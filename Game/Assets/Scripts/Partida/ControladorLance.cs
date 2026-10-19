@@ -189,7 +189,9 @@ namespace BetsDeRua
             if (portador != null)
             {
                 bola.Colocar(portador.PosicaoMao);
-                portador.Alvo = EscolherAlvo(portador.transform.position);
+                portador.Alvo = portador.Jogador.Controlador != null && portador.Modo == ModoComBola.Campo
+                    ? AlvoDaPessoa(portador)
+                    : EscolherAlvo(portador.transform.position);
                 portador.Parceiro = OutroDefensor(portador.Jogador);
             }
             LiberarDefensores(portador == null);
@@ -457,6 +459,16 @@ namespace BetsDeRua
             return dono.Jogador.DentroDoCirculoDe(garrafa.transform.position) && taco != null && taco.NoChao;
         }
 
+        /// <summary>Queimou errado: depois de um instante caída, a garrafa volta de pé.</summary>
+        private System.Collections.IEnumerator LevantarGarrafaDepois(Garrafa garrafa)
+        {
+            yield return new WaitForSeconds(configPartida.tempoGarrafaCaidaQueimaErrada);
+            if (!garrafa.Derrubada || !garrafasAvaliadas.Contains(garrafa)) yield break;
+            garrafa.Reiniciar();
+            garrafa.FicarImune(configPartida.imunidadeGarrafaDePe);
+            garrafasAvaliadas.Remove(garrafa);
+        }
+
         private void VerificarGarrafas()
         {
             foreach (Garrafa garrafa in Garrafas)
@@ -483,11 +495,10 @@ namespace BetsDeRua
                 }
                 if (Protegida(garrafa))
                 {
-                    // Queimou errado: o taco do dono já estava no chão. A garrafa volta de pé,
+                    // Queimou errado: o taco do dono já estava no chão. A garrafa cai de verdade
+                    // (para todo mundo ver que acertou), fica um instante no chão e volta de pé;
                     // o jogo segue (sem bola morta) e o ataque ganha ponto (regra da rua)
-                    garrafa.Reiniciar();
-                    garrafa.FicarImune(configPartida.imunidadeGarrafaDePe);
-                    garrafasAvaliadas.Remove(garrafa);
+                    StartCoroutine(LevantarGarrafaDepois(garrafa));
                     int ganhou = configPartida.pontosQueimaErrada;
                     if (ganhou > 0 && !EmMatchPoint(ladoNoTaco))
                     {
@@ -516,6 +527,40 @@ namespace BetsDeRua
         }
 
         /// <summary>A garrafa exposta mais perto (se nenhuma estiver exposta, a mais perto).</summary>
+        /// <summary>
+        /// Pessoa com a bola no campo: ela escolhe a garrafa. Analógico direito para a esquerda ou
+        /// direita escolhe a garrafa daquele lado da tela e ela fica escolhida; com o analógico
+        /// solto, vale a garrafa para onde a pessoa está virada (o jogo nunca troca sozinho).
+        /// </summary>
+        private Garrafa AlvoDaPessoa(Arremessador quem)
+        {
+            float x = quem.Jogador.Controlador.MiraAnalogica.x;
+            Camera cam = Camera.main;
+            if (Mathf.Abs(x) > configPartida.limiteAnalogicoEscolherGarrafa && cam != null)
+            {
+                bool aEstaAEsquerda = cam.WorldToScreenPoint(garrafaA.transform.position).x
+                                      < cam.WorldToScreenPoint(garrafaB.transform.position).x;
+                alvoEscolhidoPelaPessoa = (x < 0f) == aEstaAEsquerda ? garrafaA : garrafaB;
+            }
+            if (alvoEscolhidoPelaPessoa != null && quem == portadorQueEscolheu) return alvoEscolhidoPelaPessoa;
+            alvoEscolhidoPelaPessoa = null;
+            portadorQueEscolheu = quem;
+            // Sem escolha: a garrafa que está mais na frente de quem tem a bola
+            Garrafa melhor = garrafaB;
+            float melhorAlinhamento = float.MinValue;
+            foreach (Garrafa garrafa in Garrafas)
+            {
+                Vector3 para = garrafa.transform.position - quem.transform.position;
+                para.y = 0f;
+                float alinhamento = Vector3.Dot(quem.transform.forward, para.normalized);
+                if (alinhamento > melhorAlinhamento) { melhor = garrafa; melhorAlinhamento = alinhamento; }
+            }
+            return melhor;
+        }
+
+        private Garrafa alvoEscolhidoPelaPessoa;
+        private Arremessador portadorQueEscolheu;
+
         public Garrafa EscolherAlvo(Vector3 de)
         {
             foreach (bool soExpostas in new[] { true, false })
@@ -571,13 +616,18 @@ namespace BetsDeRua
                 batePronto = false;
                 rebatedorDaVez.ArremessoSaiu(velocidade);
                 resumoArremesso = $"{NomeDoTipo(tipo)} · {kmh:0} km/h";
-                Mostrar(resumoArremesso);
+                // Pessoa arremessando: lembra na hora certa como faz o efeito
+                Mostrar(origem.Jogador.Controlador != null
+                    ? resumoArremesso + "   ·   CURVA: analógico direito   ·   □ bate-pronto"
+                    : resumoArremesso);
                 return;
             }
             if (Estado == EstadoLance.BolaViva && origem == portador)
             {
                 portador = null;
                 bola.Lancar(saida, velocidade, origem.Jogador);
+                // Chute na garrafa: o corpo de um rebatedor no caminho também conta (corpo na frente)
+                bola.CorposAtivos = tipo == TipoArremesso.Forte && configPartida.faltaCorpoNaFrente;
                 Mostrar(tipo == TipoArremesso.Forte ? $"Chute na garrafa · {kmh:0} km/h" : NomeDoTipo(tipo));
                 return;
             }
@@ -622,6 +672,8 @@ namespace BetsDeRua
             bola.CorposAtivos = false;
             bolaDoArremesso = false;
             portador = defensor.ComBola;
+            alvoEscolhidoPelaPessoa = null;
+            portadorQueEscolheu = portador;
             portador.Alvo = EscolherAlvo(portador.transform.position);
             portador.Parceiro = OutroDefensor(defensor.Jogador);
             portador.ReceberBola(ModoComBola.Campo);
@@ -645,22 +697,21 @@ namespace BetsDeRua
         /// </summary>
         private void AoLancha(Jogador rebatedor)
         {
-            if (Estado != EstadoLance.BolaViva || rebatida) return;
+            if (Estado != EstadoLance.BolaViva) return;
+            if (rebatida)
+            {
+                // Chute da defesa na corrida bateu no corpo de um rebatedor que estava na frente da garrafa
+                if (configPartida.faltaCorpoNaFrente && IaAcertarAGarrafa(true)) ContarCorpoNaFrente(rebatedor);
+                return;
+            }
             rebatedorDaVez.Encerrar(); // a bola desviada não pode mais ser rebatida
             if (!configPartida.contarLancha)
             {
                 // Padrão: bola no corpo só é falta se ele usou o corpo para proteger a garrafa
                 // (a bola ia acertar a garrafa e o corpo dele estava na frente)
-                if (configPartida.faltaCorpoNaFrente && IaAcertarAGarrafa())
+                if (configPartida.faltaCorpoNaFrente && IaAcertarAGarrafa(false))
                 {
-                    faltasCorpo++;
-                    if (faltasCorpo >= configPartida.faltasCorpoParaPerderTaco)
-                    {
-                        EntrarTrocaDePapel($"CORPO NA FRENTE {faltasCorpo}x!");
-                        return;
-                    }
-                    Mostrar($"CORPO NA FRENTE! {rebatedor.Nome} protegeu a garrafa com o corpo  " +
-                            $"({faltasCorpo} de {configPartida.faltasCorpoParaPerderTaco})");
+                    ContarCorpoNaFrente(rebatedor);
                     return;
                 }
                 Mostrar($"Bola no corpo do {rebatedor.Nome}: segue o jogo");
@@ -685,20 +736,39 @@ namespace BetsDeRua
         /// Sem o corpo no caminho, a bola ia acertar a garrafa alvo? Refaz o voo a partir de logo antes
         /// do toque, com a mesma física, e vê se ela passa pela garrafa.
         /// </summary>
-        private bool IaAcertarAGarrafa()
+        private bool IaAcertarAGarrafa(bool qualquerGarrafa)
         {
             Vector3 p = bola.PosicaoAntesDoCorpo, v = bola.VelocidadeAntesDoCorpo;
-            Vector3 garrafa = GarrafaAlvo.transform.position;
             float alcance = garrafaAlvoRaio + configFisica.raioBola * configFisica.escalaVisualBola;
             bool parada = false;
             for (float t = 0f; t < 2f && !parada; t += configFisica.passoSimulacao)
             {
                 FisicaBola.Passo(configFisica, ref p, ref v, ref parada, configFisica.passoSimulacao);
-                Vector3 d = p - garrafa;
-                d.y = 0f;
-                if (d.magnitude <= alcance && p.y <= garrafa.y + configFisica.alturaGarrafa + configFisica.raioBola) return true;
+                foreach (Garrafa g in Garrafas)
+                {
+                    if (!qualquerGarrafa && g != GarrafaAlvo) continue;
+                    if (g.Derrubada) continue;
+                    Vector3 garrafa = g.transform.position;
+                    Vector3 d = p - garrafa;
+                    d.y = 0f;
+                    if (d.magnitude <= alcance && p.y <= garrafa.y + configFisica.alturaGarrafa + configFisica.raioBola) return true;
+                }
             }
             return false;
+        }
+
+        /// <summary>Corpo na frente da garrafa: conta a falta; juntou o limite, perde os tacos.</summary>
+        private void ContarCorpoNaFrente(Jogador rebatedor)
+        {
+            faltasCorpo++;
+            RegistroPartida.Evento($"CORPO NA FRENTE: {rebatedor.Nome} ({faltasCorpo})");
+            if (faltasCorpo >= configPartida.faltasCorpoParaPerderTaco)
+            {
+                EntrarTrocaDePapel($"CORPO NA FRENTE {faltasCorpo}x!");
+                return;
+            }
+            Mostrar($"CORPO NA FRENTE! {rebatedor.Nome} protegeu a garrafa com o corpo  " +
+                    $"({faltasCorpo} de {configPartida.faltasCorpoParaPerderTaco})");
         }
 
         private float garrafaAlvoRaio => configFisica.diametroGarrafa * 0.5f;

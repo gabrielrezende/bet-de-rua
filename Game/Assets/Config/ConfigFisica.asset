@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: ConfigFisica
   m_EditorClassIdentifier: Assembly-CSharp::BetsDeRua.ConfigFisica
   comprimentoCampo: 70
-  larguraCampo: 14
-  larguraRua: 9
+  larguraCampo: 16
+  larguraRua: 11
   alturaCalcada: 0.15
   quiqueMeioFio: 0.5
   alturaFachada: 3
@@ -31,7 +31,7 @@ MonoBehaviour:
   gravidade: 8.5
   raioBola: 0.029
   massaBola: 0.057
-  escalaVisualBola: 5
+  escalaVisualBola: 3
   arrastoAr: 0.015
   quiqueAsfalto: 0.7
   atritoQuique: 0.9

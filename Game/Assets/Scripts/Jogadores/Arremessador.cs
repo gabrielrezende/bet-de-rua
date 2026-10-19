@@ -227,7 +227,8 @@ namespace BetsDeRua
             // Pegou a bola apertando o gatilho: o mesmo aperto não pode virar arremesso
             if (esperandoSoltarGatilhos)
             {
-                if (humano.SegurandoAlgumGatilho) return;
+                // (o R1 também: quem pegou correndo com R1 não pode soltar um pingo sem querer)
+                if (humano.SegurandoAlgumGatilho || humano.SegurandoGatilhoCurto) return;
                 esperandoSoltarGatilhos = false;
             }
             bool segurando = BotaoSegurado(humano, out TipoArremesso tipoSegurado);

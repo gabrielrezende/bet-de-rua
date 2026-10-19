@@ -68,6 +68,12 @@ namespace BetsDeRua
         [Tooltip("Depois de 'queimou errado' a garrafa volta de pé e fica este tempo (s) sem poder cair, " +
                  "para a mesma bola encostada não contar várias vezes.")]
         public float imunidadeGarrafaDePe = 0.6f;
+        [Tooltip("Com a bola no campo: quanto empurrar o analógico direito para o lado para escolher a garrafa.")]
+        public float limiteAnalogicoEscolherGarrafa = 0.6f;
+        [Tooltip("Defesa: o bot parceiro só vai na bola se chegar este tanto (s) antes da pessoa.")]
+        public float folgaParaPessoaNaBola = 1.0f;
+        [Tooltip("Queimou errado: quanto tempo (s) a garrafa fica caída antes de voltar de pé.")]
+        public float tempoGarrafaCaidaQueimaErrada = 1.2f;
         [Tooltip("Perdeu o taco em match point: os pontos caem pela metade (GDD, ligado no padrão).")]
         public bool caiMetadeAoPerderTacoNoMatchPoint = true;
         [Tooltip("Pegar a bola rebatida direto no ar, antes de quicar, tira os tacos do ataque. " +

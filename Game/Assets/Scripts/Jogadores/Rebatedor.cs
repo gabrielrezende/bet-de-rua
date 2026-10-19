@@ -117,6 +117,9 @@ namespace BetsDeRua
         {
             if (cameraPrincipal == null) cameraPrincipal = Camera.main;
             jogador.GatilhosOcupados = Ativo;
+            Vector3 paraBola = bola.transform.position - transform.position;
+            paraBola.y = 0f;
+            jogador.OlharEsperandoArremesso = Ativo && !BolaEmJogo ? paraBola : Vector3.zero;
             if (!Ativo)
             {
                 // As ajudas e o arco são divididos entre os rebatedores: só esconde

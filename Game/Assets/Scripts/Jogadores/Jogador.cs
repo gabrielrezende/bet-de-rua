@@ -195,6 +195,10 @@ namespace BetsDeRua
                 Vector3 paraArea = ZonaDoTaco.CentroDaArea(ZonaDoTaco.GarrafaMaisPerto(transform.position, config), config)
                                    - transform.position;
                 paraArea.y = 0f;
+                // Esperando o arremesso: fica na diagonal, meio virado para quem arremessa e meio
+                // para a área (taco dentro do giz, giro saindo para a frente; nunca de costas)
+                if (OlharEsperandoArremesso.sqrMagnitude > 0.01f && paraArea.sqrMagnitude > 0.01f)
+                    paraArea = Vector3.Slerp(paraArea.normalized, OlharEsperandoArremesso.normalized, config.diagonalRebatedor);
                 if (paraArea.sqrMagnitude > 0.01f)
                 {
                     Quaternion alvo = Quaternion.LookRotation(paraArea, Vector3.up);
@@ -296,6 +300,8 @@ namespace BetsDeRua
         public bool PodeCorrerComBola { get; set; }
 
         public PerfilPersonagem Perfil => perfil;
+        /// <summary>Para onde o rebatedor ativo olha esperando o arremesso (zero = só para a área).</summary>
+        public Vector3 OlharEsperandoArremesso { get; set; }
         /// <summary>Altura do personagem (m).</summary>
         public float Altura => perfil != null ? perfil.altura : config.alturaJogador;
         /// <summary>Atributos da ficha (1 = normal).</summary>

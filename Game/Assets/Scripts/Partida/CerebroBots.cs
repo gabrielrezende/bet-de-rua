@@ -211,6 +211,19 @@ namespace BetsDeRua
         {
             Interceptacao.Prever(bola);
             Defensor melhor = Interceptacao.QuemChegaAntes(configFisica, defensores, out Vector3 ponto, out float tempo);
+            // Tem gente de verdade na defesa e ela chega quase junto: a bola é dela, o bot não
+            // "rouba" a jogada (o bot só vai se chegar bem antes)
+            foreach (Defensor defensor in defensores)
+            {
+                if (defensor == melhor || defensor.Jogador.Controlador == null) continue;
+                float tempoPessoa = Interceptacao.TempoParaAlcancar(configFisica, defensor.transform.position, out Vector3 pontoPessoa);
+                if (tempoPessoa - tempo < configPartida.folgaParaPessoaNaBola)
+                {
+                    perseguidorAtual = defensor;
+                    pontoDeInterceptacao = pontoPessoa;
+                    return defensor;
+                }
+            }
             if (perseguidorAtual != null && melhor != perseguidorAtual)
             {
                 float tempoAtual = Interceptacao.TempoParaAlcancar(configFisica, perseguidorAtual.transform.position,
@@ -323,6 +336,8 @@ namespace BetsDeRua
 
         // Parceiro bot de uma pessoa no taco: de que base ele saiu (-1 = A, +1 = B)
         private float baseDoParceiro;
+        private float baseDaPessoa;     // de que base a pessoa saiu (-1 = A, +1 = B)
+        private float origemDaPessoaNaViagem;
         private bool parceiroViajando;
         private float proximaDecisaoParceiro;   // evita o parceiro ficar indo e voltando a cada passo da pessoa
 
@@ -338,10 +353,12 @@ namespace BetsDeRua
 
             float meio = configFisica.distanciaBases * 0.5f;
             Vector3 h = humano.transform.position;
-            float ladoDaPessoa = h.x < 0f ? -1f : 1f;
-            // Velocidade da pessoa rumo ao meio do campo (negativa = voltando para a base dela)
-            float rumoAoMeio = -ladoDaPessoa * humano.Velocidade.x;
-            float distanciaDaBase = meio - Mathf.Abs(h.x);
+            // A base de onde a pessoa sai é a última em que ela esteve dentro da zona. Tudo é medido
+            // a partir dela (e não do lado do campo em que ela está agora: ao passar do meio o lado
+            // muda e antes isso parecia "voltando", e o parceiro ia e voltava)
+            if (humano.DentroDoCirculo()) baseDaPessoa = h.x < 0f ? -1f : 1f;
+            float rumoAoMeio = -baseDaPessoa * humano.Velocidade.x;
+            float distanciaDaBase = Mathf.Abs(h.x - baseDaPessoa * meio);
             bool podeDecidir = Time.time >= proximaDecisaoParceiro;
 
             if (!parceiroViajando)
@@ -353,6 +370,7 @@ namespace BetsDeRua
                 if (podeDecidir && pessoaFoi && !corrida.EsperandoChegarNaBase)
                 {
                     parceiroViajando = true;
+                    origemDaPessoaNaViagem = baseDaPessoa;
                     proximaDecisaoParceiro = Time.time + configPartida.intervaloDecisaoParceiro;
                     RegistroPartida.Evento($"{parceiro.Nome} (bot) acompanha a corrida de {humano.Nome}");
                 }
@@ -366,7 +384,9 @@ namespace BetsDeRua
                 {
                     // Antes de cruzar, a pessoa virou e está voltando (ou já voltou): ele desiste junto,
                     // se ainda não passou do meio
-                    bool pessoaVoltando = humano.DentroDoCirculo() || rumoAoMeio < -configPartida.velocidadeParaParceiroSair;
+                    // Só conta como desistir quando a pessoa VOLTA para a base de onde saiu (parar ou dar
+                    // um passo para trás no meio do caminho não conta)
+                    bool pessoaVoltando = humano.DentroDoCirculo() && (h.x < 0f ? -1f : 1f) == origemDaPessoaNaViagem;
                     bool passouDoMeio = Mathf.Sign(parceiro.transform.position.x) != baseDoParceiro;
                     if (pessoaVoltando && !passouDoMeio)
                     {

@@ -15,9 +15,9 @@ namespace BetsDeRua
         [Tooltip("Comprimento da rua jogável, de ponta a ponta (m). Eixo X.")]
         public float comprimentoCampo = 70f;
         [Tooltip("Largura total, de fachada a fachada (rua + as duas calçadas) (m). Eixo Z.")]
-        public float larguraCampo = 14f;
+        public float larguraCampo = 16f;
         [Tooltip("Largura só do asfalto, entre os dois meios-fios (m). O resto até as fachadas é calçada.")]
-        public float larguraRua = 9f;
+        public float larguraRua = 11f;
         [Tooltip("Altura da calçada (o degrau do meio-fio) (m). A bola rolando bate no meio-fio; na altura da quina, pula.")]
         public float alturaCalcada = 0.15f;
         [Tooltip("Quanto da velocidade a bola guarda ao bater no meio-fio (0 a 1).")]
@@ -55,7 +55,7 @@ namespace BetsDeRua
         [Tooltip("Massa da bola (kg).")]
         public float massaBola = 0.057f;
         [Tooltip("Quanto a bola aparece maior que o tamanho real, só no visual, para ler na câmera de longe.")]
-        public float escalaVisualBola = 5f;
+        public float escalaVisualBola = 3f;
         [Tooltip("Resistência do ar: desaceleração = arrasto × velocidade². ~0,015 para bola de tênis.")]
         public float arrastoAr = 0.015f;
 
@@ -246,6 +246,8 @@ namespace BetsDeRua
         [Tooltip("Depois deste tempo (s) do arremesso, ou com a bola parada, o rebatedor desiste de esperar a bola " +
                  "(e a defesa já pode ir buscar).")]
         public float tempoMaximoEsperaBatida = 3f;
+        [Tooltip("Rebatedor esperando o arremesso: 0 = olha para a área do taco, 1 = olha para quem arremessa.")]
+        [Range(0f, 1f)] public float diagonalRebatedor = 0.5f;
         [Tooltip("Por quantos segundos à frente a trajetória da bola é prevista.")]
         public float tempoPrevisao = 3f;
         [Tooltip("De quanto em quanto tempo (s) a previsão guarda um ponto.")]
