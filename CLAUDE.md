@@ -24,6 +24,7 @@ Objetivo único: descobrir se o lance é divertido no controle, jogando no sofá
 - Input System (novo) com suporte a 1 a 4 controles e teclado/mouse
 - Física da bola **própria e simples** (trajetória, quique por superfície, efeito), não o Rigidbody da bola. A garrafa pode usar Rigidbody.
 - Git desde o primeiro commit, com `.gitignore` de Unity
+- Editor Unity **6000.6.6f1** (mesma versão em todos os computadores). O Claude Code comanda o editor pelo Unity CLI: leia `docs/NOTAS_UNITY_CLI.md` antes (instalação, pegadinhas, como testar no Play mode).
 
 ## Regras de código
 - Pastas: `Assets/Scripts/Jogadores`, `Assets/Scripts/Bola`, `Assets/Scripts/Partida`, `Assets/Scripts/Camera`, `Assets/Scripts/Config`.
