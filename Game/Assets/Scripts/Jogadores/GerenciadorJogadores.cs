@@ -8,9 +8,12 @@ namespace BetsDeRua
     /// Junta as pessoas (controles e teclado) com os 4 jogadores em campo.
     /// - Cada controle conectado vira uma pessoa, na ordem em que conecta (até 4).
     /// - O teclado entra como mais uma pessoa quando alguém aperta uma tecla de jogo.
-    /// - 1ª pessoa fica com a dupla do taco, 2ª com a dupla da bola, 3ª e 4ª
-    ///   pegam o parceiro que sobrar (2x2).
-    /// - L1 (LB) / Q troca para o parceiro da dupla, se ele estiver livre.
+    /// - Antes da partida, a tela de escolha: começar no TACO (rebater) ou na BOLA
+    ///   (arremessar). Essa dupla é o "seu time": acompanha você na troca de papel.
+    /// - Quem entra joga no seu time (o 2º controle é o seu parceiro, como chamar um amigo);
+    ///   com o time cheio, os próximos vão para o outro lado (2x2).
+    /// - Você controla um jogador; o parceiro joga sozinho (bot). L1 (LB) / Q troca qual
+    ///   dos dois você controla, como no FIFA.
     /// - Select / Tab troca de dupla (só no protótipo, para testar sozinho).
     /// </summary>
     public class GerenciadorJogadores : MonoBehaviour
@@ -20,6 +23,12 @@ namespace BetsDeRua
         [SerializeField] private Jogador[] jogadores;
 
         private readonly List<ControleHumano> humanos = new List<ControleHumano>();
+
+        // Escolha do time antes da partida (o jogo fica parado enquanto isso)
+        private bool escolhendoTime = true;
+        private Dupla duplaEscolhida = Dupla.Taco;   // o que está marcado na tela
+        private Dupla duplaDoTime = Dupla.Taco;      // onde o seu time está agora
+        private bool analogicoSolto = true;          // para o analógico andar uma opção por vez
 
         public IReadOnlyList<Jogador> Jogadores => jogadores;
 
@@ -33,6 +42,12 @@ namespace BetsDeRua
                 // Ninguém joga: solta todo mundo (os bots assumem) e não deixa ninguém entrar
                 foreach (ControleHumano humano in humanos) Soltar(humano);
                 humanos.Clear();
+                if (escolhendoTime) Time.timeScale = 1f;
+                return;
+            }
+            if (escolhendoTime)
+            {
+                AtualizarEscolha();
                 return;
             }
 
@@ -92,10 +107,84 @@ namespace BetsDeRua
         private void Entrar(ControleHumano humano)
         {
             humanos.Add(humano);
-            // Ímpares (1ª, 3ª) começam na dupla do taco; pares (2ª, 4ª) na da bola
-            Dupla preferida = humano.Numero % 2 == 1 ? Dupla.Taco : Dupla.Bola;
-            Jogador livre = PrimeiroLivre(preferida) ?? PrimeiroLivre(Outra(preferida));
+            // Entra no seu time; com o time cheio, vai para o outro lado
+            Jogador livre = PrimeiroLivre(duplaDoTime) ?? PrimeiroLivre(Outra(duplaDoTime));
             Assumir(humano, livre);
+        }
+
+        // ------------------------------------------------------------------ escolha do time
+
+        /// <summary>
+        /// Tela de escolha: o jogo fica parado (timeScale 0) até alguém escolher.
+        /// Esquerda/direita (analógico, direcional, A/D ou setas) muda; X (A) / Enter / Espaço confirma.
+        /// </summary>
+        private void AtualizarEscolha()
+        {
+            Time.timeScale = 0f;
+            int mudar = 0;
+            bool confirmar = false;
+            bool algumAnalogicoInclinado = false;
+            foreach (Gamepad controle in Gamepad.all)
+            {
+                if (controle.dpad.left.wasPressedThisFrame) mudar = -1;
+                if (controle.dpad.right.wasPressedThisFrame) mudar = 1;
+                float x = controle.leftStick.ReadValue().x;
+                if (Mathf.Abs(x) > 0.6f)
+                {
+                    algumAnalogicoInclinado = true;
+                    if (analogicoSolto) mudar = x < 0f ? -1 : 1;
+                }
+                if (controle.buttonSouth.wasPressedThisFrame || controle.startButton.wasPressedThisFrame) confirmar = true;
+            }
+            analogicoSolto = !algumAnalogicoInclinado;
+            Keyboard teclado = Keyboard.current;
+            if (teclado != null)
+            {
+                if (teclado.aKey.wasPressedThisFrame || teclado.leftArrowKey.wasPressedThisFrame) mudar = -1;
+                if (teclado.dKey.wasPressedThisFrame || teclado.rightArrowKey.wasPressedThisFrame) mudar = 1;
+                if (teclado.enterKey.wasPressedThisFrame || teclado.spaceKey.wasPressedThisFrame) confirmar = true;
+            }
+            if (mudar < 0) duplaEscolhida = Dupla.Taco;
+            if (mudar > 0) duplaEscolhida = Dupla.Bola;
+            if (confirmar) Escolher(duplaEscolhida);
+        }
+
+        /// <summary>Fecha a tela de escolha: o seu time começa nesta dupla e o jogo anda.</summary>
+        public void Escolher(Dupla dupla)
+        {
+            escolhendoTime = false;
+            duplaDoTime = dupla;
+            Time.timeScale = 1f;
+        }
+
+        private void DesenharEscolha()
+        {
+            GUI.color = new Color(0f, 0f, 0f, 0.6f);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            GUIStyle titulo = new GUIStyle(GUI.skin.label) { fontSize = 34, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
+            titulo.normal.textColor = Color.white;
+            GUIStyle opcao = new GUIStyle(titulo) { fontSize = 28 };
+            GUIStyle dica = new GUIStyle(titulo) { fontSize = 18, fontStyle = FontStyle.Normal };
+            dica.normal.textColor = new Color(0.85f, 0.85f, 0.85f);
+
+            float meio = Screen.height * 0.5f;
+            GUI.Label(new Rect(0, meio - 130, Screen.width, 50), "Seu time começa com o quê?", titulo);
+
+            bool taco = duplaEscolhida == Dupla.Taco;
+            Color amarelo = new Color(1f, 0.85f, 0.1f);
+            Color apagado = new Color(0.6f, 0.6f, 0.6f);
+            opcao.normal.textColor = taco ? amarelo : apagado;
+            GUI.Label(new Rect(Screen.width * 0.5f - 420, meio - 40, 400, 60), taco ? "> TACO (rebater) <" : "TACO (rebater)", opcao);
+            opcao.normal.textColor = !taco ? amarelo : apagado;
+            GUI.Label(new Rect(Screen.width * 0.5f + 20, meio - 40, 400, 60), !taco ? "> BOLA (arremessar) <" : "BOLA (arremessar)", opcao);
+
+            GUI.Label(new Rect(0, meio + 50, Screen.width, 30),
+                      "Você controla um jogador e o parceiro é bot (L1 troca qual você controla). " +
+                      "Um 2º controle entra como seu parceiro.", dica);
+            GUI.Label(new Rect(0, meio + 85, Screen.width, 30),
+                      "Esquerda / direita (analógico, direcional ou A/D) escolhe  ·  X (A) / Enter confirma  ·  F2 só assistir", dica);
         }
 
         private void TrocarParceiro(ControleHumano humano)
@@ -109,7 +198,10 @@ namespace BetsDeRua
         {
             Dupla atual = humano.Jogador != null ? humano.Jogador.Dupla : Dupla.Bola;
             Jogador livre = PrimeiroLivre(Outra(atual));
-            if (livre != null) Assumir(humano, livre);
+            if (livre == null) return;
+            Assumir(humano, livre);
+            // Sozinho: o seu time passa a ser a outra dupla
+            if (humanos.Count == 1) duplaDoTime = livre.Dupla;
         }
 
         /// <summary>
@@ -135,6 +227,7 @@ namespace BetsDeRua
         /// </summary>
         public void InverterDuplas()
         {
+            duplaDoTime = Outra(duplaDoTime);
             var duplaAntes = new Dictionary<ControleHumano, Dupla>();
             foreach (ControleHumano humano in humanos)
             {
@@ -181,6 +274,11 @@ namespace BetsDeRua
             GUIStyle estilo = new GUIStyle(GUI.skin.label) { fontSize = 14, alignment = TextAnchor.UpperRight };
             estilo.normal.textColor = Color.white;
 
+            if (escolhendoTime && !configPartida.soAssistir)
+            {
+                DesenharEscolha();
+                return;
+            }
             if (configPartida.soAssistir)
             {
                 GUI.Label(new Rect(Screen.width - 716, Screen.height - 130, 700, 90),

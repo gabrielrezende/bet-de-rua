@@ -14,7 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BetsDeRua.ConfigPartida
   metaPontos: 10
   pontosPorCruzada: 1
+  lanchasParaPerderTaco: 3
+  pontosQueimaErrada: 1
   caiMetadeAoPerderTacoNoMatchPoint: 1
+  pegarNoArPerdeTaco: 0
   afastamentoRebatedor: 1.1
   afastamentoArremessador: 1.2
   distanciaGuardiao: 4
@@ -26,7 +29,7 @@ MonoBehaviour:
   afastamentoParceiroEspelho: 0.8
   tempoSeguroParaEncerrar: 1.5
   tempoTrocaDePapel: 2.5
-  soAssistir: 1
+  soAssistir: 0
   arremessadorAutomatico: 1
   esperaArremessoAutomatico: 2
   desvioMiraAutomatico: 0.8
@@ -36,6 +39,9 @@ MonoBehaviour:
   corridaAutomatica: 1
   folgaParaBotCorrer: 7
   distanciaChuteBot: 9
+  folgaParaChutarBot: 0.15
+  distanciaParaApoio: 8
+  fracaoApoio: 0.45
   reacaoBot: 0.25
   trocaAutomaticaNaDefesa: 0
   maximoJogadoresHumanos: 4
