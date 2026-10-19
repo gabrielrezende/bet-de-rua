@@ -46,6 +46,7 @@ namespace BetsDeRua
         /// <summary>Faz o taco girar uma vez (a batida, acertando ou não).</summary>
         public void Girar()
         {
+            Sons.Tocar(TipoSom.GiroTaco, 0.5f);
             tempoGiro = 0f;
         }
 
@@ -55,6 +56,7 @@ namespace BetsDeRua
         /// </summary>
         public void BaterNoOutroTaco(Vector3 paraOnde)
         {
+            Sons.Tocar(TipoSom.Tec, 0.9f, 0.03f);
             paraOnde.y = 0f;
             rumoBaterTacos = paraOnde.sqrMagnitude > 0.0001f ? paraOnde.normalized : transform.forward;
             tempoBaterTacos = 0f;

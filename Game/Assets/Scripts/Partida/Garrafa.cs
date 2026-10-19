@@ -82,6 +82,7 @@ namespace BetsDeRua
         {
             if (balancoAtual != null) StopCoroutine(balancoAtual);
             Derrubada = true;
+            Sons.Tocar(TipoSom.Garrafa, 0.9f);
             corpo.mass = config.massaGarrafa;
             corpo.isKinematic = false;
             // Empurrão = quantidade de movimento da bola (massa × velocidade)
@@ -97,6 +98,7 @@ namespace BetsDeRua
             Vector3 eixo = Vector3.Cross(Vector3.up, direcao);
             if (eixo.sqrMagnitude < 0.0001f) eixo = Vector3.forward;
             balancoAtual = StartCoroutine(RotinaBalanco(eixo, config.anguloBalanco * forca));
+            Sons.Tocar(TipoSom.Balanco, 0.3f + 0.4f * Mathf.Clamp01(forca));
         }
 
         private IEnumerator RotinaBalanco(Vector3 eixo, float anguloMaximo)

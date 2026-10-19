@@ -50,6 +50,7 @@ namespace BetsDeRua
         private void Entrar(InputDevice quem)
         {
             SessaoDeJogo.DispositivoPrincipal = quem;
+            Sons.Tocar(TipoSom.Start, 0.8f, 0f);
             menu.Trocar(new TelaInicio());
         }
     }
@@ -163,8 +164,10 @@ namespace BetsDeRua
                                     { new PessoaNaPartida { dispositivo = SessaoDeJogo.DispositivoPrincipal ?? Keyboard.current, numero = 1, lado = 1, vaga = 0 } }) },
                         new Bloco { titulo = "COMO JOGAR", texto = "Regras da rua e todos os botões, no controle e no teclado.",
                                     corA = cinza, corB = grafite, acao = () => menu.Abrir(new TelaComoJogar()) },
-                        new Bloco { titulo = "TREINO DE BATIDA", texto = "Em breve: a CPU arremessa e você treina o tempo da batida.",
-                                    corA = cinza, corB = grafite, desligado = true, selo = "EM BREVE" },
+                        new Bloco { titulo = "TREINO DE BATIDA", texto = "A CPU arremessa sem parar: treine o tempo e a altura da batida (R2 no ar, L2 baixa).",
+                                    corA = azul, corB = roxo, selo = "NOVO",
+                                    acao = () => menu.ComecarPartida(ModoDeJogo.TreinoBatida, new List<PessoaNaPartida>
+                                    { new PessoaNaPartida { dispositivo = SessaoDeJogo.DispositivoPrincipal ?? Keyboard.current, numero = 1, lado = 0, vaga = 0 } }) },
                     };
                 case 2:
                     PerfilPersonagem eu = PersonagensSalvos.Pegar(0);

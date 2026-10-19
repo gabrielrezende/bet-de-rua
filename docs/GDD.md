@@ -664,6 +664,17 @@ Do ícone até a primeira batida em menos de 60 segundos: o tutorial é a primei
 - Feedback em tudo: vibração na batida, som de madeira na cruzada, som de garrafa PET caindo na queimada.
 - Acessibilidade: modo de timing assistido, cores com padrão além da cor (verde/vermelho também têm ícone), legendas nos comandos de voz.
 
+### O que já está na versão de teste 0.2
+
+- **Abertura** "APERTE START" com a rua e o seu personagem no fundo; quem aperta vira o P1.
+- **Início com abas (L1/R1)** e blocos grandes: JOGAR (Partida rápida, Multiplayer local, Assistir), TREINO (Treino de arremesso, Como jogar; Treino de batida em breve), MEU JOGADOR (o seu personagem e os do P2 ao P4), ONLINE (grupo, amigos, entrar com código) e AJUSTES.
+- **Escolha de lado como no FIFA:** cada controle aparece no meio ("fora") e vai para o Lado 1 (começa no taco) ou o Lado 2 (começa na bola), no máximo 2 por lado; vaga vazia é bot. △ muda a dificuldade, □ os pontos.
+- **Criador de personagem:** categorias à esquerda, opções com ◀ ▶, o boneco 3D à direita (analógico direito gira, L2/R2 aproxima), barras do estilo e nota. △ sorteia um visual. Os 4 personagens ficam salvos no computador.
+- **Partida:** placar de transmissão no canto (quem está no taco, meta, lanchas), mensagem grande do lance, dicas só do momento, faixa de troca de papel, pausa (OPTIONS / Esc) e fim de partida com placar, duração, trocas de papel, Jogar de novo e Menu.
+- **Treino de arremesso:** a garrafa volta de pé sozinha; placar de arremessos, derrubadas, aproveitamento, sequência e o arremesso mais rápido.
+- **Online:** as telas do grupo (você + 3 vagas e o código do grupo), dos amigos e do código estão prontas; a conexão entra com a Steam (Steamworks: lobby, convites e lista de amigos).
+- **Ajustes:** dificuldade dos bots, pontos para vencer, prévia do arremesso, tela cheia, qualidade da imagem e volume (salvos no computador).
+
 ## Arte, ambientação e som
 
 Visual 3D estilizado e colorido (low poly com textura pintada à mão), leve para rodar bem no Steam Deck e em PC de entrada.
@@ -674,6 +685,14 @@ Visual 3D estilizado e colorido (low poly com textura pintada à mão), leve par
 - **Itens cosméticos:** tacos (cabo de vassoura, tábua de caixote, taco profissional de pinus, taco com fita isolante), casinhas (PET, lata, três gravetos, tijolo), bolas (tênis, borracha, de meia).
 - **Som:** "tec" da madeira na cruzada, garrafa PET caindo, bola quicando no asfalto, crianças gritando "CORRE!" e "QUEIMOU!", trilha de fim de tarde com violão e percussão.
 - **Horário:** sol de fim de tarde no padrão; partidas noturnas sob poste de luz como variante.
+
+**Na versão 0.2 (tudo gerado por código, sem arte de fora)**
+
+- **A rua:** asfalto gasto com rachaduras, remendos e bueiros; calçada de placas e meio-fio pintado; casas térreas de reboco colorido com laje e caixa d'água azul ou telhado de telha; sobrado com o andar de cima no tijolo baiano e vergalhão para cima; comércio com portão de enrolar e placa (Bar do Zé, Chaveiro, Açaí...), mesa de plástico na calçada; muros com pichação; postes com fios; árvores; carros parados no fim da rua; amarelinha de giz; e o morro coberto de casinhas ao fundo.
+- **O boneco:** corpo arredondado com proporção de gente (criança com cabeça maior), rosto, 7 cabelos, barba, boné (para a frente ou para trás), bucket, touca, camiseta, regata ou manga longa, bermuda, calção ou calça, tênis, cano alto ou chinelo, óculos, corrente, munhequeira, tatuagem. As duas mãos seguram o taco (cinemática inversa) e a cabeça acompanha a bola.
+- **O taco:** pá de madeira achatada (como a do críquete, que é de onde o bets vem) com o cabo enrolado em fita, a cor da fita escolhida no criador.
+- **Luz:** sol de fim de tarde, céu, neblina ao longe e pós-processamento (cor de filme, brilho e vinheta).
+- **Som:** estalo de madeira na batida, quique da bola de borracha, garrafa PET caindo e rolando, "TEC!" dos tacos na cruzada, vento do arremesso, vinhetas de ponto, queimada e vitória, cliques do menu, trânsito ao longe e passarinhos.
 
 **Narração de rua**
 
@@ -777,16 +796,21 @@ Cada pessoa monta o próprio personagem e joga **sempre com ele**: sozinho com b
 - **Braços e marcas:** tipo de braço, tatuagens, curativo no joelho, joelheira.
 - **Roupa:** a camiseta e o boné seguem a cor do time na partida; o resto (calção, tênis, chinelo, acessórios) é da pessoa.
 
-**Atributos com troca justa** (nenhuma escolha é simplesmente melhor):
+**Estilo de jogo com barras (como as posições do FIFA)**
 
-| Escolha | Ponto forte | Ponto fraco |
-| --- | --- | --- |
-| Corpo forte (mais pesado) | Batida e arremesso mais fortes (+8%) | Corre menos (-7%) |
-| Corpo magro | Corre mais (+5%) | Menos força (-7%) |
-| Mais alto | Alcança mais longe com o taco | (a definir: por exemplo, mais lento para abaixar no taco baixo) |
-| Criança / adolescente | Leve e ágil (a definir) | Menos força (-10% / -4%) |
+A aparência (idade, altura, corpo, roupa) é só visual e **não muda os atributos**: ninguém precisa escolher um corpo que não quer para ser bom. Quem define o jeito de jogar é o **estilo de jogo**, com cinco barras de 0 a 99. Todos os estilos somam os mesmos pontos (375), então nenhum é melhor, só joga diferente.
 
-- **Nota geral (0 a 99)**, como no FIFA, resume velocidade, força e alcance, para mostrar o personagem e equilibrar partidas.
+| Estilo | Velocidade | Força | Precisão | Alcance | Fôlego | Para quem |
+| --- | --- | --- | --- | --- | --- | --- |
+| Equilibrado | 75 | 75 | 75 | 75 | 75 | Faz de tudo um pouco |
+| Rebatedor | 68 | 90 | 72 | 85 | 60 | Bate forte e alcança longe com o taco |
+| Corredor | 92 | 62 | 70 | 66 | 85 | Rápido entre as bases, fôlego de sobra |
+| Lançador | 70 | 82 | 90 | 63 | 70 | Arremesso e chute certeiros: queima |
+| Defensor | 80 | 66 | 75 | 82 | 72 | Chega antes na bola, alcança no peixinho |
+
+Barra 75 = normal. Velocidade muda corrida e sprint; força muda batida e arremesso; precisão diminui o erro do arremesso e do chute; alcance muda o taco e o mergulho; fôlego muda quanto dura o sprint.
+
+- **Nota geral (0 a 99)**, como no FIFA: a média das cinco barras.
 - **No protótipo** já existe a ficha do personagem (`PerfilPersonagem`, um arquivo por personagem em `Game/Assets/Config/Personagens`): nome, idade, altura, tipo de corpo e cor da pele mudam o boneco (altura, largura) e os atributos (velocidade, força, alcance do taco). Os campos de rosto, cabelo e tatuagem já estão na ficha, esperando o modelo de verdade.
 - **O boneco do protótipo** é de peças simples (cabeça com boné, tronco, braços, pernas e tênis), animado por código: passada que cresce do andar ao sprint, braço do arremesso indo para trás com o arco e chicoteando ao soltar, tronco girando com o taco na batida, agachar na varrida, abaixar para pegar, pose esticada no mergulho e braço para cima no "TEC!". Depois entram modelos e animações de verdade (por exemplo, do Mixamo ou de um artista), ligados aos mesmos momentos do jogo.
 

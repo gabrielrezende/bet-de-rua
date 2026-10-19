@@ -211,6 +211,8 @@ namespace BetsDeRua
         {
             procurandoNoBote = false;
             bool noAr = !bola.QuicouDesdeLancamento;
+            Sons.Tocar(TipoSom.Pegou, 0.55f);
+            Vibracao.Pulsar(Jogador, 0.25f, 0.4f, 0.08f);
             Pegou?.Invoke(this, noAr);
         }
     }

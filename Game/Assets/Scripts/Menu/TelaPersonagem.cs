@@ -277,6 +277,7 @@ namespace BetsDeRua
 
         private void Mudou()
         {
+            Sons.Tocar(TipoSom.MenuMover, 0.5f, 0.05f);
             AtualizarValores();
             AtualizarAtributos();
             menu.MostrarPersonagem(perfil);

@@ -72,6 +72,7 @@ namespace BetsDeRua.Editor
             dados.FindProperty("configFisica").objectReferenceValue = config;
             dados.ApplyModifiedPropertiesWithoutUndo();
             CriarSistemaDeEventos();
+            interfaceObj.AddComponent<AmbienteRua>();
 
             EditorSceneManager.SaveScene(cena, CaminhoCena);
             AtualizarBuild();

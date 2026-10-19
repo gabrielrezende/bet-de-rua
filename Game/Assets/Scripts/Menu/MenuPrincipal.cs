@@ -156,6 +156,7 @@ namespace BetsDeRua
         public void Voltar()
         {
             if (pilha.Count <= 1) return;
+            Sons.Tocar(TipoSom.MenuVoltar, 0.6f, 0f);
             Tela velha = pilha.Pop();
             velha.AoFechar();
             velha.Raiz.RemoveFromHierarchy();

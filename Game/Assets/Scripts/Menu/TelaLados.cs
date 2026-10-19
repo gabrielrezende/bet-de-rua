@@ -180,7 +180,7 @@ namespace BetsDeRua
                 {
                     int nova = Mathf.Clamp(f.posicao + e.direcao.x, -1, 1);
                     if (nova != 0 && fichas.FindAll(x => x.posicao == nova).Count >= 2) nova = f.posicao; // lado cheio
-                    if (nova != f.posicao) { f.posicao = nova; mudou = true; }
+                    if (nova != f.posicao) { f.posicao = nova; mudou = true; Sons.Tocar(TipoSom.MenuMover, 0.6f); }
                 }
                 if (e.triangulo)
                 {

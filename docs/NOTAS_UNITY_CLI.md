@@ -33,3 +33,14 @@ Aprendido nas Etapas 0 a 6 do protótipo (no Mac). Leia antes de mexer no editor
 ## Trabalhando em dois computadores
 
 Antes de trocar de computador: commit e push. Ao chegar no outro: pull antes de abrir o Unity. Nunca mexer na mesma cena nos dois ao mesmo tempo.
+
+## Aprendido na versão 0.2 (menus, rua, build)
+
+- **Montar cena demora mais que 5 s** (a rua gera texturas e malhas): o `eval` responde "Main thread operation timed out after 5000ms", mas o trabalho **continua** no editor. Esperar o arquivo `.unity` mudar de data (ou `unity status --until-ready`) antes do próximo comando.
+- **Autotick cai depois de recompilar**: rodar `unity command set_autotick` antes de cada `editor_play` em teste automático; sem isso o jogo fica parado no tempo 0.
+- **Recompilar com o Play ligado não compila** (ScriptCompilationDuringPlay=1): dar `editor_stop` antes do `unity recompile`, senão dá tempo esgotado.
+- **Partida aberta pelo menu** (SessaoDeJogo) muda `ConfigPartida` (pontos, dificuldade, assistir) e devolve os valores ao sair do Play. Para simulação de bots, ajustar o config **pelo editor** (eval com `AssetDatabase.LoadAssetAtPath` + `SaveAssets`), não com `sed` no arquivo enquanto o Play está ligado.
+- **Testar o menu sem controle**: chamar os métodos direto pelo eval, ex.: `FindFirstObjectByType<BetsDeRua.MenuPrincipal>().Abrir(new BetsDeRua.TelaPersonagem(0))` ou `ComecarPartida(...)`.
+- **Prints**: `ScreenCapture.CaptureScreenshot("caminho absoluto")` pelo eval funciona no Play. Fora do Play, a ferramenta `BetsDeRua.Editor.FotoBoneco.Foto(caminho)` fotografa os 4 personagens num estúdio.
+- **Build de Windows**: `unity command build --target StandaloneWindows64 --outputPath "Builds/BetsDeRua/BetsDeRua.exe" --confirm true` e esperar `build_status` = completed (ou menu Bets > Gerar build Windows). O log do jogo instalado fica onde for passado em `-logFile`.
+- Avisos de "GaussianDepthOfField / BokehDepthOfField / PaniniProjection stripped" no jogo instalado são normais: o jogo não usa esses efeitos.

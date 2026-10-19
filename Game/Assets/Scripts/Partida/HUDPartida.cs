@@ -20,6 +20,8 @@ namespace BetsDeRua
     {
         /// <summary>True quando o HUD novo está na tela (o desenho antigo em OnGUI fica desligado).</summary>
         public static bool Ativo { get; private set; }
+        /// <summary>True com a pausa ou o fim de partida na tela (as etiquetas do jogo somem).</summary>
+        public static bool SobreposicaoAberta { get; private set; }
 
         [SerializeField] private UIDocument documento;
         [SerializeField] private StyleSheet estilo;
@@ -33,6 +35,7 @@ namespace BetsDeRua
         private Label textoTroca;
         private VisualElement painelTreino;
         private Label treinoNumeros;
+        private Label tituloTreino;
         private VisualElement pausa, fim;
         private readonly Navegacao navPausa = new Navegacao("botao-selecionado");
         private readonly Navegacao navFim = new Navegacao("botao-selecionado");
@@ -52,6 +55,7 @@ namespace BetsDeRua
         private void OnDisable()
         {
             Ativo = false;
+            SobreposicaoAberta = false;
             if (pausado) Time.timeScale = 1f;
         }
 
@@ -93,7 +97,7 @@ namespace BetsDeRua
             painelTreino.style.right = 36;
             painelTreino.style.top = 28;
             painelTreino.style.width = 420;
-            Label tituloTreino = UI.Texto("TREINO DE ARREMESSO", "titulo");
+            tituloTreino = UI.Texto("TREINO DE ARREMESSO", "titulo");
             tituloTreino.style.fontSize = 32;
             painelTreino.Add(tituloTreino);
             treinoNumeros = UI.Texto("", "subtitulo");
@@ -185,7 +189,7 @@ namespace BetsDeRua
         {
             if (lance == null || raiz == null) return;
             LerPausa();
-            if (pausado) { NavegarMenu(navPausa); return; }
+            if (pausado) { SobreposicaoAberta = true; NavegarMenu(navPausa); return; }
 
             // Placar
             int noTaco = lance.LadoNoTaco;
@@ -228,8 +232,18 @@ namespace BetsDeRua
             if (troca) textoTroca.text = $"TROCA DE PAPEL · {NomeDoLado(1 - noTaco)} VAI PARA O TACO";
 
             // Treino
-            painelTreino.style.display = lance.Treino ? DisplayStyle.Flex : DisplayStyle.None;
-            if (lance.Treino)
+            painelTreino.style.display = lance.Treino || lance.TreinoBatida ? DisplayStyle.Flex : DisplayStyle.None;
+            if (lance.TreinoBatida)
+            {
+                ControladorLance.EstatisticasTreino e = lance.EstatisticasDoTreino;
+                int aproveitamento = e.arremessos > 0 ? Mathf.RoundToInt(100f * e.rebatidas / e.arremessos) : 0;
+                tituloTreino.text = "TREINO DE BATIDA";
+                treinoNumeros.text = $"Arremessos: {e.arremessos}\nRebatidas: {e.rebatidas}  ({aproveitamento}%)\n" +
+                                     $"Perfeitas: {e.perfeitas}   Erros: {e.erros}\nSeguidas: {e.sequencia}   (recorde {e.melhorSequencia})\n" +
+                                     $"Mais forte: {e.maiorBatidaKmh:0} km/h   Queimadas: {e.queimadas}";
+                cor1.parent.parent.style.display = DisplayStyle.None;
+            }
+            else if (lance.Treino)
             {
                 ControladorLance.EstatisticasTreino e = lance.EstatisticasDoTreino;
                 treinoNumeros.text = $"Arremessos: {e.arremessos}\nDerrubadas: {e.acertos}  ({e.Aproveitamento}%)\n" +
@@ -244,13 +258,14 @@ namespace BetsDeRua
                 fimMostrado = true;
                 MostrarFim();
             }
+            SobreposicaoAberta = pausado || fim.resolvedStyle.display == DisplayStyle.Flex;
             if (fim.resolvedStyle.display == DisplayStyle.Flex) NavegarMenu(navFim);
             estadoAntes = lance.Estado;
         }
 
         private string NomeDoLado(int lado)
         {
-            if (!SessaoDeJogo.Configurada) return lado == 0 ? "LADO 1" : "LADO 2";
+            if (!SessaoDeJogo.Configurada || SessaoDeJogo.Pessoas.Count == 0) return lado == 0 ? "LADO 1" : "LADO 2";
             var nomes = new List<string>();
             foreach (PessoaNaPartida p in SessaoDeJogo.Pessoas)
                 if (p.lado == lado) nomes.Add($"P{p.numero}");
@@ -294,7 +309,9 @@ namespace BetsDeRua
             pausa.style.display = DisplayStyle.Flex;
             navPausa.Selecionar(0);
             Label dicas = pausa.Q<Label>("dicasPausa");
-            if (dicas != null) dicas.text = lance.Treino
+            if (dicas != null) dicas.text = lance.TreinoBatida
+                ? "Treino: leia a altura da bola. No ar, R2 (taco alto); baixa, L2 (taco baixo). O X amarelo mostra onde ela passa."
+                : lance.Treino
                 ? "Treino: derrube a garrafa do outro lado. Varie o tipo (R2, L2, R1) e use a curva depois de soltar."
                 : "Regra rápida: cada cruzada no meio vale 1 ponto. Derrubar a garrafa com o taco fora do chão queima a dupla do taco.";
         }

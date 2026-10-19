@@ -165,6 +165,7 @@ namespace BetsDeRua
         /// <summary>"TEC!" amarelo no ponto onde os tacos se cruzaram, subindo e sumindo.</summary>
         private void OnGUI()
         {
+            if (Time.timeScale == 0f || HUDPartida.SobreposicaoAberta) return; // pausa ou fim de partida na frente
             if (tempoDoTec >= DuracaoTec) return;
             tempoDoTec += Time.deltaTime;
             Camera camera = Camera.main;

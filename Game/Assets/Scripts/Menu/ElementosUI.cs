@@ -205,7 +205,11 @@ namespace BetsDeRua
             for (int i = 0; i < itens.Count; i++) itens[i].EnableInClassList(classeSelecionado, i == indice);
             bool mudou = indice != Indice;
             Indice = indice;
-            if (mudou) AoMudar?.Invoke(indice);
+            if (mudou)
+            {
+                Sons.Tocar(TipoSom.MenuMover, 0.6f, 0.02f);
+                AoMudar?.Invoke(indice);
+            }
         }
 
         /// <summary>Anda para o item mais perto na direção (x: -1/1, y: 1 = para cima).</summary>
@@ -238,6 +242,10 @@ namespace BetsDeRua
             return true;
         }
 
-        public void Confirmar() => AoConfirmar?.Invoke(Indice);
+        public void Confirmar()
+        {
+            Sons.Tocar(TipoSom.MenuConfirmar, 0.7f, 0f);
+            AoConfirmar?.Invoke(Indice);
+        }
     }
 }

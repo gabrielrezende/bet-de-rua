@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 
 namespace BetsDeRua
 {
-    public enum ModoDeJogo { PartidaRapida, MultiplayerLocal, TreinoArremesso, Assistir }
+    public enum ModoDeJogo { PartidaRapida, MultiplayerLocal, TreinoArremesso, Assistir, TreinoBatida }
 
     /// <summary>Uma pessoa que vai jogar: o controle dela, o lado em que começa e o personagem dela.</summary>
     public class PessoaNaPartida

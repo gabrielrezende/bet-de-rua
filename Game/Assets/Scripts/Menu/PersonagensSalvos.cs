@@ -144,7 +144,13 @@ namespace BetsDeRua
         public static void Aplicar()
         {
             if (!Application.isEditor)
-                Screen.fullScreenMode = TelaCheia ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
+            {
+                // Tela cheia na resolução nativa do monitor (inclusive ultrawide, sem faixas pretas);
+                // em janela, 1600x900 (ou menos, se o monitor for menor)
+                int largura = Display.main.systemWidth, altura = Display.main.systemHeight;
+                if (TelaCheia) Screen.SetResolution(largura, altura, FullScreenMode.FullScreenWindow);
+                else Screen.SetResolution(Mathf.Min(1600, largura - 80), Mathf.Min(900, altura - 120), FullScreenMode.Windowed);
+            }
             int niveis = QualitySettings.names.Length;
             if (niveis > 0) QualitySettings.SetQualityLevel(Mathf.Clamp(Mathf.RoundToInt(Qualidade / 2f * (niveis - 1)), 0, niveis - 1), true);
             AudioListener.volume = Volume;

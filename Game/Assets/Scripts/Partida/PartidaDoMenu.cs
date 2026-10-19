@@ -28,7 +28,8 @@ namespace BetsDeRua
             nivel2Antes = configPartida.nivelLado2;
             assistirAntes = configPartida.soAssistir;
 
-            configPartida.metaPontos = SessaoDeJogo.Modo == ModoDeJogo.TreinoArremesso ? 999 : AjustesJogo.MetaPontos;
+            bool treino = SessaoDeJogo.Modo == ModoDeJogo.TreinoArremesso || SessaoDeJogo.Modo == ModoDeJogo.TreinoBatida;
+            configPartida.metaPontos = treino ? 999 : AjustesJogo.MetaPontos;
             configPartida.nivelLado1 = AjustesJogo.NivelBots;
             configPartida.nivelLado2 = AjustesJogo.NivelBots;
             configPartida.soAssistir = SessaoDeJogo.Modo == ModoDeJogo.Assistir;

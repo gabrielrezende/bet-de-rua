@@ -246,6 +246,8 @@ namespace BetsDeRua
         [Tooltip("Depois deste tempo (s) do arremesso, ou com a bola parada, o rebatedor desiste de esperar a bola " +
                  "(e a defesa já pode ir buscar).")]
         public float tempoMaximoEsperaBatida = 3f;
+        [Tooltip("A garrafa atrás de quem lança (até esta distância, m) não conta até a bola se afastar dela (a rasteira não derruba a própria garrafa).")]
+        public float distanciaGarrafaAtras = 1.6f;
         [Tooltip("Rebatedor esperando o arremesso: 0 = olha para a área do taco, 1 = olha para quem arremessa.")]
         [Range(0f, 1f)] public float diagonalRebatedor = 0.5f;
         [Tooltip("Por quantos segundos à frente a trajetória da bola é prevista.")]

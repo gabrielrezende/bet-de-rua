@@ -56,6 +56,7 @@ namespace BetsDeRua
         private float erroPendenteMs;
 
         private bool estavaAtivo;
+        private bool registrouDeixou;
 
         // Controles
         private float carga;
@@ -99,6 +100,7 @@ namespace BetsDeRua
         public void ArremessoSaiu(Vector3 velocidadeArremesso)
         {
             BolaEmJogo = true;
+            registrouDeixou = false;
             momentoArremesso = Time.time;
             Vector3 horizontal = new Vector3(velocidadeArremesso.x, 0f, velocidadeArremesso.z);
             if (horizontal.sqrMagnitude > 0.0001f) DirecaoChegada = horizontal.normalized;
@@ -207,6 +209,7 @@ namespace BetsDeRua
         /// <summary>Leitura da bola: "BAIXA" ou "NO AR" em cima do X de onde ela vai passar (só para quem joga).</summary>
         private void OnGUI()
         {
+            if (Time.timeScale == 0f || HUDPartida.SobreposicaoAberta) return; // pausa ou fim de partida na frente
             if (!Ativo || !BolaEmJogo || cruzou || !temCruzamento || jogador.Controlador == null || cameraPrincipal == null) return;
             Vector3 tela = cameraPrincipal.WorldToScreenPoint(new Vector3(pontoCruzamento.x, 0f, pontoCruzamento.z));
             if (tela.z <= 0f) return;
@@ -313,7 +316,18 @@ namespace BetsDeRua
         private void JogarComoCpu()
         {
             if (!BolaEmJogo || jaGirou || !temCruzamento && !cruzou) return;
-            if (!alcancavel) return; // a CPU não tenta bola fora do alcance
+            if (!alcancavel)
+            {
+                // a CPU não tenta bola fora do alcance (registra uma vez, para entender o jogo)
+                if (cruzou && !registrouDeixou)
+                {
+                    registrouDeixou = true;
+                    Vector3 lateral = pontoCruzamento - PontoDaLinhaDeContato;
+                    lateral.y = 0f;
+                    RegistroPartida.Evento($"{jogador.Nome} (bot) deixou passar: lado {lateral.magnitude:0.00} m, altura {pontoCruzamento.y:0.00} m");
+                }
+                return;
+            }
             if (!tipoCpuDefinido && temCruzamento)
             {
                 // Lê a altura em que a bola vai chegar; acerta a leitura conforme o nível
@@ -412,6 +426,8 @@ namespace BetsDeRua
             BolaEmJogo = false;
             ajudas.EsconderMarca();
             ajudas.EsconderAnel();
+            Sons.Tocar(TipoSom.Batida, Mathf.Lerp(0.45f, 1f, Mathf.Clamp01(kmh / 90f)));
+            Vibracao.Pulsar(jogador, 0.5f + 0.5f * Mathf.Clamp01(kmh / 90f), 0.9f, 0.12f);
             Rebateu?.Invoke(tipo, kmh, erroMs, perfeita);
         }
 
@@ -429,6 +445,7 @@ namespace BetsDeRua
             BolaEmJogo = false;
             ajudas.EsconderMarca();
             ajudas.EsconderAnel();
+            Sons.Tocar(TipoSom.Batida, 0.35f, 0.15f);
             Rebateu?.Invoke(tipo, rapidez * 3.6f, erroMs, false);
             string qual = tipo == TipoBatida.Varrida ? "taco baixo numa bola alta" : "taco alto numa bola baixa";
             Espirrou?.Invoke($"Espirrou! ({qual})");

@@ -95,6 +95,7 @@ namespace BetsDeRua
         /// <summary>Nome de quem controla ("P1") em cima da seta.</summary>
         private void OnGUI()
         {
+            if (Time.timeScale == 0f || HUDPartida.SobreposicaoAberta) return; // pausa ou fim de partida na frente
             if (!estavaVisivel || jogador.Controlador == null) return;
             Camera camera = Camera.main;
             if (camera == null) return;

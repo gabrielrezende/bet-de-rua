@@ -265,6 +265,7 @@ namespace BetsDeRua.Editor
             LigarLista(bots, "defensores", listaDefensores.ToArray());
 
             // ---------- Vindo do menu: pontos, dificuldade e personagens ----------
+            objLance.AddComponent<AmbienteRua>();
             PartidaDoMenu doMenu = objLance.AddComponent<PartidaDoMenu>();
             Ligar(doMenu, "configPartida", configPartida);
             Ligar(doMenu, "gerenciador", gerenciador);

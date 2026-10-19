@@ -22,6 +22,8 @@ namespace BetsDeRua
         public bool CorposAtivos { get; set; }
         /// <summary>A bola tocou no corpo de um jogador (e desviou). Usado para a lancha.</summary>
         public event System.Action<Jogador> TocouNoCorpo;
+        private Garrafa garrafaAtras;
+
         /// <summary>Posição e velocidade da bola logo antes de bater no corpo (para saber se ia na garrafa).</summary>
         public Vector3 PosicaoAntesDoCorpo { get; private set; }
         public Vector3 VelocidadeAntesDoCorpo { get; private set; }
@@ -60,6 +62,18 @@ namespace BetsDeRua
             Parada = false;
             QuicouDesdeLancamento = posicao.y <= FisicaBola.AlturaDoChao(config, posicao.z) + config.raioBola + 0.001f;
             UltimoLancador = lancador;
+            // A garrafa que fica ATRÁS de quem lança (a da casinha de onde ele arremessa) não conta
+            // até a bola se afastar dela: senão a rasteira, que sai rente ao chão, derrubava a própria garrafa
+            garrafaAtras = null;
+            if (garrafas != null)
+                foreach (Garrafa g in garrafas)
+                {
+                    if (g == null) continue;
+                    Vector3 paraGarrafa = g.transform.position - posicaoInicial;
+                    paraGarrafa.y = 0f;
+                    if (paraGarrafa.magnitude < config.distanciaGarrafaAtras && Vector3.Dot(paraGarrafa, new Vector3(velocidadeInicial.x, 0f, velocidadeInicial.z)) < 0f)
+                        garrafaAtras = g;
+                }
             intensidadeCurva = 0f;
             lateralAcumulada = 0f;
             AtualizarVisual();
@@ -116,8 +130,13 @@ namespace BetsDeRua
         {
             bool parada = Parada;
             AplicarCurva(dt);
+            Vector3 antes = velocidade;
             FisicaBola.Passo(config, ref posicao, ref velocidade, ref parada, dt);
             Parada = parada;
+            // Som: quique no chão (a velocidade vertical virou) e batida na parede (a horizontal virou)
+            if (antes.y < -0.8f && velocidade.y > 0f) Sons.Tocar(TipoSom.Quique, Mathf.Clamp01(-antes.y / 7f) * 0.9f);
+            if ((antes.x * velocidade.x < 0f && Mathf.Abs(antes.x) > 1.5f) || (antes.z * velocidade.z < 0f && Mathf.Abs(antes.z) > 1.5f))
+                Sons.Tocar(TipoSom.Parede, Mathf.Clamp01(new Vector2(antes.x, antes.z).magnitude / 12f));
             if (posicao.y <= FisicaBola.AlturaDoChao(config, posicao.z) + config.raioBola + 0.001f) QuicouDesdeLancamento = true;
             // A garrafa usa o tamanho que se VÊ da bola (ela aparece maior que a real, para ler de longe):
             // encostou na tela, derrubou
@@ -193,6 +212,13 @@ namespace BetsDeRua
             foreach (Garrafa garrafa in garrafas)
             {
                 if (garrafa == null || garrafa.Derrubada) continue;
+                if (garrafa == garrafaAtras)
+                {
+                    Vector3 longe = posicao - garrafa.transform.position;
+                    longe.y = 0f;
+                    if (longe.magnitude < config.distanciaGarrafaAtras) continue;
+                    garrafaAtras = null;
+                }
 
                 // Garrafa em pé = cilindro vertical com a base no chão
                 Vector3 baseGarrafa = garrafa.transform.position;

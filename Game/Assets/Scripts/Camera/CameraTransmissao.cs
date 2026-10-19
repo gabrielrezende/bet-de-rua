@@ -132,6 +132,7 @@ namespace BetsDeRua
         /// <summary>Bola fora da tela: seta na borda, apontando para ela, com a distância (GDD, regras de ouro da câmera).</summary>
         private void OnGUI()
         {
+            if (Time.timeScale == 0f || HUDPartida.SobreposicaoAberta) return; // pausa ou fim de partida na frente
             if (!Application.isPlaying || alvo == null || cameraUnity == null || configCamera == null) return;
             Vector3 naTela = cameraUnity.WorldToViewportPoint(alvo.position);
             bool dentro = naTela.z > 0f && naTela.x >= 0f && naTela.x <= 1f && naTela.y >= 0f && naTela.y <= 1f;

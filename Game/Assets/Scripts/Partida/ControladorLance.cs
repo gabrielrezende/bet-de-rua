@@ -87,6 +87,9 @@ namespace BetsDeRua
         /// <summary>Contador da mensagem: muda a cada mensagem nova (o HUD anima a entrada).</summary>
         public int NumeroDaMensagem { get; private set; }
         public bool Treino => treino;
+        /// <summary>Treino de batida: a CPU arremessa sem parar para a pessoa treinar a batida.</summary>
+        public bool TreinoBatida => treinoBatida;
+        private bool treinoBatida;
         public EstatisticasTreino EstatisticasDoTreino { get; } = new EstatisticasTreino();
         private bool treino;
 
@@ -95,6 +98,9 @@ namespace BetsDeRua
         {
             public int arremessos, acertos, sequencia, melhorSequencia;
             public float maiorKmh;
+            // Treino de batida
+            public int rebatidas, perfeitas, erros, queimadas;
+            public float maiorBatidaKmh;
             public string ultimoTipo = "";
             public int Aproveitamento => arremessos > 0 ? Mathf.RoundToInt(100f * acertos / arremessos) : 0;
         }
@@ -130,11 +136,13 @@ namespace BetsDeRua
             bola.TocouNoCorpo += AoLancha;
             NiveisBots.Lance = this;
             treino = SessaoDeJogo.Configurada && SessaoDeJogo.Modo == ModoDeJogo.TreinoArremesso;
+            treinoBatida = SessaoDeJogo.Configurada && SessaoDeJogo.Modo == ModoDeJogo.TreinoBatida;
             inicioDaPartida = Time.time;
             GuardarCoresDosTimes();
             GuardarPerfisDosTimes();
             ProximoLance();
             if (treino) Mostrar("TREINO DE ARREMESSO: derrube a garrafa!");
+            if (treinoBatida) Mostrar("TREINO DE BATIDA: bola no ar R2, bola baixa L2!");
         }
 
         private void OnDestroy()
@@ -188,7 +196,7 @@ namespace BetsDeRua
                     break;
 
                 case EstadoLance.BolaMorta:
-                    if (tempoNoEstado > (treino ? configPartida.tempoTreinoEntreArremessos : configPartida.tempoBolaMorta)) ProximoLance();
+                    if (tempoNoEstado > (treino || treinoBatida ? configPartida.tempoTreinoEntreArremessos : configPartida.tempoBolaMorta)) ProximoLance();
                     break;
 
                 case EstadoLance.TrocaDePapel:
@@ -215,6 +223,33 @@ namespace BetsDeRua
 
         private void AtualizarBolaViva()
         {
+            if (treinoBatida)
+            {
+                LiberarDefensores(false);
+                // A garrafa caiu com o arremesso: no jogo valendo seria troca de papel
+                foreach (Garrafa g in Garrafas)
+                {
+                    if (!g.Derrubada || garrafasAvaliadas.Contains(g)) continue;
+                    garrafasAvaliadas.Add(g);
+                    if (!rebatida)
+                    {
+                        EstatisticasDoTreino.queimadas++;
+                        EstatisticasDoTreino.sequencia = 0;
+                        Mostrar("QUEIMOU! (valendo, seria troca de papel)");
+                        MudarPara(EstadoLance.BolaMorta);
+                        return;
+                    }
+                }
+                // Depois da batida (ou se a bola passou), vem o próximo arremesso
+                float limite = rebatida ? configPartida.tempoTreinoDepoisDaBatida : configPartida.tempoTreinoBolaViva;
+                if (bola.Parada || tempoNoEstado > limite)
+                {
+                    if (!rebatida && rebatedorDaVez != null && rebatedorDaVez.Ativo) { EstatisticasDoTreino.erros++; EstatisticasDoTreino.sequencia = 0; }
+                    rebatedorDaVez?.Encerrar();
+                    MudarPara(EstadoLance.BolaMorta);
+                }
+                return;
+            }
             if (treino)
             {
                 VerificarGarrafas();
@@ -336,7 +371,7 @@ namespace BetsDeRua
         {
             // Rodízio (GDD): a cada lance a defesa arremessa da outra casinha;
             // quem estava guardando atrás da casinha alvo é quem arremessa agora
-            if (primeiroLance || treino)
+            if (primeiroLance || treino || treinoBatida)
             {
                 primeiroLance = false;
                 arremessadorDaVez = arremessador;
@@ -391,6 +426,8 @@ namespace BetsDeRua
 
         private void EntrarTrocaDePapel(string motivo)
         {
+            Sons.Tocar(TipoSom.Queimou, 0.8f, 0f);
+            Vibracao.PulsarTodos(0.8f, 0.4f, 0.35f);
             MudarPara(EstadoLance.TrocaDePapel);
             EncerrarJogadas();
             // A bola segue com a física dela (quica, rola) até o próximo lance; não congela no ar
@@ -405,6 +442,7 @@ namespace BetsDeRua
 
         private void EntrarFimDePartida(int lado)
         {
+            Sons.Tocar(TipoSom.Vitoria, 0.9f, 0f);
             vencedor = lado;
             MudarPara(EstadoLance.FimDePartida);
             EncerrarJogadas();
@@ -426,6 +464,12 @@ namespace BetsDeRua
                 EstatisticasTreino e = EstatisticasDoTreino;
                 e.arremessos = e.acertos = e.sequencia = e.melhorSequencia = 0;
                 e.maiorKmh = 0f;
+            }
+            if (treinoBatida)
+            {
+                EstatisticasTreino e = EstatisticasDoTreino;
+                e.arremessos = e.rebatidas = e.perfeitas = e.erros = e.queimadas = e.sequencia = e.melhorSequencia = 0;
+                e.maiorBatidaKmh = 0f;
             }
             pontos[0] = pontos[1] = 0;
             vencedor = -1;
@@ -562,6 +606,7 @@ namespace BetsDeRua
                     e.sequencia++;
                     e.melhorSequencia = Mathf.Max(e.melhorSequencia, e.sequencia);
                     Mostrar(e.sequencia >= 3 ? $"DERRUBOU! {e.sequencia} SEGUIDAS!" : "DERRUBOU!");
+                    Sons.Tocar(TipoSom.Ponto, 0.7f, 0f);
                     MudarPara(EstadoLance.BolaMorta);
                     return;
                 }
@@ -689,6 +734,7 @@ namespace BetsDeRua
                 MudarPara(EstadoLance.BolaViva);
                 bola.Lancar(saida, velocidade, origem.Jogador);
                 bola.CorposAtivos = !treino; // lancha: o arremesso pode bater no corpo de um rebatedor
+                if (treinoBatida) EstatisticasDoTreino.arremessos++;
                 if (treino)
                 {
                     EstatisticasDoTreino.arremessos++;
@@ -724,7 +770,16 @@ namespace BetsDeRua
             bolaDoArremesso = false;
             bola.CorposAtivos = false;
             rebatedorDaVez.Encerrar();
-            corrida.Ativar();
+            if (!treinoBatida) corrida.Ativar();
+            else
+            {
+                EstatisticasTreino e = EstatisticasDoTreino;
+                e.rebatidas++;
+                if (perfeita) e.perfeitas++;
+                e.sequencia++;
+                e.melhorSequencia = Mathf.Max(e.melhorSequencia, e.sequencia);
+                e.maiorBatidaKmh = Mathf.Max(e.maiorBatidaKmh, kmh);
+            }
             string qualidade = perfeita ? "PERFEITA!" : "Boa";
             resumoBatida = $"{qualidade} {NomeDaBatida(tipo)} · {kmh:0} km/h  ({TextoErro(erroMs)})";
             Mostrar(resumoBatida);
@@ -739,6 +794,7 @@ namespace BetsDeRua
 
         private void AoErrarBatida(string motivo, float erroMs)
         {
+            if (treinoBatida) { EstatisticasDoTreino.erros++; EstatisticasDoTreino.sequencia = 0; }
             bool erroDeTempo = motivo == "Atrasou" || motivo == "Adiantou";
             if (float.IsNaN(erroMs)) resumoBatida = $"Errou: {motivo.ToLower()}";
             else if (erroDeTempo) resumoBatida = $"Errou: {TextoErro(erroMs)}";
@@ -863,6 +919,7 @@ namespace BetsDeRua
 
         private void AoValidarPontos(int cruzadas)
         {
+            Sons.Tocar(TipoSom.Ponto, 0.8f, 0f);
             int meta = configPartida.metaPontos;
             // Já estava em match point: esta cruzada validada fecha o jogo
             if (EmMatchPoint(ladoNoTaco))
@@ -1086,6 +1143,9 @@ namespace BetsDeRua
                         : "DEFESA   R2 / L2 pega a bola · □ carrinho ou peixinho · L1 troca de jogador\n";
             }
             else if (Estado == EstadoLance.TrocaDePapel) instrucoes += "Troca de papel: quem defendia vai para o taco";
+            if (treinoBatida)
+                instrucoes = "Bola NO AR = R2 (taco alto) · bola BAIXA = L2 (taco baixo) · R1 + R2 cavadinha\n" +
+                             "Bata quando o anel fechar · analógico direito escolhe a direção · segure o gatilho para mais força";
             if (treino)
                 instrucoes = "R2 reto (+ analógico dir. para baixo = rasteira) · L2 quicado · R1 pingo · encha o arco até o verde\n" +
                              "Depois de soltar: analógico direito curva, □ bate-pronto";

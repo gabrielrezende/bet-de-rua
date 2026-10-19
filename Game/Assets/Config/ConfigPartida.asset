@@ -55,6 +55,12 @@ MonoBehaviour:
   faltasCorpoParaPerderTaco: 3
   pontosQueimaErrada: 1
   imunidadeGarrafaDePe: 0.6
+  limiteAnalogicoEscolherGarrafa: 0.6
+  tempoTreinoBolaViva: 3.5
+  tempoTreinoEntreArremessos: 1.2
+  tempoTreinoDepoisDaBatida: 2.5
+  folgaParaPessoaNaBola: 1
+  tempoGarrafaCaidaQueimaErrada: 1.2
   caiMetadeAoPerderTacoNoMatchPoint: 1
   pegarNoArPerdeTaco: 0
   afastamentoRebatedor: 0.85

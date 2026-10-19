@@ -75,6 +75,8 @@ namespace BetsDeRua
         public float tempoTreinoBolaViva = 3.5f;
         [Tooltip("Treino: pausa (s) entre um arremesso e o próximo.")]
         public float tempoTreinoEntreArremessos = 1.2f;
+        [Tooltip("Treino de batida: tempo (s) para ver a bola rebatida antes do próximo arremesso.")]
+        public float tempoTreinoDepoisDaBatida = 2.5f;
         [Tooltip("Defesa: o bot parceiro só vai na bola se chegar este tanto (s) antes da pessoa.")]
         public float folgaParaPessoaNaBola = 1.0f;
         [Tooltip("Queimou errado: quanto tempo (s) a garrafa fica caída antes de voltar de pé.")]

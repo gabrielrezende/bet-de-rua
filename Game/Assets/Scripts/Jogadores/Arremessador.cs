@@ -336,6 +336,7 @@ namespace BetsDeRua
         {
             CalcularLancamento(tipo, cargaFinal, true, out Vector3 saida, out Vector3 velocidade, out float kmh);
             TirarBola();
+            Sons.Tocar(TipoSom.Arremesso, Mathf.Lerp(0.3f, 0.75f, Mathf.Clamp01(kmh / 90f)));
             Arremessou?.Invoke(this, saida, velocidade, tipo, kmh);
         }
 
