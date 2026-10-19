@@ -223,9 +223,9 @@ O esquema segue três princípios do FIFA: **poucos botões**, **cada botão com
 - **L1 (LB) = trocar de jogador**, na defesa e no ataque; o analógico direito escolhe um jogador específico.
 - **L2 (LT) = andar devagar / postura**: o guardião anda de lado olhando a bola, como a marcação do FIFA.
 
-**Com a bola na mão para arremessar, o esquema vira "twin-stick"** (decisão do protótipo, Etapa 3): o analógico esquerdo anda, o direito mira, e os gatilhos e botões de cima arremessam — **R2 (RT) forte, R1 (RB) quicado, L2 (LT) pingo**, sempre segurando para encher o arco de força e soltando na faixa verde. Como quem está com a bola não dá sprint (4 m/s), o R1 fica livre para o quicado. Os botões da frente (○, X, △, □) ficam livres nesse momento para efeitos e jogadas especiais (a definir).
+**Com a bola na mão para arremessar, o esquema vira "twin-stick"** (decisão do protótipo, Etapa 3): o analógico esquerdo anda, o direito mira, e os gatilhos e botões de cima arremessam — **R2 (RT) reto, L2 (LT) sempre quicando, R1 (RB) pingo**, sempre segurando para encher o arco de força e soltando na faixa verde. Como quem está com a bola não dá sprint (4 m/s), o R1 fica livre para o pingo. **Curva:** depois de soltar, o analógico direito empurra a bola de lado, com limite (`aceleracaoCurva`, `velocidadeLateralMaximaCurva`), para ficar difícil de rebater sem ficar impossível de acertar a garrafa. **Prévia (protótipo):** enquanto mira, o caminho inteiro da bola aparece no ar, com marcas onde ela quica (`mostrarTrajetoriaCompleta` no `ConfigHUD`; não mostra a curva). (Decisão do protótipo, depois da Etapa 6.) Os botões da frente (○, X, △, □) ficam livres nesse momento para efeitos e jogadas especiais (a definir).
 
-**Taco no chão automático.** (Decisão do protótipo, depois da Etapa 6: volta ao automático e substitui o "segurar L1" da Etapa 5.) Na zona segura da base, o taco desce sozinho e encosta no chão, mesmo andando; aí ele não pode ser queimado. Saiu da zona, o taco levanta, a garrafa fica vermelha e a casinha está exposta. Depois do giro da batida, se ainda estiver dentro, o taco volta ao chão sozinho: a janela de risco é só o giro. Vale igual para pessoas e bots. A tensão continua toda na decisão de quando sair da zona, e o L1 fica livre para trocar de jogador também no ataque. A base segue a rua, vista de cima: a garrafa fica no meio de uma **casinha** de giz pequena (`ladoCasinhaGarrafa`, 35 cm), e encostado na frente dela, do lado do arremesso, há um **retângulo da área do taco** atravessando a rua (`larguraAreaTaco` 1,4 m × `profundidadeAreaTaco` 0,6 m), onde a ponta do taco encosta. Em volta dos dois há uma **zona segura invisível** (`margemZonaSegura`, 60 cm): o rebatedor fica ali, ao lado, e a garrafa nunca some atrás dele. A garrafa é verde-escura com tampa clara, para contrastar com o giz.
+**Taco no chão automático.** (Decisão do protótipo, depois da Etapa 6: volta ao automático e substitui o "segurar L1" da Etapa 5.) Na zona segura da base, o taco desce sozinho e encosta no chão, mesmo andando; aí ele não pode ser queimado. Saiu da zona, o taco levanta, a garrafa fica vermelha e a casinha está exposta. Depois do giro da batida, se ainda estiver dentro, o taco volta ao chão sozinho: a janela de risco é só o giro. Vale igual para pessoas e bots. A tensão continua toda na decisão de quando sair da zona, e o L1 fica livre para trocar de jogador também no ataque. A base segue a rua, vista de cima: a garrafa fica no meio de uma **casinha** de giz pequena (`ladoCasinhaGarrafa`, 35 cm), e encostado na frente dela, do lado do arremesso, há um **retângulo da área do taco** atravessando a rua (`larguraAreaTaco` 1,4 m × `profundidadeAreaTaco` 0,6 m), onde a ponta do taco encosta. Em volta dos dois há uma **zona segura invisível** (`margemZonaSegura`, 60 cm): o rebatedor fica ali, ao lado, e a garrafa nunca some atrás dele. A garrafa é verde-escura com tampa clara, para contrastar com o giz, e mais gorda que uma PET de verdade (18 cm, `diametroGarrafa`) para ficar justa de acertar. **Leitura da zona:** fora da zona segura o taco levanta só um pouco (a ponta sai do chão, `anguloTacoLevantado`), e um sinal em cima da cabeça de cada rebatedor fica verde quando ele está seguro e vermelho na zona de perigo.
 
 **Atacando (rebatedor)**
 
@@ -258,9 +258,10 @@ O esquema segue três princípios do FIFA: **poucos botões**, **cada botão com
 | --- | --- | --- |
 | Andar com a bola | Analógico esquerdo | Até 4 m/s, sem sprint. Pode ir para trás e para os lados, mas não passa à frente da própria garrafa (rumo ao alvo) |
 | Mirar | Analógico direito | Solto = meio da garrafa alvo; empurrado = até 2 m para o lado. Círculo amarelo na garrafa e linha curta no chão |
-| Arremesso forte | R2 (RT), segurar e soltar | Reto e rápido, 55 a 90 km/h |
-| Arremesso quicado | R1 (RB), segurar e soltar | Quica pouco antes da garrafa e sobe nela, 45 a 65 km/h; mais difícil de rebater bem |
-| Pingo | L2 (LT), segurar e soltar | Alto e lento, cai por cima da garrafa, 32 a 45 km/h |
+| Arremesso reto | R2 (RT), segurar e soltar | Reto e rápido, 55 a 90 km/h |
+| Arremesso quicado | L2 (LT), segurar e soltar | Quica pouco antes da garrafa e sobe nela, 45 a 65 km/h; mais difícil de rebater bem |
+| Pingo | R1 (RB), segurar e soltar | Alto e lento, cai por cima da garrafa, 32 a 45 km/h |
+| Curva | Analógico direito, depois de soltar | Empurra a bola de lado enquanto ninguém rebateu; tem limite |
 | Arco de força | Segurando qualquer um dos três | Enche ao lado do jogador. Soltar na faixa verde = força e precisão máximas; antes = mais lento e um pouco torto; depois = bola desgovernada |
 | Efeito | Botões da frente (a definir) | Antes o efeito ia no analógico direito; com ele mirando, o efeito passa para os botões da frente (ver Arsenal de efeitos) |
 | Finta | A definir (botão da frente) | Ameaça arremessar e faz o rebatedor bater antes da hora |
@@ -320,7 +321,7 @@ Como o beisebol tem nome para cada arremesso, o bets ganha o seu repertório com
 | Correr / sair da base / mais uma | Shift |
 | Andar devagar / postura de goleiro | Alt |
 | Ação forte | Clique esquerdo (segurar e soltar) |
-| Arremesso forte / quicado / pingo (com a bola) | Clique esquerdo / clique direito / E (segurar e soltar) |
+| Arremesso reto / quicado / pingo (com a bola) | Reto: clique esquerdo · quicado: E · pingo: clique direito (segurar e soltar) |
 | Ação curta (toque, quicado, passe, cruzar) | Espaço |
 | Por cima | E |
 | Colocado / efeito | Ctrl + ação |

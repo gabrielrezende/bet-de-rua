@@ -6,7 +6,7 @@ namespace BetsDeRua
     /// O taco do rebatedor. Este objeto é o pivô na mão; o taco visível é filho dele.
     /// Taco no chão automático: na zona segura da base (ver ZonaDoTaco), o taco desce e
     /// encosta no chão (seguro, não pode ser queimado), mesmo andando. Saiu da zona,
-    /// ele sobe para o ombro. Depois do giro da batida, volta ao chão sozinho se ainda estiver dentro.
+    /// ele levanta um pouco (a ponta sai do chão). Depois do giro da batida, volta ao chão sozinho se ainda estiver dentro.
     /// </summary>
     public class Taco : MonoBehaviour
     {
@@ -31,7 +31,7 @@ namespace BetsDeRua
         private void Start()
         {
             NoChao = DeveFicarNoChao();
-            anguloAtual = NoChao ? AnguloNoChao() : AnguloOmbro;
+            anguloAtual = NoChao ? AnguloNoChao() : AnguloNoChao() - config.anguloTacoLevantado;
             Aplicar();
         }
 
@@ -54,7 +54,8 @@ namespace BetsDeRua
             }
 
             bool deveFicarNoChao = DeveFicarNoChao();
-            float alvo = deveFicarNoChao ? AnguloNoChao() : AnguloOmbro;
+            // Fora da zona: o taco levanta só um pouco (ponta acima do chão), não vai para o ombro
+            float alvo = deveFicarNoChao ? AnguloNoChao() : AnguloNoChao() - config.anguloTacoLevantado;
             anguloAtual = Mathf.SmoothDamp(anguloAtual, alvo, ref velocidadeAngulo, config.tempoMovimentoTaco);
             // Só conta como "no chão" quando chegou lá de verdade
             NoChao = deveFicarNoChao && Mathf.Abs(anguloAtual - alvo) < 2f;

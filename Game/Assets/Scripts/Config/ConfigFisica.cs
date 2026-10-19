@@ -78,6 +78,11 @@ namespace BetsDeRua
         public float forcaDerrubada = 1f;
         [Tooltip("Bolada fraca (não derruba): quanto da velocidade a bola guarda ao voltar da garrafa (0 a 1).")]
         [Range(0f, 1f)] public float quiqueGarrafa = 0.4f;
+        [Tooltip("Curva: depois de soltar o arremesso, o analógico direito empurra a bola de lado com esta aceleração (m/s²).")]
+        public float aceleracaoCurva = 6f;
+        [Tooltip("Curva: o máximo de velocidade de lado que ela pode ganhar no total (m/s). Limita o quanto a bola " +
+                 "desvia, para continuar dando para acertar a garrafa.")]
+        public float velocidadeLateralMaximaCurva = 1.5f;
         [Tooltip("Lancha: quanto da velocidade a bola guarda ao desviar no corpo do rebatedor (0 a 1).")]
         [Range(0f, 1f)] public float quiqueCorpo = 0.3f;
         [Tooltip("Bolada que derruba: a bola segue em frente guardando esta parte da velocidade (0 a 1).")]
@@ -136,6 +141,8 @@ namespace BetsDeRua
         public float velocidadeParadoJogador = 0.2f;
         [Tooltip("Tempo (s) para o taco subir ou descer.")]
         public float tempoMovimentoTaco = 0.12f;
+        [Tooltip("Fora da zona segura o taco levanta este tanto (graus) a partir do chão: a ponta sai do chão, sem ir para o ombro.")]
+        public float anguloTacoLevantado = 25f;
 
         [Header("Arremesso: soltura")]
         [Tooltip("Altura da mão na hora de soltar a bola (m).")]

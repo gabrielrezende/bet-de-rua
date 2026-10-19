@@ -23,6 +23,16 @@ namespace BetsDeRua
         public float duracaoPiscar = 0.4f;
         [Tooltip("Quanto o marcador cresce na piscada (1 = nada).")]
         public float escalaPiscar = 1.6f;
+
+        [Header("Sinal de zona do rebatedor (verde = seguro, vermelho = perigo)")]
+        [Tooltip("Altura do sinal acima da cabeça (m). Fica abaixo do triângulo do jogador controlado.")]
+        public float alturaSinalZona = 0.18f;
+        [Tooltip("Tamanho (diâmetro) do sinal (m).")]
+        public float tamanhoSinalZona = 0.22f;
+        [Tooltip("Cor do sinal quando o rebatedor está seguro. Mudou? Rode Bets > Montar cena Prototipo.")]
+        public Color corZonaSegura = new Color(0.2f, 0.9f, 0.3f);
+        [Tooltip("Cor do sinal na zona de perigo. Mudou? Rode Bets > Montar cena Prototipo.")]
+        public Color corZonaPerigo = new Color(0.95f, 0.2f, 0.15f);
     
         [Header("Mira do arremesso")]
         [Tooltip("Raio do círculo amarelo em volta da garrafa alvo (m).")]
@@ -35,6 +45,15 @@ namespace BetsDeRua
         public float espacoTraco = 0.3f;
         [Tooltip("Largura da linha pontilhada (m).")]
         public float larguraTraco = 0.07f;
+        [Tooltip("Protótipo: mostra o caminho inteiro da bola no ar enquanto mira, com marcas onde ela quica " +
+                 "(sem a curva do analógico). Bom para testar; desligue para o jogo de verdade.")]
+        public bool mostrarTrajetoriaCompleta = true;
+        [Tooltip("Quantos segundos de voo a prévia mostra.")]
+        public float duracaoPrevia = 2f;
+        [Tooltip("Distância em tempo (s) entre os pontos da linha da prévia. Menor = curva mais lisa.")]
+        public float intervaloPontosPrevia = 0.03f;
+        [Tooltip("Diâmetro da marca de quique no chão (m).")]
+        public float tamanhoMarcaQuique = 0.35f;
         [Tooltip("Comprimento máximo da linha de mira (m). Curta = mostra só a direção, sem entregar " +
                  "o ponto exato para quem rebate (todo mundo vê a mesma tela no sofá). 0 = linha inteira.")]
         public float comprimentoMaximoLinha = 5f;

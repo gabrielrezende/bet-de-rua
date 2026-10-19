@@ -176,6 +176,7 @@ namespace BetsDeRua
                 portador.Parceiro = OutroDefensor(portador.Jogador);
             }
             LiberarDefensores(portador == null);
+            ControlarCurva();
 
             VerificarGarrafas();
             if (Estado != EstadoLance.BolaViva) return;
@@ -187,6 +188,27 @@ namespace BetsDeRua
             tempoSeguro = prontoParaArremessar ? tempoSeguro + Time.deltaTime : 0f;
             if (tempoSeguro >= configPartida.tempoSeguroParaEncerrar) ArremessarDeNovoSemParar();
             else if (tempoNoEstado > configPartida.tempoMaximoBolaViva) EntrarBolaMorta("Tempo esgotado");
+        }
+
+        /// <summary>
+        /// Curva do arremesso: depois de soltar, enquanto ninguém rebateu ou pegou, o analógico
+        /// direito de quem arremessou empurra a bola de lado (para cima ou para baixo da tela,
+        /// já que o arremesso corre de lado na câmera).
+        /// </summary>
+        private void ControlarCurva()
+        {
+            ControleHumano humano = arremessadorDaVez != null ? arremessadorDaVez.Jogador.Controlador : null;
+            bool podeCurvar = !rebatida && portador == null && humano != null && humano.Conectado
+                              && bola.UltimoLancador == arremessadorDaVez.Jogador;
+            if (!podeCurvar) { bola.DefinirCurva(Vector3.zero, 0f); return; }
+
+            Vector3 rumo = bola.Velocidade;
+            rumo.y = 0f;
+            Vector3 eixoLateral = Vector3.Cross(Vector3.up, rumo);
+            Vector2 analogico = humano.MiraAnalogica;
+            Vector3 empurrao = new Vector3(analogico.x, 0f, analogico.y);
+            float intensidade = eixoLateral.sqrMagnitude > 0.0001f ? Vector3.Dot(empurrao, eixoLateral.normalized) : 0f;
+            bola.DefinirCurva(eixoLateral, intensidade);
         }
 
         /// <summary>
@@ -732,7 +754,8 @@ namespace BetsDeRua
             if (Estado == EstadoLance.Arremesso)
             {
                 instrucoes += bolaHumano
-                    ? "ARREMESSO: R2 / clique esq. forte · R1 / clique dir. quicado · L2 / E pingo (solte na faixa verde)\n"
+                    ? "ARREMESSO: R2 / clique esq. reto · L2 / E quicado · R1 / clique dir. pingo (solte na faixa verde)\n" +
+                      "   depois de soltar: analógico direito faz a bola curvar\n"
                     : "ARREMESSO: a CPU arremessa (Select / Tab troca de dupla)\n";
                 if (tacoHumano)
                     instrucoes += "REBATEDOR: dentro do círculo o taco fica no chão sozinho (garrafa vermelha = fora, pode ser queimada)\n" +

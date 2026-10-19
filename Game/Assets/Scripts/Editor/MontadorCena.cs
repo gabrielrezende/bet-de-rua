@@ -124,7 +124,9 @@ namespace BetsDeRua.Editor
             // para não esconder a garrafa da câmera). Dupla da bola: arremessador atrás da
             // garrafa A, guardião atrás da garrafa B.
             GameObject raizJogadores = new GameObject("Jogadores");
-            var montagem = new MontagemJogador(config, configHUD, matRosto, matTaco, matMarcadorGiz);
+            Material matZonaSegura = CriarMaterial("SinalZonaSegura", configHUD.corZonaSegura, true);
+            Material matZonaPerigo = CriarMaterial("SinalZonaPerigo", configHUD.corZonaPerigo, true);
+            var montagem = new MontagemJogador(config, configHUD, matRosto, matTaco, matMarcadorGiz, matZonaSegura, matZonaPerigo);
             float lado = configPartida.afastamentoRebatedor;
             Jogador rebatedorB = montagem.Criar("RebatedorB", "Rebatedor B", Dupla.Taco, Papel.Rebatedor,
                 new Vector3(meioBases, 0f, lado), Vector3.left, matDuplaTaco, matMarcadorTaco, raizJogadores.transform);
@@ -161,6 +163,13 @@ namespace BetsDeRua.Editor
             Ligar(mira, "configHUD", configHUD);
             Ligar(mira, "materialMira", matMira);
 
+            // Prévia da trajetória inteira (protótipo: liga e desliga no ConfigHUD)
+            GameObject objPrevia = new GameObject("PreviaTrajetoria");
+            PreviaTrajetoria previa = objPrevia.AddComponent<PreviaTrajetoria>();
+            Ligar(previa, "configFisica", config);
+            Ligar(previa, "configHUD", configHUD);
+            Ligar(previa, "material", matMira);
+
             GameObject objArco = new GameObject("ArcoForca");
             ArcoForca arco = objArco.AddComponent<ArcoForca>();
             Ligar(arco, "configHUD", configHUD);
@@ -179,6 +188,7 @@ namespace BetsDeRua.Editor
                 Ligar(comBola, "configPartida", configPartida);
                 Ligar(comBola, "mira", mira);
                 Ligar(comBola, "arco", arco);
+                Ligar(comBola, "previa", previa);
                 if (defensorJogador == arremessador) arremessadorComp = comBola;
 
                 Defensor defensor = defensorJogador.gameObject.AddComponent<Defensor>();
@@ -426,15 +436,20 @@ namespace BetsDeRua.Editor
             private readonly Material matRosto;
             private readonly Material matTaco;
             private readonly Material matGiz;
+            private readonly Material matZonaSegura;
+            private readonly Material matZonaPerigo;
 
             public MontagemJogador(ConfigFisica config, ConfigHUD configHUD,
-                                   Material matRosto, Material matTaco, Material matGiz)
+                                   Material matRosto, Material matTaco, Material matGiz,
+                                   Material matZonaSegura, Material matZonaPerigo)
             {
                 this.config = config;
                 this.configHUD = configHUD;
                 this.matRosto = matRosto;
                 this.matTaco = matTaco;
                 this.matGiz = matGiz;
+                this.matZonaSegura = matZonaSegura;
+                this.matZonaPerigo = matZonaPerigo;
             }
 
             public Jogador Criar(string nomeObjeto, string nome, Dupla dupla, Papel papel, Vector3 posicao,
@@ -482,7 +497,18 @@ namespace BetsDeRua.Editor
                 dados.FindProperty("nome").stringValue = nome;
                 dados.ApplyModifiedPropertiesWithoutUndo();
 
-                if (papel == Papel.Rebatedor) CriarTaco(raiz.transform, jogador);
+                if (papel == Papel.Rebatedor)
+                {
+                    CriarTaco(raiz.transform, jogador);
+                    // Sinal em cima da cabeça: verde = seguro, vermelho = zona de perigo
+                    SinalZona sinal = raiz.AddComponent<SinalZona>();
+                    Ligar(sinal, "configHUD", configHUD);
+                    Ligar(sinal, "configFisica", config);
+                    Ligar(sinal, "jogador", jogador);
+                    Ligar(sinal, "taco", raiz.GetComponentInChildren<Taco>());
+                    Ligar(sinal, "materialSeguro", matZonaSegura);
+                    Ligar(sinal, "materialPerigo", matZonaPerigo);
+                }
 
                 MarcadorJogador marcador = raiz.AddComponent<MarcadorJogador>();
                 Ligar(marcador, "configHUD", configHUD);

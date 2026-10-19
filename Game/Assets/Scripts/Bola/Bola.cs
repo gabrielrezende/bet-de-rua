@@ -23,6 +23,11 @@ namespace BetsDeRua
         /// <summary>A bola tocou no corpo de um jogador (e desviou). Usado para a lancha.</summary>
         public event System.Action<Jogador> TocouNoCorpo;
 
+        // Curva do arremesso (analógico direito depois de soltar): empurra a bola de lado
+        private Vector3 eixoCurva;
+        private float intensidadeCurva;     // -1 a 1
+        private float lateralAcumulada;     // quanto de velocidade de lado a curva já deu (m/s)
+
         // Posição "física" do centro da bola (o visual fica um pouco acima, por ser maior)
         private Vector3 posicao;
         private Vector3 velocidade;
@@ -52,7 +57,20 @@ namespace BetsDeRua
             Parada = false;
             QuicouDesdeLancamento = posicao.y <= config.raioBola + 0.001f;
             UltimoLancador = lancador;
+            intensidadeCurva = 0f;
+            lateralAcumulada = 0f;
             AtualizarVisual();
+        }
+
+        /// <summary>
+        /// Curva: empurra a bola de lado, no eixo 'eixoLateral' (no chão), com 'intensidade'
+        /// de -1 a 1. Há um limite de quanto ela pode desviar no total (ConfigFisica).
+        /// </summary>
+        public void DefinirCurva(Vector3 eixoLateral, float intensidade)
+        {
+            eixoLateral.y = 0f;
+            eixoCurva = eixoLateral.sqrMagnitude > 0.0001f ? eixoLateral.normalized : Vector3.zero;
+            intensidadeCurva = Mathf.Clamp(intensidade, -1f, 1f);
         }
 
         /// <summary>Para a bola numa posição.</summary>
@@ -84,11 +102,22 @@ namespace BetsDeRua
         private void Simular(float dt)
         {
             bool parada = Parada;
+            AplicarCurva(dt);
             FisicaBola.Passo(config, ref posicao, ref velocidade, ref parada, dt);
             Parada = parada;
             if (posicao.y <= config.raioBola + 0.001f) QuicouDesdeLancamento = true;
             if (!Parada) ColidirComGarrafas(config.raioBola);
             if (!Parada && CorposAtivos) ColidirComCorpos(config.raioBola);
+        }
+
+        private void AplicarCurva(float dt)
+        {
+            if (Mathf.Approximately(intensidadeCurva, 0f) || eixoCurva == Vector3.zero) return;
+            float limite = config.velocidadeLateralMaximaCurva;
+            float dv = intensidadeCurva * config.aceleracaoCurva * dt;
+            float nova = Mathf.Clamp(lateralAcumulada + dv, -limite, limite);
+            velocidade += eixoCurva * (nova - lateralAcumulada);
+            lateralAcumulada = nova;
         }
 
         /// <summary>Corpo = cilindro em pé (raio e altura do jogador). Bateu: desvia e avisa.</summary>

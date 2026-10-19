@@ -33,6 +33,8 @@ namespace BetsDeRua
         [SerializeField] private MiraNoChao mira;
         [Tooltip("Arco de força (dividido entre os defensores).")]
         [SerializeField] private ArcoForca arco;
+        [Tooltip("Prévia do caminho inteiro da bola (dividida entre os defensores).")]
+        [SerializeField] private PreviaTrajetoria previa;
 
         private Jogador jogador;
         private Camera cameraPrincipal;
@@ -128,6 +130,14 @@ namespace BetsDeRua
             {
                 jogador.OlharPara(pontoMira - transform.position);
                 mira.Mostrar(PosicaoMao, pontoMira, Alvo.transform.position);
+                // Prévia do caminho inteiro: só nos lances que usam o arco (não no passe)
+                bool lanceDeArco = !carregando || (tipoCarregando != TipoArremesso.Passe && tipoCarregando != TipoArremesso.Lancamento);
+                if (previa != null && lanceDeArco)
+                {
+                    PreviaDoLancamento(out Vector3 saida, out Vector3 velocidade);
+                    previa.Mostrar(saida, velocidade);
+                }
+                else if (previa != null) previa.Esconder();
                 mostrandoVisuais = true;
             }
         }
@@ -137,6 +147,7 @@ namespace BetsDeRua
             if (!mostrandoVisuais) return;
             mira.Esconder();
             arco.Esconder();
+            if (previa != null) previa.Esconder();
             mostrandoVisuais = false;
         }
 
@@ -244,12 +255,16 @@ namespace BetsDeRua
             Soltar(tipo, cargaBot);
         }
 
+        /// <summary>
+        /// Arremesso: R2 reto (forte), L2 sempre quicando, R1 pingo (por cima).
+        /// Campo: R2 chute na garrafa, R1 passe, L2 lançamento para o colega.
+        /// </summary>
         private bool BotaoSegurado(ControleHumano humano, out TipoArremesso tipo)
         {
             bool campo = Modo == ModoComBola.Campo;
             if (humano.SegurandoGatilhoForte) { tipo = TipoArremesso.Forte; return true; }
-            if (humano.SegurandoGatilhoCurto) { tipo = campo ? TipoArremesso.Passe : TipoArremesso.Quicado; return true; }
-            if (humano.SegurandoGatilhoPorCima) { tipo = campo ? TipoArremesso.Lancamento : TipoArremesso.Pingo; return true; }
+            if (humano.SegurandoGatilhoPorCima) { tipo = campo ? TipoArremesso.Lancamento : TipoArremesso.Quicado; return true; }
+            if (humano.SegurandoGatilhoCurto) { tipo = campo ? TipoArremesso.Passe : TipoArremesso.Pingo; return true; }
             tipo = TipoArremesso.Forte;
             return false;
         }
@@ -259,16 +274,29 @@ namespace BetsDeRua
             switch (tipo)
             {
                 case TipoArremesso.Quicado:
-                case TipoArremesso.Passe: return humano.SegurandoGatilhoCurto;
-                case TipoArremesso.Pingo:
                 case TipoArremesso.Lancamento: return humano.SegurandoGatilhoPorCima;
+                case TipoArremesso.Pingo:
+                case TipoArremesso.Passe: return humano.SegurandoGatilhoCurto;
                 default: return humano.SegurandoGatilhoForte;
             }
         }
 
         private void Soltar(TipoArremesso tipo, float cargaFinal)
         {
-            Vector3 saida = PosicaoMao;
+            CalcularLancamento(tipo, cargaFinal, true, out Vector3 saida, out Vector3 velocidade, out float kmh);
+            TirarBola();
+            Arremessou?.Invoke(this, saida, velocidade, tipo, kmh);
+        }
+
+        /// <summary>
+        /// A conta do lançamento: de onde a bola sai, com que velocidade e quantos km/h.
+        /// comErro = true sorteia o desvio de soltar fora da faixa verde (o lançamento de verdade);
+        /// false dá o caminho "limpo" (a prévia da trajetória na mira).
+        /// </summary>
+        private void CalcularLancamento(TipoArremesso tipo, float cargaFinal, bool comErro,
+                                        out Vector3 saida, out Vector3 velocidade, out float kmh)
+        {
+            saida = PosicaoMao;
             bool passeParaColega = tipo == TipoArremesso.Passe || tipo == TipoArremesso.Lancamento;
 
             // Passe e lançamento vão direto no colega; o resto vai no ponto mirado
@@ -280,7 +308,6 @@ namespace BetsDeRua
 
             // Velocidade na horizontal: o arco enche até o fim da faixa verde (passes: fixa)
             float fracao = Mathf.Clamp01(cargaFinal / Mathf.Max(0.01f, config.fimFaixaVerde));
-            float kmh;
             switch (tipo)
             {
                 case TipoArremesso.Quicado: kmh = Mathf.Lerp(config.quicadoMinimaKmh, config.quicadoMaximaKmh, fracao); break;
@@ -316,22 +343,31 @@ namespace BetsDeRua
 
             // Precisão (só no que usa o arco): perfeita na faixa verde, um pouco torta antes, desgovernada depois
             float erroGraus = 0f;
-            if (!passeParaColega && cargaFinal > config.fimFaixaVerde)
+            if (comErro && !passeParaColega && cargaFinal > config.fimFaixaVerde)
             {
                 float sinal = UnityEngine.Random.value < 0.5f ? -1f : 1f;
                 erroGraus = sinal * UnityEngine.Random.Range(config.erroDesgovernadaMinimo, config.erroDesgovernadaMaximo);
                 subida *= 1f + config.subidaExtraDesgovernada * UnityEngine.Random.Range(0.5f, 1f);
             }
-            else if (!passeParaColega && cargaFinal < config.inicioFaixaVerde)
+            else if (comErro && !passeParaColega && cargaFinal < config.inicioFaixaVerde)
             {
                 float falta = 1f - cargaFinal / Mathf.Max(0.01f, config.inicioFaixaVerde);
                 erroGraus = UnityEngine.Random.Range(-1f, 1f) * config.erroMaximoAntesDaFaixa * falta;
             }
             direcao = Quaternion.AngleAxis(erroGraus, Vector3.up) * direcao;
 
-            Vector3 velocidade = direcao * rapidezHorizontal + Vector3.up * subida;
-            TirarBola();
-            Arremessou?.Invoke(this, saida, velocidade, tipo, kmh);
+            velocidade = direcao * rapidezHorizontal + Vector3.up * subida;
+        }
+
+        /// <summary>
+        /// Prévia (para a mira): a velocidade de saída "limpa" do tipo que está sendo carregado,
+        /// ou do forte no meio da faixa verde quando ainda não segurou nada.
+        /// </summary>
+        private void PreviaDoLancamento(out Vector3 saida, out Vector3 velocidade)
+        {
+            TipoArremesso tipo = carregando ? tipoCarregando : TipoArremesso.Forte;
+            float cargaPrevia = carregando ? carga : (config.inicioFaixaVerde + config.fimFaixaVerde) * 0.5f;
+            CalcularLancamento(tipo, cargaPrevia, false, out saida, out velocidade, out _);
         }
     }
 }
