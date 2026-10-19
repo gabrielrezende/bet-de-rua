@@ -420,6 +420,7 @@ Aceleração e freada têm peso: mudar de direção bruscamente custa meio passo
 
 1. **Arremesso.** O arremessador mira a garrafa do outro lado com o analógico direito e arremessa com R2 (RT) forte, R1 (RB) quicado ou L2 (LT) pingo. O rebatedor espera dentro do círculo com o taco no chão (automático enquanto estiver parado no círculo).
 2. **Batida.** O rebatedor rebate com ○ (B) forte, X (A) toque ou △ (Y) cavadinha. A bola fica viva: começa a parte "futebol".
+   - **Batida mal encaixada (a pesquisar no protótipo):** como na rua, nem toda batida sai limpa. Bola rasteira pode **espirrar** no taco e correr para trás, ou **pular por cima do taco** e derrubar a própria garrafa. Mesmo acertando a bola, ela pode pegar de raspão e ir para trás (o "para trás"). Acontece muito com taco redondo, como o cabo de vassoura. A ideia é que a chance de espirrar cresça com a bola rasteira ou quicando torto, com o tempo da batida mais longe do ideal e com o tipo de taco. Hoje o protótipo trata a garrafa derrubada pela própria batida como "não conta"; pela regra da rua (seção "Regras"), ela tira os tacos da dupla, e isso precisa ser decidido junto com a batida espirrada.
 3. **Bola viva: a defesa vai na bola.** O jogador de defesa mais perto vira o ativo automaticamente (troca com L1 / LB). Ele corre com o analógico e R2, guiado pelo círculo no chão que mostra onde a bola vai cair ou parar.
 4. **Dominar a bola.** Perto da bola (até 1 m), □ (X) pega. No chão: dominada em 0,3 s. No ar: aparece um anel encolhendo; apertar □ quando ele fecha pega antes de quicar e o ataque perde o taco. Errar o tempo faz a bola espirrar da mão.
 5. **Com a bola na mão, três escolhas:**
@@ -761,6 +762,23 @@ Cada ambiente tem um jeito próprio de quicar a bola e um detalhe de infância; 
 | Beira-mar | Calçadão de pedra portuguesa | Coqueiro, carrinho de mate e biscoito | Temporada de verão |
 | Rua de festa junina | Terra com bandeirinhas | Fogueira, quadrilha ao fundo | Evento de junho |
 | Noite no poste | Qualquer chão, luz de poste | Mariposas, só a área iluminada é clara | Variante noturna |
+
+**Tipos de taco e de bola (jogabilidade, a pesquisar)**
+
+Além das skins (só visuais), a ideia é ter **tipos** de taco e de bola com jeitos diferentes de jogar, sempre trocando uma vantagem por uma desvantagem, para nenhum ser simplesmente melhor:
+
+| Tipo | Ponto forte | Ponto fraco |
+| --- | --- | --- |
+| Cabo de vassoura (redondo) | Batida mais forte, bola vai longe | Menos preciso; espirra mais e a bola corre para trás com mais frequência |
+| Taco reto (tábua) | Batida mais precisa, espirra pouco | Menos força |
+| Taco de beisebol | Muita força na batida forte | Pesado: o giro demora mais, a janela de tempo é mais apertada |
+| Taco de hóquei | Bom para bola rasteira e para "varrer" a bola de lado | Ruim para cavadinha |
+| Bola pesada | Mais difícil de rebater longe; derruba a garrafa mesmo devagar | Pega pouco efeito |
+| Bola leve | Pega muito efeito (curva) | Vai longe na batida; o vento e o quique mexem mais nela |
+
+- A dupla escolhe o taco e a bola antes da partida; no ranqueado, todos os tipos ficam liberados para todos, para não virar "pagar para ganhar". O que se compra ou ganha são as skins e as pinturas.
+- Skins de taco por cima de qualquer tipo: pintado, desenhado, com fita, criado pela comunidade.
+- No protótipo, os números de força, precisão, chance de espirrar, peso e efeito viram campos no `ConfigFisica`, para testar um tipo de cada vez.
 
 **Skins de taco**
 
