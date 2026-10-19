@@ -253,6 +253,13 @@ namespace BetsDeRua.Editor
             LigarLista(lance, "rebatedores", listaRebatedores.ToArray());
             Ligar(lance, "gerenciador", gerenciador);
 
+            // Log da partida (Game/Logs/Partida.log)
+            RegistroPartida registro = objLance.AddComponent<RegistroPartida>();
+            Ligar(registro, "configPartida", configPartida);
+            Ligar(registro, "lance", lance);
+            Ligar(registro, "bola", bola);
+            LigarLista(registro, "jogadores", System.Array.ConvertAll(todosJogadores, j => (Object)j));
+
             // ---------- Corrida (cruzada e pontos) ----------
             Corrida corrida = objLance.AddComponent<Corrida>();
             Ligar(corrida, "configPartida", configPartida);

@@ -126,6 +126,8 @@ namespace BetsDeRua
 
         private bool AlguemApertouCruzar()
         {
+            // Cruzada automática: os dois se encontraram no meio, já vale (sem botão)
+            if (configPartida.cruzadaAutomatica) return true;
             bool temHumano = false;
             foreach (Jogador rebatedor in new[] { rebatedorA, rebatedorB })
             {
@@ -140,6 +142,13 @@ namespace BetsDeRua
 
         private void Cruzar()
         {
+            // Os dois batem os tacos em X, no alto, um na direção do outro; "TEC!" no ponto do encontro
+            Vector3 a = rebatedorA.transform.position, b = rebatedorB.transform.position;
+            tacoA?.BaterNoOutroTaco(b - a);
+            tacoB?.BaterNoOutroTaco(a - b);
+            pontoDoTec = (a + b) * 0.5f + Vector3.up * (configFisica.alturaJogador + 0.3f);
+            tempoDoTec = 0f;
+
             PontosPendentes++;
             // Agora cada um tem que chegar na base do outro lado (saiu da última em que encostou)
             esperandoChegarNaBase = true;
@@ -147,6 +156,29 @@ namespace BetsDeRua
             baseDeSaidaA = ultimaBaseA;
             baseDeSaidaB = ultimaBaseB;
             Cruzou?.Invoke(PontosPendentes);
+        }
+
+        private Vector3 pontoDoTec;
+        private float tempoDoTec = float.MaxValue;
+        private const float DuracaoTec = 0.7f;
+
+        /// <summary>"TEC!" amarelo no ponto onde os tacos se cruzaram, subindo e sumindo.</summary>
+        private void OnGUI()
+        {
+            if (tempoDoTec >= DuracaoTec) return;
+            tempoDoTec += Time.deltaTime;
+            Camera camera = Camera.main;
+            if (camera == null) return;
+            Vector3 tela = camera.WorldToScreenPoint(pontoDoTec);
+            if (tela.z <= 0f) return;
+            float t = tempoDoTec / DuracaoTec;
+            GUIStyle estilo = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = Mathf.RoundToInt(Mathf.Lerp(42f, 30f, t)), fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter
+            };
+            estilo.normal.textColor = new Color(1f, 0.85f, 0.1f, 1f - t);
+            float y = Screen.height - tela.y - 40f * t;
+            GUI.Label(new Rect(tela.x - 100f, y - 30f, 200f, 60f), "TEC!", estilo);
         }
 
         private void MostrarAnel(Vector3 a, Vector3 b)

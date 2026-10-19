@@ -47,6 +47,21 @@ namespace BetsDeRua
             return new Vector3(ponto.x < 0f ? -meio : meio, 0f, 0f);
         }
 
+        /// <summary>Quanto falta (m) de 'ponto' até a borda da zona segura da garrafa em 'posicaoGarrafa' (0 = dentro).</summary>
+        public static float DistanciaAteZona(Vector3 ponto, Vector3 posicaoGarrafa, ConfigFisica config)
+        {
+            float margem = config.margemZonaSegura;
+            float paraOArremesso = ParaOArremesso(posicaoGarrafa);
+            float atras = -config.ladoCasinhaGarrafa * 0.5f - margem;
+            float frente = config.ladoCasinhaGarrafa * 0.5f + config.profundidadeAreaTaco + margem;
+            float meiaLargura = Mathf.Max(config.larguraAreaTaco, config.ladoCasinhaGarrafa) * 0.5f + margem;
+            float u = (ponto.x - posicaoGarrafa.x) * paraOArremesso;
+            float z = Mathf.Abs(ponto.z - posicaoGarrafa.z);
+            float foraU = u < atras ? atras - u : u > frente ? u - frente : 0f;
+            float foraZ = Mathf.Max(0f, z - meiaLargura);
+            return Mathf.Sqrt(foraU * foraU + foraZ * foraZ);
+        }
+
         /// <summary>True se 'ponto' está na zona segura de alguma das duas bases.</summary>
         public static bool NaZonaSeguraDeAlguma(Vector3 ponto, ConfigFisica config)
         {

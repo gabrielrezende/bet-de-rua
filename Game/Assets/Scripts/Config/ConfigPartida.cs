@@ -12,11 +12,27 @@ namespace BetsDeRua
         [Header("Partida")]
         [Tooltip("Meta de pontos. Chegando nela, a dupla entra em match point e precisa fechar.")]
         public int metaPontos = 10;
+
+        [Header("Log da partida (Game/Logs/Partida.log)")]
+        [Tooltip("Grava tudo o que acontece na partida, em ordem de tempo, para entender depois.")]
+        public bool gravarLog = true;
+        [Tooltip("De quantos em quantos segundos o log tira uma 'foto' de todos os jogadores e da bola.")]
+        public float intervaloFotoLog = 0.5f;
         [Tooltip("Quanto vale cada cruzada validada. GDD: 1 no padrão, 2 como opção.")]
         public int pontosPorCruzada = 1;
+        [Tooltip("Os dois rebatedores se encontrando no meio já cruzam os tacos, sem apertar botão. " +
+                 "Desligado: precisa apertar X (A) / Espaço no anel.")]
+        public bool cruzadaAutomatica = true;
         [Tooltip("Lancha: o arremesso bateu no corpo de um rebatedor (o da vez ou o parceiro). A bola segue em jogo. " +
                  "Com este tanto de lanchas a dupla do taco perde os tacos (troca de papel).")]
         public int lanchasParaPerderTaco = 3;
+        [Tooltip("Lancha (regra de algumas regiões): o arremesso no corpo de um rebatedor conta contra o time do taco. " +
+                 "Desligado no padrão: a bola só desvia e o jogo segue. A falta que vale é a queima errada " +
+                 "(jogar na garrafa com o taco do dono na base = ponto para o time do taco).")]
+        public bool contarLancha = false;
+        [Tooltip("Com a lancha ligada: a bola no corpo do rebatedor DA VEZ (o que ia rebater) também conta. " +
+                 "Desligado: só conta no parceiro parado na outra base.")]
+        public bool lanchaNoRebatedorDaVez = false;
         [Tooltip("Queimou errado: a defesa derrubou a garrafa com o taco do dono já no chão. " +
                  "O ataque ganha este tanto de pontos (0 = só não vale).")]
         public int pontosQueimaErrada = 1;
@@ -78,6 +94,11 @@ namespace BetsDeRua
         [Tooltip("Defensor bot só chuta se a bola chegar na garrafa este tanto (s) antes do dono voltar para a base. " +
                  "Senão anda com a bola para perto da garrafa (errar daria tempo para o ataque cruzar).")]
         public float folgaParaChutarBot = 0.15f;
+        [Tooltip("Tempo de reação (s) do defensor bot antes de soltar o chute (ele não enche o arco como a pessoa).")]
+        public float reacaoChuteBot = 0.15f;
+        [Tooltip("Parceiro bot de uma pessoa no taco: sai para a viagem quando a pessoa já está a esta distância (m) " +
+                 "da base, rumo ao meio (ou correndo para o meio).")]
+        public float distanciaParaParceiroSair = 2f;
         [Tooltip("Apoio: com a bola a mais que isso (m) da casinha que ele guarda, o defensor bot que não vai " +
                  "na bola sai para o meio do caminho, para receber o passe.")]
         public float distanciaParaApoio = 8f;

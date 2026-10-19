@@ -100,7 +100,9 @@ namespace BetsDeRua
             Vector3 guarda = lance.PosicaoDeGuarda(jogador);
             Vector3 casinha = lance.CasinhaMaisPerto(guarda).transform.position;
             Vector3 bolaNoChao = new Vector3(bola.Posicao.x, 0f, bola.Posicao.z);
-            if (DistanciaNoChao(casinha, bolaNoChao) <= configPartida.distanciaParaApoio) return guarda;
+            // Só sai de trás da casinha com a bola solta e isolada lá longe; senão espera atrás
+            // (passar no meio, entre o rebatedor e a garrafa, só atrapalha)
+            if (lance.Portador != null || DistanciaNoChao(casinha, bolaNoChao) <= configPartida.distanciaParaApoio) return guarda;
             Vector3 apoio = Vector3.Lerp(casinha, bolaNoChao, configPartida.fracaoApoio);
             float limiteZ = configFisica.larguraCampo * 0.5f - 1f;
             apoio.z = Mathf.Clamp(apoio.z, -limiteZ, limiteZ);
@@ -163,6 +165,7 @@ namespace BetsDeRua
                 float distanciaColega = Vector3.Distance(colega.transform.position, alvo.transform.position);
                 if (distanciaColega + configPartida.distanciaChuteBot < minhaDistancia && Reagiu(jogador))
                 {
+                    RegistroPartida.Evento($"{jogador.Nome} (bot) passa para {colega.Nome}");
                     portador.ExecutarPeloBot(TipoArremesso.Passe, 0f, colega.transform.position);
                     return;
                 }
@@ -172,7 +175,8 @@ namespace BetsDeRua
             // Se não chega, errar só dá tempo para o ataque cruzar de novo: anda com a bola
             // para perto da garrafa e prende o ataque na base.
             float rapidezChute = configFisica.forteMaximaKmh / 3.6f;
-            float tempoBola = configFisica.tempoEncherChute + minhaDistancia / Mathf.Max(1f, rapidezChute);
+            // O bot solta na hora (não enche o arco como a pessoa): só a viagem da bola e uma reação
+            float tempoBola = configPartida.reacaoChuteBot + minhaDistancia / Mathf.Max(1f, rapidezChute);
             bool chegaAntes = tempoBola + configPartida.folgaParaChutarBot < lance.TempoParaProteger(alvo);
             if (minhaDistancia > configPartida.distanciaChuteBot || !chegaAntes)
             {
@@ -183,6 +187,8 @@ namespace BetsDeRua
             if (Reagiu(jogador))
             {
                 float carga = (configFisica.inicioFaixaVerde + configFisica.fimFaixaVerde) * 0.5f;
+                RegistroPartida.Evento($"{jogador.Nome} (bot) chuta na {alvo.name}: bola chega em {tempoBola:0.00}s, " +
+                                       $"dono protege em {lance.TempoParaProteger(alvo):0.00}s");
                 portador.ExecutarPeloBot(TipoArremesso.Forte, carga, alvo.transform.position);
             }
         }
@@ -215,21 +221,26 @@ namespace BetsDeRua
 
         private void ComandarCorrida()
         {
-            if (!lance.Rebatida || !corrida.Ativa) return;
-
             Jogador humano = null;
             foreach (Jogador rebatedor in rebatedores)
                 if (rebatedor.Controlador != null) humano = rebatedor;
 
-            if (humano != null)
+            // Rebatedor bot sem nada para fazer (antes da batida, ou sem viagem): fica na zona segura,
+            // não parado do lado de fora (ex.: logo depois que a pessoa troca de jogador com o L1)
+            if (!lance.Rebatida || !corrida.Ativa)
             {
-                // Uma pessoa no taco: o parceiro corre em espelho, um pouco para o lado
                 foreach (Jogador rebatedor in rebatedores)
                 {
-                    if (rebatedor == humano) continue;
-                    Vector3 h = humano.transform.position;
-                    IrPara(rebatedor, new Vector3(-h.x, 0f, h.z - configPartida.afastamentoParceiroEspelho));
+                    if (rebatedor.Controlador != null || (lance.RebatedorDaVez != null && lance.RebatedorDaVez.Jogador == rebatedor
+                                                          && lance.Estado == EstadoLance.Arremesso)) continue;
+                    if (!rebatedor.DentroDoCirculo()) IrPara(rebatedor, PontoNaBase(rebatedor.transform.position));
                 }
+                return;
+            }
+
+            if (humano != null)
+            {
+                ComandarParceiroDaPessoa(humano);
                 return;
             }
 
@@ -253,6 +264,8 @@ namespace BetsDeRua
                     folga = Mathf.Min(folga, DistanciaNoChao(defensor.transform.position, ondeVaiEstar));
                 // Com a bola já na mão da defesa, ninguém sai da base
                 vaoCorrer = lance.Portador == null && folga > configPartida.folgaParaBotCorrer;
+                RegistroPartida.Evento($"bots do taco {(vaoCorrer ? "VÃO CORRER" : "ficam na base")} " +
+                                       $"(defesa a {folga:0.0} m de onde a bola vai estar; precisa > {configPartida.folgaParaBotCorrer:0.0})");
                 destinoDaViagem.Clear();
                 origemDaViagem.Clear();
                 if (vaoCorrer)
@@ -263,7 +276,10 @@ namespace BetsDeRua
                     foreach (Jogador rebatedor in rebatedores)
                     {
                         bool estaNaA = rebatedor.transform.position.x < 0f;
-                        destinoDaViagem[rebatedor] = new Vector3(estaNaA ? meio : -meio, 0f, estaNaA ? lado : -lado);
+                        // Termina ao lado da base (onde o rebatedor fica), fora da linha do arremesso;
+                        // um pouco mais para dentro e outro mais para fora, para passarem lado a lado no meio
+                        destinoDaViagem[rebatedor] = new Vector3(estaNaA ? meio : -meio, 0f,
+                                                                 configPartida.afastamentoRebatedor + (estaNaA ? lado : -lado));
                         origemDaViagem[rebatedor] = rebatedor.transform.position;
                     }
                 }
@@ -271,7 +287,8 @@ namespace BetsDeRua
             foreach (Jogador rebatedor in rebatedores)
             {
                 if (vaoCorrer && destinoDaViagem.TryGetValue(rebatedor, out Vector3 destino)) IrPara(rebatedor, ParaOndeVai(rebatedor, destino));
-                else IrPara(rebatedor, rebatedor.transform.position);
+                // Sem viagem: fica (ou volta para) dentro da zona segura, nunca parado do lado de fora
+                else IrPara(rebatedor, rebatedor.DentroDoCirculo() ? rebatedor.transform.position : PontoNaBase(rebatedor.transform.position));
             }
         }
 
@@ -286,6 +303,71 @@ namespace BetsDeRua
             return passouDoMeio ? destino : origem;
         }
 
+        // Parceiro bot de uma pessoa no taco: de que base ele saiu (-1 = A, +1 = B)
+        private float baseDoParceiro;
+        private bool parceiroViajando;
+
+        /// <summary>
+        /// Uma pessoa no taco e o parceiro bot: ele NÃO copia cada passo (senão os dois ficam
+        /// expostos juntos). Ele lê a intenção: a pessoa saiu da base correndo para o meio, ele
+        /// faz a viagem dele até a outra base; a pessoa desistiu e voltou, ele volta também.
+        /// </summary>
+        private void ComandarParceiroDaPessoa(Jogador humano)
+        {
+            Jogador parceiro = rebatedores[0] == humano ? rebatedores[1] : rebatedores[0];
+            if (parceiro.Controlador != null) return;
+
+            float meio = configFisica.distanciaBases * 0.5f;
+            Vector3 h = humano.transform.position;
+            float ladoDaPessoa = h.x < 0f ? -1f : 1f;
+            // A pessoa está indo: fora da zona e já perto do meio, ou andando para o meio
+            float rumoAoMeio = -ladoDaPessoa * humano.Velocidade.x;
+            bool pessoaIndo = !humano.DentroDoCirculo()
+                              && (Mathf.Abs(h.x) < meio - configPartida.distanciaParaParceiroSair || rumoAoMeio > 1f);
+
+            if (!parceiroViajando)
+            {
+                if (parceiro.DentroDoCirculo()) baseDoParceiro = parceiro.transform.position.x < 0f ? -1f : 1f;
+                if (pessoaIndo && !corrida.EsperandoChegarNaBase)
+                {
+                    parceiroViajando = true;
+                    RegistroPartida.Evento($"{parceiro.Nome} (bot) acompanha a corrida de {humano.Nome}");
+                }
+            }
+            else
+            {
+                // Chegou do outro lado: a viagem acabou
+                bool chegou = parceiro.DentroDoCirculo() && (parceiro.transform.position.x < 0f ? -1f : 1f) != baseDoParceiro;
+                if (chegou) { parceiroViajando = false; baseDoParceiro = -baseDoParceiro; }
+            }
+
+            float lado = configPartida.afastamentoParceiroEspelho * 0.5f;
+            Vector3 destino;
+            if (parceiroViajando)
+            {
+                // Desistiu? A pessoa voltou para a base de onde saiu antes de cruzar: ele volta também
+                bool pessoaDesistiu = humano.DentroDoCirculo() && !corrida.EsperandoChegarNaBase
+                                      && (h.x < 0f ? -1f : 1f) == -baseDoParceiro;
+                bool passouDoMeio = Mathf.Sign(parceiro.transform.position.x) != baseDoParceiro;
+                if (pessoaDesistiu && !passouDoMeio)
+                {
+                    parceiroViajando = false;
+                    RegistroPartida.Evento($"{parceiro.Nome} (bot) volta: {humano.Nome} desistiu");
+                }
+                destino = parceiroViajando ? new Vector3(-baseDoParceiro * meio, 0f, configPartida.afastamentoRebatedor - baseDoParceiro * lado)
+                                           : PontoNaBase(parceiro.transform.position);
+            }
+            else destino = PontoNaBase(parceiro.transform.position);
+            IrPara(parceiro, destino);
+        }
+
+        /// <summary>Um ponto dentro da zona segura da base mais perto (onde o rebatedor fica parado).</summary>
+        private Vector3 PontoNaBase(Vector3 de)
+        {
+            float meio = configFisica.distanciaBases * 0.5f;
+            return new Vector3(de.x < 0f ? -meio : meio, 0f, configPartida.afastamentoRebatedor);
+        }
+
         /// <summary>True se os dois rebatedores bot terminaram a viagem: chegaram no destino ou voltaram para a origem.</summary>
         private bool ChegaramAoDestino()
         {
@@ -293,7 +375,9 @@ namespace BetsDeRua
             {
                 if (!destinoDaViagem.TryGetValue(rebatedor, out Vector3 destino)) continue;
                 bool noDestino = DistanciaNoChao(rebatedor.transform.position, destino) <= Chegou;
-                bool naOrigem = origemDaViagem.TryGetValue(rebatedor, out Vector3 origem)
+                // Voltar para a origem só encerra a viagem se eles desistiram (a defesa pegou a bola);
+                // no começo da viagem eles ainda estão na origem e isso não é "chegar"
+                bool naOrigem = lance.Portador != null && origemDaViagem.TryGetValue(rebatedor, out Vector3 origem)
                                 && DistanciaNoChao(rebatedor.transform.position, origem) <= Chegou;
                 if (!noDestino && !naOrigem) return false;
             }

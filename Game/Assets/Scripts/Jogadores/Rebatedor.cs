@@ -37,6 +37,7 @@ namespace BetsDeRua
         // Estado de um arremesso
         private bool jaGirou;
         private bool cruzou;              // a bola já passou da linha do rebatedor
+        private float momentoArremesso;   // quando o arremesso saiu da mão
         private float momentoIdeal;       // Time.time do cruzamento (previsto, ou real depois que cruzou)
         private bool alcancavel;          // no cruzamento, a bola fica ao alcance do taco?
         private bool temCruzamento;       // a previsão encontrou um cruzamento
@@ -91,6 +92,7 @@ namespace BetsDeRua
         public void ArremessoSaiu(Vector3 velocidadeArremesso)
         {
             BolaEmJogo = true;
+            momentoArremesso = Time.time;
             Vector3 horizontal = new Vector3(velocidadeArremesso.x, 0f, velocidadeArremesso.z);
             if (horizontal.sqrMagnitude > 0.0001f) DirecaoChegada = horizontal.normalized;
             SortearJogadaDaCpu();
@@ -136,8 +138,11 @@ namespace BetsDeRua
             // Batida adiantada (dentro da janela): acontece quando a bola chega na linha
             if (batidaPendente && cruzou) AplicarBatida(tipoPendente, cargaPendente, erroPendenteMs);
 
-            // A bola passou e a janela fechou sem batida: acabou a chance neste arremesso
-            if (BolaEmJogo && cruzou && !batidaPendente && Time.time > momentoIdeal + config.janelaBoaMs / 1000f)
+            // A bola passou e a janela fechou sem batida: acabou a chance neste arremesso.
+            // Também acaba se a bola parou ou demorou demais (ex.: o rebatedor saiu da frente e a
+            // bola nunca cruzou a linha dele): senão a defesa ficaria esperando a batida para sempre
+            bool desistiu = !batidaPendente && (bola.Parada || Time.time - momentoArremesso > config.tempoMaximoEsperaBatida);
+            if (BolaEmJogo && (desistiu || cruzou && !batidaPendente && Time.time > momentoIdeal + config.janelaBoaMs / 1000f))
             {
                 BolaEmJogo = false;
                 ajudas.EsconderMarca();

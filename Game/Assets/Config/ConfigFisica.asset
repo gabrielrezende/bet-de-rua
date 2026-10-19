@@ -38,7 +38,7 @@ MonoBehaviour:
   alturaGarrafa: 0.4
   diametroGarrafa: 0.18
   massaGarrafa: 0.3
-  velocidadeDerrubaKmh: 15
+  velocidadeDerrubaKmh: 1
   forcaDerrubada: 1
   quiqueGarrafa: 0.4
   aceleracaoCurva: 6
@@ -51,8 +51,8 @@ MonoBehaviour:
   anguloBalanco: 10
   duracaoBalanco: 0.7
   velocidadeAndar: 2
-  velocidadeCorrer: 5
-  velocidadeSprint: 7
+  velocidadeCorrer: 4
+  velocidadeSprint: 8
   limiteAnalogicoAndar: 0.5
   aceleracaoJogador: 14
   frenagemJogador: 18
@@ -91,8 +91,9 @@ MonoBehaviour:
   alcanceTaco: 1.5
   avancoContatoBatida: 0.6
   alturaMaximaAlcance: 1.6
-  janelaPerfeitaMs: 50
-  janelaBoaMs: 120
+  janelaPerfeitaMs: 70
+  janelaBoaMs: 170
+  tempoMaximoEsperaBatida: 3
   tempoPrevisao: 3
   passoPrevisao: 0.01
   tempoEncherBatida: 0.7
@@ -106,7 +107,7 @@ MonoBehaviour:
   fatorBatidaBoa: 0.8
   erroDirecaoBatidaBoa: 12
   duracaoGiroTaco: 0.18
-  raioPegar: 1
+  raioPegar: 1.3
   alturaMaximaPegar: 2.2
   alcanceMergulho: 3.5
   velocidadeMergulho: 8

@@ -257,6 +257,8 @@ namespace BetsDeRua
 
         private void Assumir(ControleHumano humano, Jogador jogador)
         {
+            if (humano.Jogador != jogador)
+                RegistroPartida.Evento($"P{humano.Numero}: {humano.Jogador?.Nome ?? "ninguém"} -> {jogador?.Nome ?? "ninguém"}");
             Soltar(humano);
             if (jogador == null) return;
             humano.Jogador = jogador;
@@ -294,7 +296,7 @@ namespace BetsDeRua
                     texto += $"P{humano.Numero} ({humano.NomeDispositivo}): sem jogador livre\n";
                     continue;
                 }
-                string dupla = humano.Jogador.Dupla == Dupla.Taco ? "Taco (azul)" : "Bola (laranja)";
+                string dupla = humano.Jogador.Dupla == Dupla.Taco ? "Taco" : "Bola";
                 int estamina = Mathf.RoundToInt(humano.Jogador.Estamina * 100f);
                 texto += $"P{humano.Numero} ({humano.NomeDispositivo}): {dupla} · {humano.Jogador.Nome}" +
                          $" · {humano.Jogador.Velocidade.magnitude:0.0} m/s · sprint {estamina}%\n";

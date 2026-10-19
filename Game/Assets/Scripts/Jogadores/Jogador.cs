@@ -290,6 +290,23 @@ namespace BetsDeRua
                 velocidade -= direcaoLimite * ((avanco - Mathf.Max(0f, folga)) / dt);
         }
 
+        /// <summary>Material do corpo (a cor do time).</summary>
+        public Material MaterialCorpo
+        {
+            get
+            {
+                Transform corpoVisual = transform.Find("Corpo");
+                return corpoVisual != null ? corpoVisual.GetComponent<MeshRenderer>().sharedMaterial : null;
+            }
+        }
+
+        /// <summary>Pinta o corpo com a cor do time (na troca de papel a cor acompanha o time).</summary>
+        public void PintarCorpo(Material material)
+        {
+            Transform corpoVisual = transform.Find("Corpo");
+            if (corpoVisual != null) corpoVisual.GetComponent<MeshRenderer>().sharedMaterial = material;
+        }
+
         /// <summary>Vira o corpo, na hora, para uma direção no chão.</summary>
         public void OlharPara(Vector3 direcao)
         {

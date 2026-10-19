@@ -143,6 +143,10 @@ namespace BetsDeRua
         public float tempoMovimentoTaco = 0.12f;
         [Tooltip("Fora da zona segura o taco levanta este tanto (graus) a partir do chão: a ponta sai do chão, sem ir para o ombro.")]
         public float anguloTacoLevantado = 25f;
+        [Tooltip("Cruzada: quanto tempo (s) os dois ficam com os tacos levantados e batendo em X.")]
+        public float duracaoBaterTacos = 0.35f;
+        [Tooltip("Cruzada: quanto o taco sobe ao bater no outro (1 = 45 graus; maior = mais em pé).")]
+        public float alturaBaterTacos = 1.2f;
 
         [Header("Arremesso: soltura")]
         [Tooltip("Altura da mão na hora de soltar a bola (m).")]
@@ -177,6 +181,9 @@ namespace BetsDeRua
         public float alturaChegadaPingo = 0.25f;
         [Tooltip("Até quantos metros da garrafa o analógico leva a mira.")]
         public float raioMira = 2f;
+        [Tooltip("Curva do analógico na mira: 1 = linear; maior = mais fino perto do centro (2 = metade do curso " +
+                 "move só 1/4 do raioMira).")]
+        public float curvaMiraAnalogico = 2.2f;
         [Tooltip("Erro máximo de direção soltando antes da faixa verde (graus). " +
                  "A garrafa é fina: 0,3° já erra por ~10 cm a 20 m.")]
         public float erroMaximoAntesDaFaixa = 0.5f;
@@ -198,6 +205,9 @@ namespace BetsDeRua
         public float janelaPerfeitaMs = 50f;
         [Tooltip("Janela da batida boa (ms). Fora dela, o taco passa no vazio.")]
         public float janelaBoaMs = 120f;
+        [Tooltip("Depois deste tempo (s) do arremesso, ou com a bola parada, o rebatedor desiste de esperar a bola " +
+                 "(e a defesa já pode ir buscar).")]
+        public float tempoMaximoEsperaBatida = 3f;
         [Tooltip("Por quantos segundos à frente a trajetória da bola é prevista.")]
         public float tempoPrevisao = 3f;
         [Tooltip("De quanto em quanto tempo (s) a previsão guarda um ponto.")]
@@ -239,6 +249,9 @@ namespace BetsDeRua
         public float duracaoCaidoMergulho = 0.6f;
         [Tooltip("No bote, pega a bola a até esta distância (m).")]
         public float raioPegarNoMergulho = 1.3f;
+        [Tooltip("□ com a bola vindo: se ela vai entrar no alcance normal dentro deste tempo (s), ele espera e pega " +
+                 "sem se jogar. Só mergulha se a bola vai passar longe.")]
+        public float tempoEsperarBolaChegar = 0.6f;
         [Tooltip("Quanto o corpo deita no mergulho (graus).")]
         public float anguloMergulho = 75f;
         [Tooltip("Bola abaixo desta altura (m) = carrinho (de pé na frente, deitado para trás); acima = peixinho (de peito).")]

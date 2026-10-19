@@ -92,6 +92,9 @@ namespace BetsDeRua
         public float espessuraAnelTempo = 0.06f;
 
         [Header("Garrafa exposta")]
+        [Tooltip("Pinta de vermelho a garrafa do rebatedor que está fora da zona. Desligado: o perigo aparece " +
+                 "só no sinal em cima da cabeça do rebatedor (vermelho = fora da zona).")]
+        public bool pintarGarrafaExposta = false;
         [Tooltip("Cor da garrafa quando o taco do dono está fora do chão (pode ser queimada).")]
         public Color corGarrafaExposta = new Color(0.95f, 0.2f, 0.15f);
 

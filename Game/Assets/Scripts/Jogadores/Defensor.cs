@@ -30,6 +30,7 @@ namespace BetsDeRua
         private Jogador jogador;
         private Arremessador comBola;
         private bool procurandoNoBote;
+        private float tempoEsperandoChegar = float.MaxValue; // □ apertado com a bola vindo: pega quando ela chegar
 
         // Círculo no chão mostrando até onde dá para pegar a bola (só para quem uma pessoa controla)
         private const float AlturaCirculo = 0.018f;
@@ -84,6 +85,13 @@ namespace BetsDeRua
             ControleHumano humano = jogador.Controlador;
             if (humano != null && humano.Conectado && humano.ApertouPegar) TentarPegar();
 
+            // □ apertado com a bola vindo na direção dele: pega sozinho quando ela entrar no alcance
+            if (tempoEsperandoChegar < config.tempoEsperarBolaChegar)
+            {
+                tempoEsperandoChegar += Time.deltaTime;
+                if (AoAlcance(config.raioPegar)) { tempoEsperandoChegar = float.MaxValue; Pegar(); return; }
+            }
+
             // No bote do mergulho: pega se alcançar
             if (procurandoNoBote)
             {
@@ -112,6 +120,13 @@ namespace BetsDeRua
             rumoAgora.y = 0f;
             if (rumoAgora.magnitude > config.alcanceMergulho || bola.Posicao.y > config.alturaMaximaPegar) return;
 
+            // A bola vem e vai passar perto dele: não precisa se jogar, pega quando ela chegar
+            if (VaiChegarPerto())
+            {
+                tempoEsperandoChegar = 0f;
+                return;
+            }
+
             Vector3 ponto = PontoDoBote();
             Vector3 rumo = ponto - transform.position;
             rumo.y = 0f;
@@ -120,6 +135,19 @@ namespace BetsDeRua
         }
 
         private readonly System.Collections.Generic.List<Vector3> previsao = new System.Collections.Generic.List<Vector3>();
+
+        /// <summary>True se, no tempo de espera, a bola entra no alcance normal do □ (sem mergulho).</summary>
+        private bool VaiChegarPerto()
+        {
+            bola.PreverTrajetoria(config.tempoEsperarBolaChegar, PassoPrevisaoBote, previsao);
+            foreach (Vector3 p in previsao)
+            {
+                Vector3 d = p - transform.position;
+                d.y = 0f;
+                if (d.magnitude <= config.raioPegar && p.y <= config.alturaMaximaPegar) return true;
+            }
+            return false;
+        }
         private const float PassoPrevisaoBote = 0.02f;
 
         /// <summary>

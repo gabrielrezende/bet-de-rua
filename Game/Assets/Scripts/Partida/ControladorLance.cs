@@ -93,6 +93,7 @@ namespace BetsDeRua
             corrida.Cruzou += AoCruzar;
             corrida.PontosValidados += AoValidarPontos;
             bola.TocouNoCorpo += AoLancha;
+            GuardarCoresDosTimes();
             ProximoLance();
         }
 
@@ -156,6 +157,7 @@ namespace BetsDeRua
                         gerenciador.InverterDuplas();
                         ladoNoTaco = 1 - ladoNoTaco;
                         lanchas = 0;
+                        PintarTimes();
                         ProximoLance();
                     }
                     break;
@@ -256,6 +258,7 @@ namespace BetsDeRua
 
         private void MudarPara(EstadoLance novo)
         {
+            if (novo != Estado) RegistroPartida.Evento($"estado: {Estado} -> {novo}");
             Estado = novo;
             tempoNoEstado = 0f;
             tempoSeguro = 0f;
@@ -359,6 +362,7 @@ namespace BetsDeRua
             if (ladoNoTaco != 0) gerenciador.InverterDuplas();
             ladoNoTaco = 0;
             lanchas = 0;
+            PintarTimes();
             primeiroLance = true;
             Mostrar("Partida nova!");
             ProximoLance();
@@ -370,6 +374,36 @@ namespace BetsDeRua
             corrida.Encerrar();
             foreach (Rebatedor rebatedor in rebatedores) rebatedor.Encerrar();
             LiberarDefensores(false);
+        }
+
+        // ------------------------------------------------------------------ cores dos times
+
+        // Cor de cada time (Lado 1 e Lado 2): a do corpo e a do triângulo do jogador controlado.
+        // A cor acompanha o time, não o boneco: na troca de papel, os bonecos trocam de cor.
+        private readonly Material[] corCorpoDoLado = new Material[2];
+        private readonly Material[] corMarcadorDoLado = new Material[2];
+
+        /// <summary>No começo o Lado 1 está no taco: guarda as cores que os bonecos têm agora.</summary>
+        private void GuardarCoresDosTimes()
+        {
+            Jogador rebatedor = rebatedores[0].Jogador;
+            Jogador defensor = defensores[0].Jogador;
+            corCorpoDoLado[0] = rebatedor.MaterialCorpo;
+            corCorpoDoLado[1] = defensor.MaterialCorpo;
+            corMarcadorDoLado[0] = rebatedor.GetComponent<MarcadorJogador>()?.MaterialTriangulo;
+            corMarcadorDoLado[1] = defensor.GetComponent<MarcadorJogador>()?.MaterialTriangulo;
+        }
+
+        /// <summary>Pinta cada boneco com a cor do time que está naquele papel agora.</summary>
+        private void PintarTimes()
+        {
+            foreach (Jogador jogador in gerenciador.Jogadores)
+            {
+                int lado = jogador.Dupla == Dupla.Taco ? ladoNoTaco : 1 - ladoNoTaco;
+                if (corCorpoDoLado[lado] != null) jogador.PintarCorpo(corCorpoDoLado[lado]);
+                MarcadorJogador marcador = jogador.GetComponent<MarcadorJogador>();
+                if (marcador != null && corMarcadorDoLado[lado] != null) marcador.MaterialTriangulo = corMarcadorDoLado[lado];
+            }
         }
 
         // ------------------------------------------------------------------ regras
@@ -429,9 +463,7 @@ namespace BetsDeRua
         {
             if (Protegida(garrafa)) return 0f;
             Rebatedor dono = MaisPerto(rebatedores, garrafa.transform.position);
-            Vector3 d = dono.transform.position - garrafa.transform.position;
-            d.y = 0f;
-            float falta = Mathf.Max(0f, d.magnitude - configFisica.margemZonaSegura - configFisica.ladoCasinhaGarrafa * 0.5f);
+            float falta = ZonaDoTaco.DistanciaAteZona(dono.transform.position, garrafa.transform.position, configFisica);
             return falta / Mathf.Max(0.1f, configFisica.velocidadeSprint) + configFisica.tempoMovimentoTaco;
         }
 
@@ -463,7 +495,8 @@ namespace BetsDeRua
 
         private void PintarGarrafas()
         {
-            bool jogoRolando = Estado == EstadoLance.Arremesso || Estado == EstadoLance.BolaViva;
+            bool jogoRolando = configHUD.pintarGarrafaExposta
+                               && (Estado == EstadoLance.Arremesso || Estado == EstadoLance.BolaViva);
             foreach (Garrafa garrafa in Garrafas)
                 garrafa.MarcarExposta(jogoRolando && !garrafa.Derrubada && !Protegida(garrafa), configHUD.corGarrafaExposta);
         }
@@ -530,6 +563,7 @@ namespace BetsDeRua
             if (Estado != EstadoLance.BolaViva || portador != null || defensor.ComBola == null) return;
 
             Jogador lancador = bola.UltimoLancador;
+            RegistroPartida.Evento($"{defensor.Jogador.Nome} pegou a bola{(noAr ? " no ar" : "")} (último a lançar: {lancador?.Nome ?? "-"})");
             bola.CorposAtivos = false;
             portador = defensor.ComBola;
             portador.Alvo = EscolherAlvo(portador.transform.position);
@@ -557,6 +591,18 @@ namespace BetsDeRua
         {
             if (Estado != EstadoLance.BolaViva || rebatida) return;
             rebatedorDaVez.Encerrar(); // a bola desviada não pode mais ser rebatida
+            if (!configPartida.contarLancha)
+            {
+                // Padrão: bola no corpo não é falta; ela desvia e o jogo segue
+                Mostrar($"Bola no corpo do {rebatedor.Nome}: segue o jogo");
+                return;
+            }
+            if (!configPartida.lanchaNoRebatedorDaVez && rebatedor == rebatedorDaVez.Jogador)
+            {
+                // Quem ia rebater só não acertou e a bola pegou nele: não é falta, a bola segue
+                Mostrar($"Bola no corpo do {rebatedor.Nome}: segue o jogo");
+                return;
+            }
             lanchas++;
             if (lanchas >= configPartida.lanchasParaPerderTaco)
             {
@@ -670,6 +716,7 @@ namespace BetsDeRua
         {
             mensagem = texto;
             tempoMensagem = 0f;
+            RegistroPartida.Evento(texto);
         }
 
         /// <summary>"atrasou 40 ms" / "adiantou 25 ms" / "no tempo".</summary>
@@ -727,6 +774,21 @@ namespace BetsDeRua
             GUI.Label(new Rect(16, 36, 900, 22), linha, detalhe);
         }
 
+        /// <summary>Aviso grande na troca de papel: quem vai para o taco, quem vai para a bola, e em quanto tempo.</summary>
+        private void DesenharTrocaDePapel()
+        {
+            GUIStyle grande = new GUIStyle(GUI.skin.label) { fontSize = 40, alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
+            grande.normal.textColor = Color.white;
+            GUIStyle menor = new GUIStyle(grande) { fontSize = 22, fontStyle = FontStyle.Normal };
+            int novoNoTaco = 1 - ladoNoTaco;
+            float falta = Mathf.Max(0f, configPartida.tempoTrocaDePapel - tempoNoEstado);
+            float meio = Screen.height * 0.5f;
+            GUI.Label(new Rect(0, meio - 70, Screen.width, 60), "TROCA DE PAPEL", grande);
+            GUI.Label(new Rect(0, meio - 5, Screen.width, 30),
+                      $"Lado {novoNoTaco + 1} vai para o TACO  ·  Lado {ladoNoTaco + 1} vai para a BOLA", menor);
+            GUI.Label(new Rect(0, meio + 30, Screen.width, 30), $"cada time continua com a sua cor  ·  {falta:0} s", menor);
+        }
+
         private void DesenharVencedor()
         {
             GUIStyle grande = new GUIStyle(GUI.skin.label)
@@ -780,6 +842,7 @@ namespace BetsDeRua
 
             DesenharPlacar();
             if (Estado == EstadoLance.FimDePartida) DesenharVencedor();
+            if (Estado == EstadoLance.TrocaDePapel) DesenharTrocaDePapel();
 
             // Mensagem do lance no alto, no meio, por alguns segundos
             if (tempoMensagem < configHUD.duracaoMensagem && !string.IsNullOrEmpty(mensagem))
@@ -789,7 +852,14 @@ namespace BetsDeRua
                     fontSize = 26, alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold
                 };
                 grande.normal.textColor = Color.white;
-                GUI.Label(new Rect(0, 115, Screen.width, 40), mensagem, grande);
+                // Ponto marcado: bem maior e amarelo, para ninguém perder
+                bool ponto = mensagem.Contains("PONTO") || mensagem.Contains("MATCH POINT");
+                if (ponto)
+                {
+                    grande.fontSize = 48;
+                    grande.normal.textColor = new Color(1f, 0.85f, 0.1f);
+                }
+                GUI.Label(new Rect(0, 115, Screen.width, ponto ? 70 : 40), mensagem, grande);
             }
         }
     }

@@ -183,7 +183,10 @@ namespace BetsDeRua
             {
                 // Analógico direito solto = mira no meio da garrafa; empurrado = até raioMira para o lado
                 Vector2 analogico = Vector2.ClampMagnitude(humano.MiraAnalogica, 1f);
-                pontoMira = centro + new Vector3(analogico.x, 0f, analogico.y) * config.raioMira;
+                // Curva: perto do centro a mira anda devagar (ajuste fino); no fim do curso chega ao raioMira
+                float quanto = Mathf.Pow(analogico.magnitude, Mathf.Max(1f, config.curvaMiraAnalogico));
+                Vector2 direcaoAnalogico = analogico.sqrMagnitude > 0.0001f ? analogico.normalized : Vector2.zero;
+                pontoMira = centro + new Vector3(direcaoAnalogico.x, 0f, direcaoAnalogico.y) * (quanto * config.raioMira);
             }
             pontoMira.y = 0f;
         }

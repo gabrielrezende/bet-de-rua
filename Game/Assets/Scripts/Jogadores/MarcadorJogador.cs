@@ -18,6 +18,17 @@ namespace BetsDeRua
         [SerializeField] private Material materialGiz;
 
         private Transform triangulo;
+
+        /// <summary>Material (cor do time) do triângulo em cima da cabeça.</summary>
+        public Material MaterialTriangulo
+        {
+            get => materialTriangulo;
+            set
+            {
+                materialTriangulo = value;
+                if (triangulo != null) triangulo.GetComponent<MeshRenderer>().sharedMaterial = value;
+            }
+        }
         private Transform circulo;
         private bool estavaVisivel;
         private float tempoPiscando = float.MaxValue;

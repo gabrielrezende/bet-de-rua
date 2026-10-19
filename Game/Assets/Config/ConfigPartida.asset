@@ -13,8 +13,13 @@ MonoBehaviour:
   m_Name: ConfigPartida
   m_EditorClassIdentifier: Assembly-CSharp::BetsDeRua.ConfigPartida
   metaPontos: 10
+  gravarLog: 1
+  intervaloFotoLog: 0.5
   pontosPorCruzada: 1
+  cruzadaAutomatica: 1
   lanchasParaPerderTaco: 3
+  contarLancha: 0
+  lanchaNoRebatedorDaVez: 0
   pontosQueimaErrada: 1
   caiMetadeAoPerderTacoNoMatchPoint: 1
   pegarNoArPerdeTaco: 0
@@ -28,7 +33,7 @@ MonoBehaviour:
   distanciaCruzada: 1.5
   afastamentoParceiroEspelho: 0.8
   tempoSeguroParaEncerrar: 1.5
-  tempoTrocaDePapel: 2.5
+  tempoTrocaDePapel: 4
   soAssistir: 0
   arremessadorAutomatico: 1
   esperaArremessoAutomatico: 2
@@ -40,7 +45,9 @@ MonoBehaviour:
   folgaParaBotCorrer: 7
   distanciaChuteBot: 9
   folgaParaChutarBot: 0.15
-  distanciaParaApoio: 8
+  reacaoChuteBot: 0.15
+  distanciaParaParceiroSair: 2
+  distanciaParaApoio: 14
   fracaoApoio: 0.45
   reacaoBot: 0.25
   trocaAutomaticaNaDefesa: 0

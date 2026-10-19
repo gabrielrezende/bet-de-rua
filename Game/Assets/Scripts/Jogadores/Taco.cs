@@ -24,6 +24,8 @@ namespace BetsDeRua
         private float anguloAtual;
         private float velocidadeAngulo;
         private float tempoGiro = float.MaxValue;
+        private float tempoBaterTacos = float.MaxValue;
+        private Vector3 rumoBaterTacos;
 
         /// <summary>True quando o taco está encostado no chão dentro do círculo.</summary>
         public bool NoChao { get; private set; }
@@ -41,8 +43,29 @@ namespace BetsDeRua
             tempoGiro = 0f;
         }
 
+        /// <summary>
+        /// Cruzada: levanta o taco na direção de 'paraOnde' (o parceiro) e bate no taco dele,
+        /// os dois cruzando em X no alto. Só visual: o ponto já foi contado.
+        /// </summary>
+        public void BaterNoOutroTaco(Vector3 paraOnde)
+        {
+            paraOnde.y = 0f;
+            rumoBaterTacos = paraOnde.sqrMagnitude > 0.0001f ? paraOnde.normalized : transform.forward;
+            tempoBaterTacos = 0f;
+        }
+
         private void Update()
         {
+            if (tempoBaterTacos < config.duracaoBaterTacos)
+            {
+                tempoBaterTacos += Time.deltaTime;
+                // O taco (que fica pendurado para baixo do pivô) aponta para cima e para o parceiro
+                Vector3 apontar = (rumoBaterTacos + Vector3.up * config.alturaBaterTacos).normalized;
+                transform.rotation = Quaternion.FromToRotation(Vector3.down, apontar);
+                anguloAtual = AnguloNoChao() - config.anguloTacoLevantado;
+                NoChao = false;
+                return;
+            }
             if (tempoGiro < config.duracaoGiroTaco)
             {
                 tempoGiro += Time.deltaTime;
