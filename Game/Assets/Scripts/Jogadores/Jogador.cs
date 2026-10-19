@@ -39,6 +39,16 @@ namespace BetsDeRua
         /// <summary>Quem controla este jogador agora (null = ninguém).</summary>
         public ControleHumano Controlador { get; set; }
         public bool EstaParado => velocidade.magnitude < config.velocidadeParadoJogador;
+        /// <summary>
+        /// Com a bola na mão: anda no máximo a velocidadeComBola, sem sprint (GDD),
+        /// e R2/L2 ficam livres para arremessar.
+        /// </summary>
+        public bool ComBolaNaMao { get; set; }
+
+        // Limite opcional: o jogador não passa da linha 'pontoLimite' no sentido 'direcaoLimite'
+        private bool temLimiteFrente;
+        private Vector3 pontoLimite;
+        private Vector3 direcaoLimite;
 
         private void Awake()
         {
@@ -62,6 +72,12 @@ namespace BetsDeRua
         private void Update()
         {
             if (Controlador == null) DefinirEntrada(Vector2.zero, false, false);
+            if (ComBolaNaMao)
+            {
+                // Com a bola: sem sprint e sem "andar devagar" (os gatilhos viram arremesso)
+                entradaSprint = false;
+                entradaDevagar = false;
+            }
 
             float dt = Time.deltaTime;
             float intensidade = entradaMovimento.magnitude;
@@ -81,6 +97,8 @@ namespace BetsDeRua
             velocidade += Vector3.ClampMagnitude(diferenca, taxa * dt);
 
             AtualizarEstamina(sprintando, dt);
+
+            AplicarLimiteFrente(dt);
 
             // Move (com um empurrãozinho para baixo para ficar grudado no chão)
             Vector3 antes = transform.position;
@@ -105,6 +123,12 @@ namespace BetsDeRua
         private float VelocidadeAlvo(float intensidade, bool sprintando)
         {
             if (intensidade <= 0.001f) return 0f;
+            if (ComBolaNaMao) return Mathf.Min(VelocidadeSemBola(intensidade, false), config.velocidadeComBola);
+            return VelocidadeSemBola(intensidade, sprintando);
+        }
+
+        private float VelocidadeSemBola(float intensidade, bool sprintando)
+        {
             if (sprintando) return config.velocidadeSprint;
             if (entradaDevagar) return config.velocidadeAndar * Mathf.Min(1f, intensidade / config.limiteAnalogicoAndar);
 
@@ -121,6 +145,35 @@ namespace BetsDeRua
                 Estamina = Mathf.Max(0f, Estamina - dt / Mathf.Max(0.01f, config.duracaoSprint));
             else
                 Estamina = Mathf.Min(1f, Estamina + dt / Mathf.Max(0.01f, config.recargaSprint));
+        }
+
+        /// <summary>Impede o jogador de passar da linha que fica em 'ponto', no sentido 'direcao'.</summary>
+        public void DefinirLimiteFrente(Vector3 ponto, Vector3 direcao)
+        {
+            direcao.y = 0f;
+            if (direcao.sqrMagnitude < 0.0001f) { RemoverLimiteFrente(); return; }
+            temLimiteFrente = true;
+            pontoLimite = ponto;
+            direcaoLimite = direcao.normalized;
+        }
+
+        public void RemoverLimiteFrente() => temLimiteFrente = false;
+
+        /// <summary>Corta a velocidade que levaria o jogador para além da linha do limite.</summary>
+        private void AplicarLimiteFrente(float dt)
+        {
+            if (!temLimiteFrente || dt <= 0f) return;
+            float folga = Vector3.Dot(pontoLimite - transform.position, direcaoLimite); // quanto falta até a linha
+            float avanco = Vector3.Dot(velocidade, direcaoLimite) * dt;
+            if (avanco > Mathf.Max(0f, folga))
+                velocidade -= direcaoLimite * ((avanco - Mathf.Max(0f, folga)) / dt);
+        }
+
+        /// <summary>Vira o corpo, na hora, para uma direção no chão.</summary>
+        public void OlharPara(Vector3 direcao)
+        {
+            direcao.y = 0f;
+            if (direcao.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(direcao, Vector3.up);
         }
 
         /// <summary>True se o jogador está dentro do círculo de alguma base.</summary>

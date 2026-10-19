@@ -92,6 +92,11 @@ namespace BetsDeRua
         [Tooltip("Rapidez para virar o corpo (graus/s).")]
         public float velocidadeVirar = 720f;
 
+        [Tooltip("Velocidade máxima com a bola na mão (m/s), sem sprint (GDD).")]
+        public float velocidadeComBola = 4f;
+        [Tooltip("Com a bola na mão, quanto o arremessador pode ir à frente da própria garrafa, rumo ao alvo (m). 0 = não passa dela.")]
+        public float avancoMaximoComBola = 0f;
+
         [Header("Jogadores: estamina do sprint")]
         [Tooltip("Quantos segundos de sprint seguido com a estamina cheia.")]
         public float duracaoSprint = 6f;
@@ -105,8 +110,8 @@ namespace BetsDeRua
         public float raioJogador = 0.3f;
         [Tooltip("Comprimento do taco (m).")]
         public float comprimentoTaco = 0.73f;
-        [Tooltip("Espessura do taco (m).")]
-        public float espessuraTaco = 0.05f;
+        [Tooltip("Espessura do taco (m). O real tem ~5 cm; mais grosso para ver de longe.")]
+        public float espessuraTaco = 0.1f;
         [Tooltip("Altura da mão que segura o taco (m). Precisa ser menor que o comprimento do taco para ele alcançar o chão.")]
         public float alturaMaoTaco = 0.7f;
         [Tooltip("Abaixo desta velocidade (m/s) o rebatedor conta como parado (taco desce no círculo).")]
@@ -114,12 +119,46 @@ namespace BetsDeRua
         [Tooltip("Tempo (s) para o taco subir ou descer.")]
         public float tempoMovimentoTaco = 0.12f;
 
-        [Header("Lançador de teste (só para a Etapa 1)")]
-        [Tooltip("Velocidade do lançamento forte de teste (km/h).")]
-        public float velocidadeTesteForteKmh = 70f;
-        [Tooltip("Velocidade com que a rasteira fraca de teste CHEGA na garrafa (km/h). Abaixo de 15 ela só balança.")]
-        public float velocidadeTesteFracoKmh = 10f;
-        [Tooltip("Altura de onde a bola de teste sai (m).")]
-        public float alturaSaidaTeste = 1.2f;
+        [Header("Arremesso: soltura")]
+        [Tooltip("Altura da mão na hora de soltar a bola (m).")]
+        public float alturaSoltura = 1.4f;
+        [Tooltip("Quanto à frente do corpo a bola sai (m).")]
+        public float avancoSoltura = 0.35f;
+        [Tooltip("Quanto para o lado direito do corpo a bola sai (m).")]
+        public float ladoSoltura = 0.25f;
+
+        [Header("Arremesso: arco de força")]
+        [Tooltip("Segundos segurando o botão para o arco encher de 0 até o fim.")]
+        public float tempoEncherForca = 1.2f;
+        [Tooltip("Onde começa a faixa verde no arco (0 a 1).")]
+        [Range(0f, 1f)] public float inicioFaixaVerde = 0.72f;
+        [Tooltip("Onde termina a faixa verde no arco (0 a 1). Soltar depois disso = bola desgovernada.")]
+        [Range(0f, 1f)] public float fimFaixaVerde = 0.86f;
+
+        [Header("Arremesso: velocidades (km/h, na horizontal)")]
+        [Tooltip("○ (B) forte: velocidade com o arco vazio.")]
+        public float forteMinimaKmh = 55f;
+        [Tooltip("○ (B) forte: velocidade soltando no fim da faixa verde.")]
+        public float forteMaximaKmh = 90f;
+        public float quicadoMinimaKmh = 45f;
+        public float quicadoMaximaKmh = 65f;
+        public float pingoMinimaKmh = 32f;
+        public float pingoMaximaKmh = 45f;
+
+        [Header("Arremesso: trajetória e mira")]
+        [Tooltip("X (A) quicado: no máximo quantos metros antes do alvo a bola quica (mais perto se precisar, para não passar por cima).")]
+        public float distanciaQuique = 1.5f;
+        [Tooltip("△ (Y) pingo: altura em que a bola chega no alvo, caindo por cima (m).")]
+        public float alturaChegadaPingo = 0.25f;
+        [Tooltip("Até quantos metros da garrafa o analógico leva a mira.")]
+        public float raioMira = 2f;
+        [Tooltip("Erro máximo de direção soltando antes da faixa verde (graus). " +
+                 "A garrafa é fina: 0,3° já erra por ~10 cm a 20 m.")]
+        public float erroMaximoAntesDaFaixa = 0.5f;
+        [Tooltip("Erro de direção da bola desgovernada, mínimo e máximo (graus).")]
+        public float erroDesgovernadaMinimo = 3f;
+        public float erroDesgovernadaMaximo = 7f;
+        [Tooltip("Quanto a bola desgovernada sobe a mais (0,3 = 30% mais subida).")]
+        public float subidaExtraDesgovernada = 0.3f;
     }
 }

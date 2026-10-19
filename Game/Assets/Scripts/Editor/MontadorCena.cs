@@ -47,11 +47,15 @@ namespace BetsDeRua.Editor
             Material matBola = CriarMaterial("Bola", new Color(0.85f, 0.95f, 0.2f));
             Material matDuplaTaco = CriarMaterial("DuplaTaco", configPartida.corDuplaTaco);
             Material matDuplaBola = CriarMaterial("DuplaBola", configPartida.corDuplaBola);
-            Material matTaco = CriarMaterial("Taco", new Color(0.75f, 0.72f, 0.68f));
+            Material matTaco = CriarMaterial("Taco", new Color(0.95f, 0.85f, 0.6f));
             Material matRosto = CriarMaterial("Rosto", new Color(0.12f, 0.12f, 0.12f));
             Material matMarcadorTaco = CriarMaterial("MarcadorDuplaTaco", configPartida.corDuplaTaco, true);
             Material matMarcadorBola = CriarMaterial("MarcadorDuplaBola", configPartida.corDuplaBola, true);
             Material matMarcadorGiz = CriarMaterial("MarcadorGiz", new Color(0.95f, 0.95f, 0.95f), true);
+            Material matMira = CriarMaterial("MiraAmarela", new Color(1f, 0.85f, 0.1f), true);
+            Material matArcoFundo = CriarMaterial("ArcoFundo", new Color(0.12f, 0.12f, 0.12f), true);
+            Material matArcoFaixa = CriarMaterial("ArcoFaixaVerde", new Color(0.2f, 0.9f, 0.3f), true);
+            Material matArcoPreenchimento = CriarMaterial("ArcoPreenchimento", Color.white, true);
 
             float comprimento = config.comprimentoCampo;
             float largura = config.larguraCampo;
@@ -106,7 +110,8 @@ namespace BetsDeRua.Editor
             Object.DestroyImmediate(objBola.GetComponent<Collider>()); // física própria, sem collider
             objBola.GetComponent<MeshRenderer>().sharedMaterial = matBola;
             float raioVisual = config.raioBola * config.escalaVisualBola;
-            objBola.transform.position = LancadorDeTeste.PosicaoRepouso(config) + Vector3.up * (raioVisual - config.raioBola);
+            // Provisório: no Play, o ControladorLance põe a bola na mão do arremessador
+            objBola.transform.position = new Vector3(-meioBases, raioVisual, 0f);
             Bola bola = objBola.AddComponent<Bola>();
             Ligar(bola, "config", config);
             LigarLista(bola, "garrafas", todas);
@@ -144,13 +149,36 @@ namespace BetsDeRua.Editor
             Ligar(transmissao, "alvo", objBola.transform);
             LigarLista(transmissao, "outrosAlvos", System.Array.ConvertAll(todosJogadores, j => (Object)j.transform));
 
-            // ---------- Lançador de teste ----------
-            GameObject objLancador = new GameObject("LancadorDeTeste");
-            LancadorDeTeste lancador = objLancador.AddComponent<LancadorDeTeste>();
-            Ligar(lancador, "config", config);
-            Ligar(lancador, "bola", bola);
-            Ligar(lancador, "garrafaAlvo", garrafaB);
-            LigarLista(lancador, "todasGarrafas", todas);
+            // ---------- Arremesso: mira no chão e arco de força ----------
+            GameObject objMira = new GameObject("MiraNoChao");
+            MiraNoChao mira = objMira.AddComponent<MiraNoChao>();
+            Ligar(mira, "configHUD", configHUD);
+            Ligar(mira, "materialMira", matMira);
+
+            GameObject objArco = new GameObject("ArcoForca");
+            ArcoForca arco = objArco.AddComponent<ArcoForca>();
+            Ligar(arco, "configHUD", configHUD);
+            Ligar(arco, "configFisica", config);
+            Ligar(arco, "materialFundo", matArcoFundo);
+            Ligar(arco, "materialFaixa", matArcoFaixa);
+            Ligar(arco, "materialPreenchimento", matArcoPreenchimento);
+
+            Arremessador arremessadorComp = arremessador.gameObject.AddComponent<Arremessador>();
+            Ligar(arremessadorComp, "config", config);
+            Ligar(arremessadorComp, "mira", mira);
+            Ligar(arremessadorComp, "arco", arco);
+
+            // ---------- Lance (máquina de estados) ----------
+            GameObject objLance = new GameObject("ControladorLance");
+            ControladorLance lance = objLance.AddComponent<ControladorLance>();
+            Ligar(lance, "configFisica", config);
+            Ligar(lance, "configPartida", configPartida);
+            Ligar(lance, "configHUD", configHUD);
+            Ligar(lance, "bola", bola);
+            Ligar(lance, "arremessador", arremessadorComp);
+            Ligar(lance, "garrafaAlvo", garrafaB);
+            Ligar(lance, "garrafaDoArremessador", garrafaA);
+            LigarLista(lance, "todasGarrafas", todas);
 
             // Salva e põe a cena como a primeira do build
             EditorSceneManager.SaveScene(cena, CaminhoCena);

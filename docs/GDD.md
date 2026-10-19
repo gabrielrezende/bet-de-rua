@@ -184,9 +184,9 @@ No arremesso, o ataque fica um em cada casinha; a defesa tem o arremessador na c
 
 No modo em que cada pessoa controla a dupla inteira, a câmera padrão é a de transmissão, igual ao FIFA: lateral, elevada, mostrando a rua inteira de uma casinha à outra. Como o campo do bets é comprido e estreito, essa vista mostra tudo de uma vez: as duas casinhas, a bola, quem corre atrás dela e a faixa do meio.
 
-- **Segue a bola:** a câmera desliza de lado acompanhando a bola e abre um pouco quando ela vai longe.
-- **Zoom no arremesso:** na hora de mirar, a câmera aproxima rápido atrás do arremessador (0,4 s) e volta para a lateral quando a bola sai. Resolve a falta de profundidade da vista de lado.
-- **Linha de trajetória:** enquanto mira, uma linha pontilhada no chão mostra para onde vai a bola, no arremesso e na rebatida.
+- **Sempre os quatro na tela:** a câmera enquadra os 4 jogadores e a bola o tempo todo, deslizando de lado e se afastando o quanto precisar (até 2x). Se a bola for longe demais para caber todo mundo, a bola tem prioridade e a câmera vai atrás dela. (Decisão do protótipo, Etapa 3: substitui o "segue a bola" e o zoom no arremesso.)
+- **Sem zoom no arremesso:** a câmera não aproxima na mira, para não tirar ninguém da tela; a sombra da bola e as marcas no chão resolvem a profundidade da vista de lado.
+- **Linha de trajetória:** enquanto mira, uma linha pontilhada no chão sai de quem arremessa ou rebate. No sofá todo mundo vê a mesma tela, então a linha é **curta** (cerca de 5 m): mostra a direção sem entregar o ponto exato. Online, cada um poderá ver a linha inteira na própria tela.
 - **Marcadores:** um triângulo colorido em cima de cada personagem controlado por você; o ativo pisca. O nome do jogador aparece embaixo, como no FIFA.
 - **Minimapa:** faixa fina no rodapé com as duas casinhas, os 4 jogadores e a bola, útil quando a bola vai para fora da tela.
 - **Alternativas no menu:** câmera de transmissão aproximada, câmera alta (de cima do poste) e a câmera por papel descrita acima, padrão no online 2x2.
@@ -214,6 +214,8 @@ O esquema segue três princípios do FIFA: **poucos botões**, **cada botão com
 - **R2 (RT) = correr**; para o rebatedor, é também sair da base.
 - **L1 (LB) = trocar de jogador**; o analógico direito escolhe um jogador específico.
 - **L2 (LT) = andar devagar / postura**: o guardião anda de lado olhando a bola, como a marcação do FIFA.
+
+**Com a bola na mão para arremessar, o esquema vira "twin-stick"** (decisão do protótipo, Etapa 3): o analógico esquerdo anda, o direito mira, e os gatilhos e botões de cima arremessam — **R2 (RT) forte, R1 (RB) quicado, L2 (LT) pingo**, sempre segurando para encher o arco de força e soltando na faixa verde. Como quem está com a bola não dá sprint (4 m/s), o R2 fica livre para arremessar. Os botões da frente (○, X, △, □) ficam livres nesse momento para efeitos e jogadas especiais (a definir).
 
 **Taco no chão automático.** Parado dentro do círculo, o taco do rebatedor fica encostado no chão sozinho e ele não pode ser queimado. Sair do círculo (R2 ou empurrar o analógico para fora) levanta o taco e deixa a casinha exposta. A tensão continua toda na decisão de quando sair, que é exatamente o que o guardião espera. Para quem quiser a experiência mais fiel à rua, existe o **modo clássico** nas opções: segurar L2 (LT) para manter o taco no chão.
 
@@ -243,19 +245,22 @@ O esquema segue três princípios do FIFA: **poucos botões**, **cada botão com
 
 | Ação | PlayStation (Xbox) | Como funciona |
 | --- | --- | --- |
-| Mirar | Analógico esquerdo | A câmera aproxima e a linha no chão vai até a garrafa |
-| Arremesso forte | ○ (B), segurar e soltar | Reto e rápido; barra de força igual à do chute |
-| Arremesso quicado | X (A) | Bate no chão antes; mais difícil de rebater bem |
-| Pingo | △ (Y) | Alto e lento, cai por cima da garrafa |
-| Efeito | Analógico direito, na hora de soltar | A direção do analógico define o efeito (ver Arsenal de efeitos) |
-| Arremesso colocado | R1 (RB) + arremesso | Menos força, mais precisão na garrafa |
-| Finta | □ (X) | Ameaça arremessar e faz o rebatedor bater antes da hora |
+| Andar com a bola | Analógico esquerdo | Até 4 m/s, sem sprint. Pode ir para trás e para os lados, mas não passa à frente da própria garrafa (rumo ao alvo) |
+| Mirar | Analógico direito | Solto = meio da garrafa alvo; empurrado = até 2 m para o lado. Círculo amarelo na garrafa e linha curta no chão |
+| Arremesso forte | R2 (RT), segurar e soltar | Reto e rápido, 55 a 90 km/h |
+| Arremesso quicado | R1 (RB), segurar e soltar | Quica pouco antes da garrafa e sobe nela, 45 a 65 km/h; mais difícil de rebater bem |
+| Pingo | L2 (LT), segurar e soltar | Alto e lento, cai por cima da garrafa, 32 a 45 km/h |
+| Arco de força | Segurando qualquer um dos três | Enche ao lado do jogador. Soltar na faixa verde = força e precisão máximas; antes = mais lento e um pouco torto; depois = bola desgovernada |
+| Efeito | Botões da frente (a definir) | Antes o efeito ia no analógico direito; com ele mirando, o efeito passa para os botões da frente (ver Arsenal de efeitos) |
+| Finta | A definir (botão da frente) | Ameaça arremessar e faz o rebatedor bater antes da hora |
 
-No teclado, o efeito vem das setas segurando na hora de soltar (ou arrastando o mouse).
+No teclado: WASD anda, o mouse mira, clique esquerdo = forte, clique direito = quicado, E = pingo.
 
 **Arsenal de efeitos**
 
-Como o beisebol tem nome para cada arremesso, o bets ganha o seu repertório com nome de rua. O tipo de arremesso (○, X ou △) combinado com a direção do analógico direito forma cada um:
+Como o beisebol tem nome para cada arremesso, o bets ganha o seu repertório com nome de rua. O tipo de arremesso (○, X ou △) combinado com a direção do analógico direito forma cada um.
+
+> Atualização (Etapa 3 do protótipo): os tipos agora saem de R2 (forte), R1 (quicado) e L2 (pingo), e o analógico direito virou a mira. Na tabela abaixo, leia ○ = R2, X = R1, △ = L2; como o efeito vai ser escolhido (provavelmente pelos botões da frente) ainda está em aberto.
 
 | Nome | Como sai | O que a bola faz |
 | --- | --- | --- |
@@ -302,6 +307,7 @@ Como o beisebol tem nome para cada arremesso, o bets ganha o seu repertório com
 | Correr / sair da base / mais uma | Shift |
 | Andar devagar / postura de goleiro | Alt |
 | Ação forte | Clique esquerdo (segurar e soltar) |
+| Arremesso forte / quicado / pingo (com a bola) | Clique esquerdo / clique direito / E (segurar e soltar) |
 | Ação curta (toque, quicado, passe, cruzar) | Espaço |
 | Por cima | E |
 | Colocado / efeito | Ctrl + ação |
@@ -397,7 +403,7 @@ Aceleração e freada têm peso: mudar de direção bruscamente custa meio passo
 
 **O lance passo a passo**
 
-1. **Arremesso.** O arremessador mira a garrafa do outro lado e arremessa com ○ (B). O rebatedor espera dentro do círculo com o taco no chão (automático enquanto estiver parado no círculo).
+1. **Arremesso.** O arremessador mira a garrafa do outro lado com o analógico direito e arremessa com R2 (RT) forte, R1 (RB) quicado ou L2 (LT) pingo. O rebatedor espera dentro do círculo com o taco no chão (automático enquanto estiver parado no círculo).
 2. **Batida.** O rebatedor rebate com ○ (B) forte, X (A) toque ou △ (Y) cavadinha. A bola fica viva: começa a parte "futebol".
 3. **Bola viva: a defesa vai na bola.** O jogador de defesa mais perto vira o ativo automaticamente (troca com L1 / LB). Ele corre com o analógico e R2, guiado pelo círculo no chão que mostra onde a bola vai cair ou parar.
 4. **Dominar a bola.** Perto da bola (até 1 m), □ (X) pega. No chão: dominada em 0,3 s. No ar: aparece um anel encolhendo; apertar □ quando ele fecha pega antes de quicar e o ataque perde o taco. Errar o tempo faz a bola espirrar da mão.

@@ -17,8 +17,6 @@ namespace BetsDeRua
         [Tooltip("Material do círculo de giz.")]
         [SerializeField] private Material materialGiz;
 
-        private const int SegmentosCirculo = 48;
-
         private Transform triangulo;
         private Transform circulo;
         private bool estavaVisivel;
@@ -92,7 +90,7 @@ namespace BetsDeRua
                 && Mathf.Approximately(espessuraCirculoMontada, configHUD.espessuraCirculoGiz)) return;
             raioCirculoMontado = configHUD.raioCirculoGiz;
             espessuraCirculoMontada = configHUD.espessuraCirculoGiz;
-            circulo.GetComponent<MeshFilter>().sharedMesh = MontarAnel(raioCirculoMontado, espessuraCirculoMontada);
+            circulo.GetComponent<MeshFilter>().sharedMesh = MalhasProcedurais.AnelNoChao(raioCirculoMontado, espessuraCirculoMontada);
         }
 
         /// <summary>
@@ -123,35 +121,6 @@ namespace BetsDeRua
             for (int i = 0; i < triangulos.Length; i++) triangulos[i] = i;
 
             Mesh malha = new Mesh { name = "MarcadorTriangulo", vertices = vertices, triangles = triangulos };
-            malha.RecalculateNormals();
-            malha.RecalculateBounds();
-            return malha;
-        }
-
-        /// <summary>Anel achatado no chão (círculo de giz).</summary>
-        private static Mesh MontarAnel(float raio, float espessura)
-        {
-            float raioDentro = Mathf.Max(0f, raio - espessura * 0.5f);
-            float raioFora = raio + espessura * 0.5f;
-            Vector3[] vertices = new Vector3[SegmentosCirculo * 2];
-            int[] triangulos = new int[SegmentosCirculo * 6];
-            for (int i = 0; i < SegmentosCirculo; i++)
-            {
-                float angulo = i * Mathf.PI * 2f / SegmentosCirculo;
-                Vector3 direcao = new Vector3(Mathf.Cos(angulo), 0f, Mathf.Sin(angulo));
-                vertices[i * 2] = direcao * raioDentro;
-                vertices[i * 2 + 1] = direcao * raioFora;
-
-                int proximo = (i + 1) % SegmentosCirculo;
-                int t = i * 6;
-                triangulos[t] = i * 2;
-                triangulos[t + 1] = proximo * 2;
-                triangulos[t + 2] = i * 2 + 1;
-                triangulos[t + 3] = i * 2 + 1;
-                triangulos[t + 4] = proximo * 2;
-                triangulos[t + 5] = proximo * 2 + 1;
-            }
-            Mesh malha = new Mesh { name = "MarcadorCirculoGiz", vertices = vertices, triangles = triangulos };
             malha.RecalculateNormals();
             malha.RecalculateBounds();
             return malha;

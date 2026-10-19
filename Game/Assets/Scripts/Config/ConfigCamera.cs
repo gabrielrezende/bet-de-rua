@@ -9,23 +9,26 @@ namespace BetsDeRua
     [CreateAssetMenu(fileName = "ConfigCamera", menuName = "Bets de Rua/Config Camera")]
     public class ConfigCamera : ScriptableObject
     {
-        [Header("Transmissão alta")]
-        [Tooltip("Altura da câmera em relação ao chão (m).")]
+        [Header("Transmissão alta (posição mais perto possível)")]
+        [Tooltip("Altura da câmera quando está o mais perto possível (m).")]
         public float altura = 14f;
-        [Tooltip("Distância na horizontal da câmera até a linha central do campo (m). " +
+        [Tooltip("Distância na horizontal até a linha central do campo, o mais perto possível (m). " +
                  "Com 14 m de altura dá ~35° de inclinação.")]
         public float distancia = 20f;
         [Tooltip("Campo de visão vertical (graus).")]
         public float campoVisao = 40f;
-        [Tooltip("Tempo (s) que a câmera leva para alcançar a bola. Maior = mais suave.")]
-        public float suavizacao = 0.3f;
-        [Tooltip("Quanto a câmera pode mostrar além dos muros do fundo (m). " +
-                 "A câmera para de deslizar quando chega nesse limite.")]
+
+        [Header("Enquadramento: os 4 jogadores e a bola sempre na tela")]
+        [Tooltip("Folga além do jogador ou da bola mais na ponta (m).")]
+        public float margemEnquadramento = 3f;
+        [Tooltip("Quanto a câmera pode se afastar no máximo (2 = duas vezes mais longe que o mais perto). " +
+                 "Se nem assim couber todo mundo, a bola tem prioridade.")]
+        public float afastamentoMaximo = 2f;
+        [Tooltip("Quanto a câmera pode mostrar além dos muros do fundo (m).")]
         public float margemAlemDoMuro = 1.5f;
-        [Header("Zoom dinâmico")]
-        [Tooltip("Quanto a câmera pode abrir quando bola e jogadores se espalham (0,15 = 15% mais longe).")]
-        [Range(0f, 0.5f)] public float aberturaMaxima = 0.15f;
-        [Tooltip("Tempo (s) para a câmera abrir ou fechar.")]
+        [Tooltip("Tempo (s) para a câmera deslizar de lado. Maior = mais suave.")]
+        public float suavizacao = 0.3f;
+        [Tooltip("Tempo (s) para a câmera se afastar ou aproximar.")]
         public float suavizacaoZoom = 0.6f;
 
         [Tooltip("Distância máxima que a câmera desenha (m).")]

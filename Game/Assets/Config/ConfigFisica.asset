@@ -40,6 +40,38 @@ MonoBehaviour:
   quiqueGarrafa: 0.4
   anguloBalanco: 10
   duracaoBalanco: 0.7
-  velocidadeTesteForteKmh: 70
-  velocidadeTesteFracoKmh: 10
-  alturaSaidaTeste: 1.2
+  velocidadeAndar: 2
+  velocidadeCorrer: 5
+  velocidadeSprint: 7
+  limiteAnalogicoAndar: 0.5
+  aceleracaoJogador: 14
+  frenagemJogador: 18
+  velocidadeVirar: 720
+  duracaoSprint: 6
+  recargaSprint: 4
+  alturaJogador: 1.75
+  raioJogador: 0.3
+  comprimentoTaco: 0.73
+  espessuraTaco: 0.1
+  alturaMaoTaco: 0.7
+  velocidadeParadoJogador: 0.2
+  tempoMovimentoTaco: 0.12
+  alturaSoltura: 1.4
+  avancoSoltura: 0.35
+  ladoSoltura: 0.25
+  tempoEncherForca: 1.2
+  inicioFaixaVerde: 0.72
+  fimFaixaVerde: 0.86
+  forteMinimaKmh: 55
+  forteMaximaKmh: 90
+  quicadoMinimaKmh: 45
+  quicadoMaximaKmh: 65
+  pingoMinimaKmh: 32
+  pingoMaximaKmh: 45
+  distanciaQuique: 1.5
+  alturaChegadaPingo: 0.25
+  raioMira: 2
+  erroMaximoAntesDaFaixa: 0.5
+  erroDesgovernadaMinimo: 3
+  erroDesgovernadaMaximo: 7
+  subidaExtraDesgovernada: 0.3

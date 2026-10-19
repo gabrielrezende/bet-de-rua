@@ -21,6 +21,12 @@ namespace BetsDeRua
         public Color corDuplaTaco = new Color(0.2f, 0.45f, 0.95f);
         public Color corDuplaBola = new Color(1f, 0.55f, 0.1f);
 
+        [Header("Lance")]
+        [Tooltip("Quanto tempo a bola fica morta antes de voltar para o arremessador (s).")]
+        public float tempoBolaMorta = 1.5f;
+        [Tooltip("Se a bola não parar sozinha, o lance acaba depois deste tempo (s).")]
+        public float tempoMaximoBolaViva = 12f;
+
         [Header("Controles")]
         [Tooltip("Máximo de pessoas jogando ao mesmo tempo (controles + teclado).")]
         public int maximoJogadoresHumanos = 4;
