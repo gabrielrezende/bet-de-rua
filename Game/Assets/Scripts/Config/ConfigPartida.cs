@@ -36,6 +36,9 @@ namespace BetsDeRua
         [Tooltip("Queimou errado: a defesa derrubou a garrafa com o taco do dono já no chão. " +
                  "O ataque ganha este tanto de pontos (0 = só não vale).")]
         public int pontosQueimaErrada = 1;
+        [Tooltip("Depois de 'queimou errado' a garrafa volta de pé e fica este tempo (s) sem poder cair, " +
+                 "para a mesma bola encostada não contar várias vezes.")]
+        public float imunidadeGarrafaDePe = 0.6f;
         [Tooltip("Perdeu o taco em match point: os pontos caem pela metade (GDD, ligado no padrão).")]
         public bool caiMetadeAoPerderTacoNoMatchPoint = true;
         [Tooltip("Pegar a bola rebatida direto no ar, antes de quicar, tira os tacos do ataque. " +
@@ -96,6 +99,11 @@ namespace BetsDeRua
         public float folgaParaChutarBot = 0.15f;
         [Tooltip("Tempo de reação (s) do defensor bot antes de soltar o chute (ele não enche o arco como a pessoa).")]
         public float reacaoChuteBot = 0.15f;
+        [Tooltip("Tempo de reação (s) que o defensor bot supõe que o rebatedor fora da zona leva para começar a voltar. " +
+                 "Maior = o bot arrisca jogar na garrafa mais vezes.")]
+        public float reacaoRebatedor = 0.3f;
+        [Tooltip("Rebatedores bot correm em faixas separadas no meio do caminho; a esta distância (m) da base vão direto ao ponto.")]
+        public float distanciaSairDaFaixa = 3f;
         [Tooltip("Parceiro bot de uma pessoa no taco: sai para a viagem quando a pessoa já está a esta distância (m) " +
                  "da base, rumo ao meio (ou correndo para o meio).")]
         public float distanciaParaParceiroSair = 2f;

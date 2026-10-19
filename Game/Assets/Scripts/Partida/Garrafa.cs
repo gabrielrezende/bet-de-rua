@@ -19,6 +19,7 @@ namespace BetsDeRua
         private Vector3 posicaoInicial;
         private Quaternion rotacaoInicial;
         private Coroutine balancoAtual;
+        private float imuneAte;   // logo depois de ser posta de pé, ignora a bola (que ainda pode estar encostada)
 
         /// <summary>True depois que a garrafa foi derrubada (até o próximo Reiniciar).</summary>
         public bool Derrubada { get; private set; }
@@ -45,7 +46,7 @@ namespace BetsDeRua
         /// </summary>
         public bool ReceberBolada(Vector3 velocidadeBola, Vector3 pontoContato)
         {
-            if (Derrubada) return false;
+            if (Derrubada || Time.time < imuneAte) return false;
 
             float velocidadeKmh = velocidadeBola.magnitude * 3.6f;
             UltimaBoladaKmh = velocidadeKmh;
@@ -126,6 +127,12 @@ namespace BetsDeRua
                 desenho.SetPropertyBlock(propriedades);
             }
             else desenho.SetPropertyBlock(null);
+        }
+
+        /// <summary>Durante 'segundos', a bola não derruba a garrafa (ex.: logo depois de "queimou errado").</summary>
+        public void FicarImune(float segundos)
+        {
+            imuneAte = Time.time + segundos;
         }
 
         /// <summary>Coloca a garrafa de pé de novo na base.</summary>

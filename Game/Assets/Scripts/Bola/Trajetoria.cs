@@ -10,7 +10,7 @@ namespace BetsDeRua
     public static class Trajetoria
     {
         private const float Passo = 0.005f;
-        private const float SubidaMinima = -10f;
+        private const float SubidaMinima = -40f; // jogar para baixo, de perto (ex.: chute na garrafa a 1 m)
         private const float SubidaMaxima = 40f;
         private const int Tentativas = 25;
 

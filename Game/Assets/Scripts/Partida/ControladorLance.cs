@@ -62,6 +62,7 @@ namespace BetsDeRua
         private bool primeiroLance = true;
         private int lanchas;                    // lanchas da dupla que está no taco agora
         private float tempoSemBolaNoArremesso;
+        private bool bolaDoArremesso;           // a bola no ar é a do arremesso (ninguém rebateu nem pegou ainda)
 
         public EstadoLance Estado { get; private set; }
         public bool Rebatida => rebatida;
@@ -432,11 +433,21 @@ namespace BetsDeRua
                     garrafasAvaliadas.Remove(garrafa);
                     continue;
                 }
+                // O arremesso derrubou a garrafa: queimou, com ou sem taco no chão (regra da rua:
+                // o rebatedor tinha que ter rebatido). O "taco no chão protege" vale para a bola
+                // jogada na corrida, depois da batida.
+                bool arremesso = bolaDoArremesso;
+                if (arremesso)
+                {
+                    EntrarTrocaDePapel("QUEIMOU no arremesso!");
+                    return;
+                }
                 if (Protegida(garrafa))
                 {
                     // Queimou errado: o taco do dono já estava no chão. A garrafa volta de pé,
                     // o jogo segue (sem bola morta) e o ataque ganha ponto (regra da rua)
                     garrafa.Reiniciar();
+                    garrafa.FicarImune(configPartida.imunidadeGarrafaDePe);
                     garrafasAvaliadas.Remove(garrafa);
                     int ganhou = configPartida.pontosQueimaErrada;
                     if (ganhou > 0 && !EmMatchPoint(ladoNoTaco))
@@ -513,6 +524,7 @@ namespace BetsDeRua
                 MudarPara(EstadoLance.BolaViva);
                 bola.Lancar(saida, velocidade, origem.Jogador);
                 bola.CorposAtivos = true; // lancha: o arremesso pode bater no corpo de um rebatedor
+                bolaDoArremesso = true;
                 rebatedorDaVez.ArremessoSaiu(velocidade);
                 resumoArremesso = $"{NomeDoTipo(tipo)} · {kmh:0} km/h";
                 Mostrar(resumoArremesso);
@@ -532,6 +544,7 @@ namespace BetsDeRua
         private void AoRebater(TipoBatida tipo, float kmh, float erroMs, bool perfeita)
         {
             rebatida = true;
+            bolaDoArremesso = false;
             bola.CorposAtivos = false;
             rebatedorDaVez.Encerrar();
             corrida.Ativar();
@@ -563,6 +576,7 @@ namespace BetsDeRua
             Jogador lancador = bola.UltimoLancador;
             RegistroPartida.Evento($"{defensor.Jogador.Nome} pegou a bola{(noAr ? " no ar" : "")} (último a lançar: {lancador?.Nome ?? "-"})");
             bola.CorposAtivos = false;
+            bolaDoArremesso = false;
             portador = defensor.ComBola;
             portador.Alvo = EscolherAlvo(portador.transform.position);
             portador.Parceiro = OutroDefensor(defensor.Jogador);
