@@ -4,7 +4,7 @@ using UnityEngine;
 namespace BetsDeRua
 {
     /// <summary>Os jeitos de soltar a bola da mão.</summary>
-    public enum TipoArremesso { Forte, Quicado, Pingo, Passe, Lancamento }
+    public enum TipoArremesso { Forte, Quicado, Pingo, Passe, Lancamento, Rasteira }
 
     /// <summary>Em que situação o jogador está com a bola.</summary>
     public enum ModoComBola
@@ -181,14 +181,34 @@ namespace BetsDeRua
             }
             else
             {
-                // Analógico direito solto = mira no meio da garrafa; empurrado = até raioMira para o lado
-                Vector2 analogico = Vector2.ClampMagnitude(humano.MiraAnalogica, 1f);
+                // Ponto de vista de quem arremessa: esquerda/direita do analógico = lados da garrafa
+                // (a distância vem da força; o "para baixo" fica para a rasteira).
                 // Curva: perto do centro a mira anda devagar (ajuste fino); no fim do curso chega ao raioMira
-                float quanto = Mathf.Pow(analogico.magnitude, Mathf.Max(1f, config.curvaMiraAnalogico));
-                Vector2 direcaoAnalogico = analogico.sqrMagnitude > 0.0001f ? analogico.normalized : Vector2.zero;
-                pontoMira = centro + new Vector3(direcaoAnalogico.x, 0f, direcaoAnalogico.y) * (quanto * config.raioMira);
+                float x = Mathf.Clamp(humano.MiraAnalogica.x, -1f, 1f);
+                float quanto = Mathf.Sign(x) * Mathf.Pow(Mathf.Abs(x), Mathf.Max(1f, config.curvaMiraAnalogico));
+                pontoMira = centro + DireitaDeQuemArremessa(centro) * (quanto * config.raioMira);
             }
             pontoMira.y = 0f;
+        }
+
+        /// <summary>A direita de quem arremessa, olhando de onde ele está para 'paraOnde' (no chão).</summary>
+        private Vector3 DireitaDeQuemArremessa(Vector3 paraOnde)
+        {
+            Vector3 frente = paraOnde - transform.position;
+            frente.y = 0f;
+            if (frente.sqrMagnitude < 0.0001f) frente = transform.forward;
+            return Vector3.Cross(Vector3.up, frente.normalized);
+        }
+
+        /// <summary>
+        /// O tipo que sai de fato: no arremesso, R2 com o analógico direito para baixo vira rasteira.
+        /// </summary>
+        private TipoArremesso TipoEfetivo(TipoArremesso tipo, ControleHumano humano)
+        {
+            if (tipo == TipoArremesso.Forte && Modo == ModoComBola.Arremesso && humano != null
+                && humano.MiraAnalogica.y < -config.limiteAnalogicoRasteira)
+                return TipoArremesso.Rasteira;
+            return tipo;
         }
 
         private void AtualizarCarga(ControleHumano humano)
@@ -225,7 +245,7 @@ namespace BetsDeRua
             // Soltou o botão: solta a bola
             carregando = false;
             arco.Esconder();
-            Soltar(tipoCarregando, carga);
+            Soltar(TipoEfetivo(tipoCarregando, humano), carga);
         }
 
         /// <summary>
@@ -317,9 +337,14 @@ namespace BetsDeRua
                 case TipoArremesso.Pingo: kmh = Mathf.Lerp(config.pingoMinimaKmh, config.pingoMaximaKmh, fracao); break;
                 case TipoArremesso.Passe: kmh = config.passeKmh; break;
                 case TipoArremesso.Lancamento: kmh = config.lancamentoKmh; break;
+                case TipoArremesso.Rasteira: kmh = Mathf.Lerp(config.rasteiraMinimaKmh, config.rasteiraMaximaKmh, fracao); break;
                 default: kmh = Mathf.Lerp(config.forteMinimaKmh, config.forteMaximaKmh, fracao); break;
             }
             float rapidezHorizontal = kmh / 3.6f;
+
+            // Força = distância: na faixa verde a bola chega no ponto mirado; antes, cai curta;
+            // depois, isola (vai por cima e cai lá longe). Sem sorteio: o que a prévia mostra é o que sai.
+            if (!passeParaColega) distancia *= FatorDistancia(cargaFinal);
 
             // Quanto a bola precisa subir para chegar no destino, conforme o tipo
             float meioGarrafa = config.alturaGarrafa * 0.5f;
@@ -329,6 +354,10 @@ namespace BetsDeRua
                 case TipoArremesso.Quicado: // quica no chão antes e chega no meio da garrafa
                     subida = Trajetoria.AcharSubidaQuicado(config, distancia, rapidezHorizontal, saida.y,
                                                            meioGarrafa, config.distanciaQuique);
+                    break;
+                case TipoArremesso.Rasteira: // abaixa e solta rente ao chão: a bola sai rolando
+                    saida = new Vector3(saida.x, config.raioBola + 0.01f, saida.z);
+                    subida = 0f;
                     break;
                 case TipoArremesso.Pingo: // alto, cai por cima
                     subida = Trajetoria.AcharSubida(config, distancia, rapidezHorizontal, config.alturaChegadaPingo - saida.y);
@@ -346,20 +375,36 @@ namespace BetsDeRua
 
             // Precisão (só no que usa o arco): perfeita na faixa verde, um pouco torta antes, desgovernada depois
             float erroGraus = 0f;
-            if (comErro && !passeParaColega && cargaFinal > config.fimFaixaVerde)
+            if (comErro && config.erroAleatorioForaDaFaixa && !passeParaColega && cargaFinal > config.fimFaixaVerde)
             {
                 float sinal = UnityEngine.Random.value < 0.5f ? -1f : 1f;
                 erroGraus = sinal * UnityEngine.Random.Range(config.erroDesgovernadaMinimo, config.erroDesgovernadaMaximo);
                 subida *= 1f + config.subidaExtraDesgovernada * UnityEngine.Random.Range(0.5f, 1f);
             }
-            else if (comErro && !passeParaColega && cargaFinal < config.inicioFaixaVerde)
+            else if (comErro && config.erroAleatorioForaDaFaixa && !passeParaColega && cargaFinal < config.inicioFaixaVerde)
             {
                 float falta = 1f - cargaFinal / Mathf.Max(0.01f, config.inicioFaixaVerde);
                 erroGraus = UnityEngine.Random.Range(-1f, 1f) * config.erroMaximoAntesDaFaixa * falta;
             }
             direcao = Quaternion.AngleAxis(erroGraus, Vector3.up) * direcao;
 
+            // Teto na subida: com força demais a bola isola, mas não vai para o espaço
+            subida = Mathf.Min(subida, config.subidaMaximaArremesso);
             velocidade = direcao * rapidezHorizontal + Vector3.up * subida;
+        }
+
+        /// <summary>
+        /// Quanto a distância muda com a força: 1 dentro da faixa verde; menos antes (bola curta);
+        /// mais depois (bola isolada).
+        /// </summary>
+        private float FatorDistancia(float cargaFinal)
+        {
+            if (cargaFinal < config.inicioFaixaVerde)
+                return Mathf.Lerp(config.fatorDistanciaSemForca, 1f, cargaFinal / Mathf.Max(0.01f, config.inicioFaixaVerde));
+            if (cargaFinal > config.fimFaixaVerde)
+                return Mathf.Lerp(1f, config.fatorDistanciaForcaMaxima,
+                                  (cargaFinal - config.fimFaixaVerde) / Mathf.Max(0.01f, 1f - config.fimFaixaVerde));
+            return 1f;
         }
 
         /// <summary>
@@ -368,7 +413,7 @@ namespace BetsDeRua
         /// </summary>
         private void PreviaDoLancamento(out Vector3 saida, out Vector3 velocidade)
         {
-            TipoArremesso tipo = carregando ? tipoCarregando : TipoArremesso.Forte;
+            TipoArremesso tipo = TipoEfetivo(carregando ? tipoCarregando : TipoArremesso.Forte, jogador.Controlador);
             float cargaPrevia = carregando ? carga : (config.inicioFaixaVerde + config.fimFaixaVerde) * 0.5f;
             CalcularLancamento(tipo, cargaPrevia, false, out saida, out velocidade, out _);
         }

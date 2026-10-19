@@ -207,10 +207,8 @@ namespace BetsDeRua
             Vector3 rumo = bola.Velocidade;
             rumo.y = 0f;
             Vector3 eixoLateral = Vector3.Cross(Vector3.up, rumo);
-            Vector2 analogico = humano.MiraAnalogica;
-            Vector3 empurrao = new Vector3(analogico.x, 0f, analogico.y);
-            float intensidade = eixoLateral.sqrMagnitude > 0.0001f ? Vector3.Dot(empurrao, eixoLateral.normalized) : 0f;
-            bola.DefinirCurva(eixoLateral, intensidade);
+            // Ponto de vista de quem arremessou: analógico para a direita = a bola curva para a direita dela
+            bola.DefinirCurva(eixoLateral, humano.MiraAnalogica.x);
         }
 
         /// <summary>
@@ -745,7 +743,8 @@ namespace BetsDeRua
                 case TipoArremesso.Pingo: return "Pingo";
                 case TipoArremesso.Passe: return "Passe";
                 case TipoArremesso.Lancamento: return "Lançamento";
-                default: return "Forte";
+                case TipoArremesso.Rasteira: return "Rasteira";
+                default: return "Reto";
             }
         }
 
@@ -816,8 +815,8 @@ namespace BetsDeRua
             if (Estado == EstadoLance.Arremesso)
             {
                 instrucoes += bolaHumano
-                    ? "ARREMESSO: R2 / clique esq. reto · L2 / E quicado · R1 / clique dir. pingo (solte na faixa verde)\n" +
-                      "   depois de soltar: analógico direito faz a bola curvar\n"
+                    ? "ARREMESSO: R2 reto (+ analógico dir. para baixo = rasteira) · L2 quicado · R1 pingo\n" +
+                      "   força: antes do verde cai curta, no verde chega na garrafa, depois isola · depois de soltar, analógico dir. curva\n"
                     : "ARREMESSO: a CPU arremessa (Select / Tab troca de dupla)\n";
                 if (tacoHumano)
                     instrucoes += "REBATEDOR: dentro do círculo o taco fica no chão sozinho (garrafa vermelha = fora, pode ser queimada)\n" +

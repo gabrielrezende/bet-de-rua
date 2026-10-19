@@ -184,6 +184,20 @@ namespace BetsDeRua
         [Tooltip("Curva do analógico na mira: 1 = linear; maior = mais fino perto do centro (2 = metade do curso " +
                  "move só 1/4 do raioMira).")]
         public float curvaMiraAnalogico = 2.2f;
+        [Tooltip("Força = distância. Soltando com o arco vazio, a bola vai só esta fração da distância até o alvo (cai curta).")]
+        public float fatorDistanciaSemForca = 0.45f;
+        [Tooltip("Força = distância. Com o arco cheio (passou do verde), a bola vai esta vezes a distância até o alvo (isola).")]
+        public float fatorDistanciaForcaMaxima = 1.9f;
+        [Tooltip("Rasteira (R2 + analógico direito para baixo): velocidade mínima e máxima (km/h).")]
+        public float rasteiraMinimaKmh = 35f;
+        public float rasteiraMaximaKmh = 70f;
+        [Tooltip("Maior velocidade para cima (m/s) que um arremesso pode ter: a bola isola, mas sem subir demais.")]
+        public float subidaMaximaArremesso = 9f;
+        [Tooltip("Rasteira: quanto (0 a 1) o analógico direito precisa estar para baixo, segurando o R2.")]
+        [Range(0.1f, 0.95f)] public float limiteAnalogicoRasteira = 0.5f;
+        [Tooltip("Liga o sorteio de erro de direção fora da faixa verde (o jeito antigo). Desligado: a força só " +
+                 "muda a distância, sem sorte.")]
+        public bool erroAleatorioForaDaFaixa = false;
         [Tooltip("Erro máximo de direção soltando antes da faixa verde (graus). " +
                  "A garrafa é fina: 0,3° já erra por ~10 cm a 20 m.")]
         public float erroMaximoAntesDaFaixa = 0.5f;
