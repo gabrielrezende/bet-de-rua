@@ -60,6 +60,17 @@ namespace BetsDeRua
                 if (humano.ApertouTrocarDupla) TrocarDupla(humano);
                 // L1 troca para o parceiro, na defesa e no ataque (o taco no chão é automático)
                 else if (humano.ApertouTrocarJogador) TrocarParceiro(humano);
+                // Rebatedor correndo: □ se joga para a frente e desliza para alcançar a base com o taco
+                else if (humano.ApertouPegar && humano.Jogador != null && humano.Jogador.Papel == Papel.Rebatedor)
+                {
+                    Rebatedor rebatedor = humano.Jogador.GetComponent<Rebatedor>();
+                    if (rebatedor == null || !rebatedor.Ativo)
+                    {
+                        Vector3 rumo = humano.Jogador.Velocidade.sqrMagnitude > 0.5f ? humano.Jogador.Velocidade : humano.Jogador.transform.forward;
+                        humano.Jogador.Mergulhar(rumo, false);
+                        RegistroPartida.Evento($"{humano.Jogador.Nome} se joga para alcançar a base");
+                    }
+                }
 
                 if (humano.Jogador != null)
                     humano.Jogador.DefinirEntrada(humano.Movimento, humano.Sprint, humano.Devagar);

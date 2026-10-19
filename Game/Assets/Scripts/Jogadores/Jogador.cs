@@ -320,10 +320,16 @@ namespace BetsDeRua
             return ZonaDoTaco.NaZonaSegura(transform.position, posicaoGarrafa, config);
         }
 
-        /// <summary>True se o jogador está na zona segura de alguma base.</summary>
+        /// <summary>
+        /// True se o jogador está na zona segura de alguma base. Rebatedor se jogando: vale também
+        /// a ponta do taco esticado à frente (como deslizar na base do beisebol).
+        /// </summary>
         public bool DentroDoCirculo()
         {
-            return ZonaDoTaco.NaZonaSeguraDeAlguma(transform.position, config);
+            if (ZonaDoTaco.NaZonaSeguraDeAlguma(transform.position, config)) return true;
+            if (papel != Papel.Rebatedor || !Mergulhando) return false;
+            Vector3 pontaDoTaco = transform.position + direcaoMergulho * config.alcanceTacoNoMergulho;
+            return ZonaDoTaco.NaZonaSeguraDeAlguma(pontaDoTaco, config);
         }
     }
 }

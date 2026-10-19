@@ -131,8 +131,9 @@ namespace BetsDeRua
             switch (Estado)
             {
                 case EstadoLance.Arremesso:
-                    // A bola acompanha a mão do arremessador
+                    // A bola acompanha a mão do arremessador; a CPU arremessa do lugar dela, atrás da garrafa
                     bola.Colocar(arremessadorDaVez.PosicaoMao);
+                    arremessadorDaVez.LugarDoArremessoCpu = PosicaoDeGuarda(arremessadorDaVez.Jogador);
                     LiberarDefensores(false);
                     // Segurança: o arremessador ficou sem a bola (arremesso ignorado) e o jogo travaria
                     tempoSemBolaNoArremesso = arremessadorDaVez.ComBola ? 0f : tempoSemBolaNoArremesso + Time.deltaTime;
@@ -833,7 +834,7 @@ namespace BetsDeRua
                       "   força: antes do verde cai curta, no verde chega na garrafa, depois isola · depois de soltar, analógico dir. curva\n"
                     : "ARREMESSO: a CPU arremessa (Select / Tab troca de dupla)\n";
                 if (tacoHumano)
-                    instrucoes += "REBATEDOR: dentro do círculo o taco fica no chão sozinho (garrafa vermelha = fora, pode ser queimada)\n" +
+                    instrucoes += "REBATEDOR: perto da base o taco fica no chão sozinho (bolinha verde em cima = seguro, vermelha = pode ser queimado)\n" +
                                   "   batida: R2 forte · R1 toque · L2 cavadinha · direção: analógico direito / mouse\n";
             }
             else if (Estado == EstadoLance.BolaViva)
@@ -841,7 +842,7 @@ namespace BetsDeRua
                 if (rebatedorDaVez != null && rebatedorDaVez.Ativo && tacoHumano)
                     instrucoes += "BATIDA: R2 forte · R1 toque · L2 cavadinha — bata quando o anel fechar\n";
                 if (tacoHumano && rebatida)
-                    instrucoes += "CORRIDA: R1 / Shift sprint · no meio, X (A) / Espaço cruza · volte para o círculo · L1 / Q troca de jogador\n";
+                    instrucoes += "CORRIDA: R1 / Shift sprint · passe perto do parceiro no meio para cruzar · chegue na outra base · □ desliza · L1 troca\n";
                 if (bolaHumano)
                     instrucoes += portador != null && portador.Jogador.Controlador != null
                         ? "COM A BOLA: R2 chuta na garrafa · R1 passe · L2 lançamento · mira: analógico direito\n" +

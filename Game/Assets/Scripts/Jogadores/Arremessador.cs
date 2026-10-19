@@ -55,6 +55,8 @@ namespace BetsDeRua
         public Garrafa Alvo { get; set; }
         /// <summary>Colega para o passe e o lançamento (no campo).</summary>
         public Jogador Parceiro { get; set; }
+        /// <summary>Onde a CPU precisa estar para arremessar (null = de onde estiver). Quem define é o ControladorLance.</summary>
+        public Vector3? LugarDoArremessoCpu { get; set; }
         /// <summary>Garrafa da base dele: no arremesso, não pode passar à frente dela.</summary>
         public Garrafa GarrafaPropria { get; set; }
         public Jogador Jogador => jogador;
@@ -257,6 +259,13 @@ namespace BetsDeRua
             if (!configPartida.arremessadorAutomatico) return;
             // Ainda andando para o lugar do arremesso (sem bola morta ninguém é teleportado): espera chegar
             if (!jogador.EstaParado) { esperaCpu = 0f; return; }
+            // Ainda longe do lugar do arremesso (atrás da garrafa, fora da linha do parceiro): espera chegar
+            if (LugarDoArremessoCpu.HasValue)
+            {
+                Vector3 falta = LugarDoArremessoCpu.Value - transform.position;
+                falta.y = 0f;
+                if (falta.magnitude > configPartida.folgaLugarArremessoCpu) { esperaCpu = 0f; return; }
+            }
             jogador.OlharPara(Alvo.transform.position - transform.position);
             esperaCpu += Time.deltaTime;
             if (esperaCpu < configPartida.esperaArremessoAutomatico) return;

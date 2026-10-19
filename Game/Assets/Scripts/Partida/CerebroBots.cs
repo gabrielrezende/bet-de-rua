@@ -310,6 +310,7 @@ namespace BetsDeRua
         // Parceiro bot de uma pessoa no taco: de que base ele saiu (-1 = A, +1 = B)
         private float baseDoParceiro;
         private bool parceiroViajando;
+        private float proximaDecisaoParceiro;   // evita o parceiro ficar indo e voltando a cada passo da pessoa
 
         /// <summary>
         /// Uma pessoa no taco e o parceiro bot: ele NÃO copia cada passo (senão os dois ficam
@@ -324,17 +325,21 @@ namespace BetsDeRua
             float meio = configFisica.distanciaBases * 0.5f;
             Vector3 h = humano.transform.position;
             float ladoDaPessoa = h.x < 0f ? -1f : 1f;
-            // A pessoa está indo: fora da zona e já perto do meio, ou andando para o meio
+            // Velocidade da pessoa rumo ao meio do campo (negativa = voltando para a base dela)
             float rumoAoMeio = -ladoDaPessoa * humano.Velocidade.x;
-            bool pessoaIndo = !humano.DentroDoCirculo()
-                              && (Mathf.Abs(h.x) < meio - configPartida.distanciaParaParceiroSair || rumoAoMeio > 1f);
+            float distanciaDaBase = meio - Mathf.Abs(h.x);
+            bool podeDecidir = Time.time >= proximaDecisaoParceiro;
 
             if (!parceiroViajando)
             {
                 if (parceiro.DentroDoCirculo()) baseDoParceiro = parceiro.transform.position.x < 0f ? -1f : 1f;
-                if (pessoaIndo && !corrida.EsperandoChegarNaBase)
+                // Só sai quando a pessoa sai de verdade: já longe da base E correndo para o meio
+                bool pessoaFoi = !humano.DentroDoCirculo() && distanciaDaBase >= configPartida.distanciaParaParceiroSair
+                                 && rumoAoMeio > configPartida.velocidadeParaParceiroSair;
+                if (podeDecidir && pessoaFoi && !corrida.EsperandoChegarNaBase)
                 {
                     parceiroViajando = true;
+                    proximaDecisaoParceiro = Time.time + configPartida.intervaloDecisaoParceiro;
                     RegistroPartida.Evento($"{parceiro.Nome} (bot) acompanha a corrida de {humano.Nome}");
                 }
             }
@@ -343,25 +348,24 @@ namespace BetsDeRua
                 // Chegou do outro lado: a viagem acabou
                 bool chegou = parceiro.DentroDoCirculo() && (parceiro.transform.position.x < 0f ? -1f : 1f) != baseDoParceiro;
                 if (chegou) { parceiroViajando = false; baseDoParceiro = -baseDoParceiro; }
+                else if (podeDecidir && !corrida.EsperandoChegarNaBase)
+                {
+                    // Antes de cruzar, a pessoa virou e está voltando (ou já voltou): ele desiste junto,
+                    // se ainda não passou do meio
+                    bool pessoaVoltando = humano.DentroDoCirculo() || rumoAoMeio < -configPartida.velocidadeParaParceiroSair;
+                    bool passouDoMeio = Mathf.Sign(parceiro.transform.position.x) != baseDoParceiro;
+                    if (pessoaVoltando && !passouDoMeio)
+                    {
+                        parceiroViajando = false;
+                        proximaDecisaoParceiro = Time.time + configPartida.intervaloDecisaoParceiro;
+                        RegistroPartida.Evento($"{parceiro.Nome} (bot) volta: {humano.Nome} desistiu");
+                    }
+                }
             }
 
-            float lado = configPartida.afastamentoParceiroEspelho * 0.5f;
-            Vector3 destino;
-            if (parceiroViajando)
-            {
-                // Desistiu? A pessoa voltou para a base de onde saiu antes de cruzar: ele volta também
-                bool pessoaDesistiu = humano.DentroDoCirculo() && !corrida.EsperandoChegarNaBase
-                                      && (h.x < 0f ? -1f : 1f) == -baseDoParceiro;
-                bool passouDoMeio = Mathf.Sign(parceiro.transform.position.x) != baseDoParceiro;
-                if (pessoaDesistiu && !passouDoMeio)
-                {
-                    parceiroViajando = false;
-                    RegistroPartida.Evento($"{parceiro.Nome} (bot) volta: {humano.Nome} desistiu");
-                }
-                destino = parceiroViajando ? NoCaminho(parceiro, new Vector3(-baseDoParceiro * meio, 0f, configPartida.afastamentoRebatedor))
-                                           : PontoNaBase(parceiro.transform.position);
-            }
-            else destino = PontoNaBase(parceiro.transform.position);
+            Vector3 destino = parceiroViajando
+                ? NoCaminho(parceiro, new Vector3(-baseDoParceiro * meio, 0f, configPartida.afastamentoRebatedor))
+                : PontoNaBase(parceiro.transform.position);
             IrPara(parceiro, destino);
         }
 

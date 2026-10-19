@@ -99,6 +99,9 @@ namespace BetsDeRua
         public float folgaParaChutarBot = 0.15f;
         [Tooltip("Tempo de reação (s) do defensor bot antes de soltar o chute (ele não enche o arco como a pessoa).")]
         public float reacaoChuteBot = 0.15f;
+        [Tooltip("O arremessador bot só arremessa quando está a até esta distância (m) do lugar dele, atrás da garrafa " +
+                 "(senão pode jogar a bola no próprio parceiro rebatedor).")]
+        public float folgaLugarArremessoCpu = 0.5f;
         [Tooltip("Tempo de reação (s) que o defensor bot supõe que o rebatedor fora da zona leva para começar a voltar. " +
                  "Maior = o bot arrisca jogar na garrafa mais vezes.")]
         public float reacaoRebatedor = 0.3f;
@@ -107,6 +110,11 @@ namespace BetsDeRua
         [Tooltip("Parceiro bot de uma pessoa no taco: sai para a viagem quando a pessoa já está a esta distância (m) " +
                  "da base, rumo ao meio (ou correndo para o meio).")]
         public float distanciaParaParceiroSair = 2f;
+        [Tooltip("Parceiro bot de uma pessoa no taco: a pessoa precisa estar correndo para o meio (ou de volta) com " +
+                 "pelo menos esta velocidade (m/s) para ele sair (ou desistir junto).")]
+        public float velocidadeParaParceiroSair = 2f;
+        [Tooltip("Parceiro bot: tempo mínimo (s) entre uma decisão e outra (sair / desistir), para não ficar indo e voltando.")]
+        public float intervaloDecisaoParceiro = 0.6f;
         [Tooltip("Apoio: com a bola a mais que isso (m) da casinha que ele guarda, o defensor bot que não vai " +
                  "na bola sai para o meio do caminho, para receber o passe.")]
         public float distanciaParaApoio = 8f;

@@ -145,6 +145,8 @@ namespace BetsDeRua
         public float anguloTacoLevantado = 25f;
         [Tooltip("Cruzada: quanto tempo (s) os dois ficam com os tacos levantados e batendo em X.")]
         public float duracaoBaterTacos = 0.35f;
+        [Tooltip("Rebatedor se jogando (□ correndo): a ponta do taco esticado alcança a base até esta distância (m) à frente.")]
+        public float alcanceTacoNoMergulho = 1.4f;
         [Tooltip("Cruzada: quanto o taco sobe ao bater no outro (1 = 45 graus; maior = mais em pé).")]
         public float alturaBaterTacos = 1.2f;
 

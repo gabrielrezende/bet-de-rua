@@ -21,6 +21,7 @@ MonoBehaviour:
   contarLancha: 0
   lanchaNoRebatedorDaVez: 0
   pontosQueimaErrada: 1
+  imunidadeGarrafaDePe: 0.6
   caiMetadeAoPerderTacoNoMatchPoint: 1
   pegarNoArPerdeTaco: 0
   afastamentoRebatedor: 1.1
@@ -46,7 +47,12 @@ MonoBehaviour:
   distanciaChuteBot: 9
   folgaParaChutarBot: 0.15
   reacaoChuteBot: 0.15
+  folgaLugarArremessoCpu: 0.5
+  reacaoRebatedor: 0.3
+  distanciaSairDaFaixa: 3
   distanciaParaParceiroSair: 2
+  velocidadeParaParceiroSair: 2
+  intervaloDecisaoParceiro: 0.6
   distanciaParaApoio: 14
   fracaoApoio: 0.45
   reacaoBot: 0.25

@@ -106,7 +106,9 @@ namespace BetsDeRua
             FisicaBola.Passo(config, ref posicao, ref velocidade, ref parada, dt);
             Parada = parada;
             if (posicao.y <= config.raioBola + 0.001f) QuicouDesdeLancamento = true;
-            if (!Parada) ColidirComGarrafas(config.raioBola);
+            // A garrafa usa o tamanho que se VÊ da bola (ela aparece maior que a real, para ler de longe):
+            // encostou na tela, derrubou
+            if (!Parada) ColidirComGarrafas(config.raioBola * config.escalaVisualBola);
             if (!Parada && CorposAtivos) ColidirComCorpos(config.raioBola);
         }
 
