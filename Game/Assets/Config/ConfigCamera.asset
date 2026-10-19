@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 28a8cc6f741a14d01ab40aa377b983dc, type: 3}
   m_Name: ConfigCamera
   m_EditorClassIdentifier: Assembly-CSharp::BetsDeRua.ConfigCamera
-  altura: 14
-  distancia: 20
+  altura: 9.5
+  distancia: 21
   campoVisao: 40
   suavizacao: 0.3
   margemAlemDoMuro: 1.5

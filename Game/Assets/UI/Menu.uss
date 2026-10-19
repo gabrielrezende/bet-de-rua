@@ -1,0 +1,552 @@
+/* Bets de Rua — estilo dos menus e do HUD (UI Toolkit).
+   Clima de rua: fundo escuro translúcido, amarelo-giz de destaque, letras condensadas grandes. */
+
+.raiz {
+    flex-grow: 1;
+    -unity-font: url("Fontes/BarlowCondensed-SemiBold.ttf");
+    color: rgb(245, 245, 240);
+    font-size: 26px;
+}
+
+.titulo-logo {
+    -unity-font: url("Fontes/Bangers-Regular.ttf");
+    color: rgb(255, 214, 32);
+    font-size: 64px;
+    letter-spacing: 2px;
+    text-shadow: 4px 4px 0px rgb(20, 20, 26);
+    -unity-text-align: middle-left;
+    margin: 0;
+    padding: 0;
+}
+
+.titulo-logo-grande {
+    font-size: 190px;
+    -unity-text-align: middle-center;
+    text-shadow: 10px 10px 0px rgb(20, 20, 26);
+}
+
+.titulo {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 54px;
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-left;
+    text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.6);
+}
+
+.subtitulo {
+    font-size: 26px;
+    color: rgb(205, 210, 220);
+}
+
+.texto-pequeno {
+    font-size: 21px;
+    color: rgb(190, 195, 205);
+}
+
+/* ---------- barras de cima e de baixo ---------- */
+
+.barra-topo {
+    flex-direction: row;
+    align-items: center;
+    height: 110px;
+    padding-left: 56px;
+    padding-right: 56px;
+    background-color: rgba(10, 12, 18, 0.82);
+    border-bottom-width: 3px;
+    border-bottom-color: rgb(255, 214, 32);
+}
+
+.barra-rodape {
+    flex-direction: row;
+    align-items: center;
+    height: 64px;
+    padding-left: 56px;
+    padding-right: 56px;
+    background-color: rgba(10, 12, 18, 0.85);
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.dica-botao {
+    flex-direction: row;
+    align-items: center;
+    margin-right: 36px;
+    font-size: 24px;
+}
+
+.icone-botao {
+    width: 34px;
+    height: 34px;
+    margin-right: 10px;
+}
+
+.icone-texto {
+    min-width: 34px;
+    height: 34px;
+    margin-right: 10px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 8px;
+    background-color: rgb(235, 235, 235);
+    color: rgb(20, 20, 26);
+    font-size: 20px;
+    -unity-text-align: middle-center;
+    -unity-font: url("Fontes/BarlowCondensed-Bold.ttf");
+}
+
+/* ---------- abas (L1 / R1) ---------- */
+
+.abas {
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 1;
+    justify-content: center;
+}
+
+.aba {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 30px;
+    color: rgb(150, 155, 165);
+    padding: 6px 22px;
+    margin: 0 6px;
+    border-bottom-width: 5px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+}
+
+.aba-ativa {
+    color: rgb(255, 255, 255);
+    border-bottom-color: rgb(255, 214, 32);
+}
+
+/* ---------- blocos (tiles) ---------- */
+
+.grade {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    padding: 46px 0 0 56px;
+    width: 62%;
+}
+
+.bloco {
+    width: 520px;
+    height: 250px;
+    margin: 0 22px 22px 0;
+    padding: 26px 30px;
+    background-color: rgba(28, 32, 44, 0.9);
+    border-width: 3px;
+    border-color: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    justify-content: flex-end;
+    transition-property: scale, border-color, translate;
+    transition-duration: 0.12s;
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.bloco-grande {
+    width: 1062px;
+    height: 300px;
+}
+
+.bloco-selecionado {
+    border-color: rgb(255, 214, 32);
+    border-width: 5px;
+    scale: 1.03 1.03;
+}
+
+.bloco-desligado {
+    opacity: 0.55;
+}
+
+.bloco-titulo {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 50px;
+    color: rgb(255, 255, 255);
+    text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.7);
+    white-space: normal;
+}
+
+.bloco-texto {
+    font-size: 25px;
+    color: rgb(230, 232, 238);
+    white-space: normal;
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.6);
+}
+
+.selo {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    padding: 4px 14px;
+    background-color: rgb(255, 214, 32);
+    color: rgb(20, 20, 26);
+    -unity-font: url("Fontes/BarlowCondensed-Bold.ttf");
+    font-size: 22px;
+    border-radius: 4px;
+}
+
+/* ---------- cartão do jogador (canto) ---------- */
+
+.cartao {
+    flex-direction: row;
+    align-items: center;
+    padding: 8px 18px;
+    background-color: rgba(255, 255, 255, 0.07);
+    border-radius: 6px;
+}
+
+.cartao-nota {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 46px;
+    color: rgb(255, 214, 32);
+    margin-right: 14px;
+}
+
+.cartao-nome {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 28px;
+}
+
+/* ---------- listas de opções (criador, ajustes) ---------- */
+
+.painel {
+    background-color: rgba(14, 16, 24, 0.88);
+    border-radius: 6px;
+    padding: 24px 28px;
+}
+
+.linha-opcao {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    height: 62px;
+    padding: 0 18px;
+    margin-bottom: 6px;
+    background-color: rgba(255, 255, 255, 0.04);
+    border-left-width: 6px;
+    border-left-color: rgba(0, 0, 0, 0);
+    border-radius: 4px;
+}
+
+.linha-selecionada {
+    background-color: rgba(255, 214, 32, 0.16);
+    border-left-color: rgb(255, 214, 32);
+}
+
+.opcao-nome {
+    font-size: 27px;
+    color: rgb(220, 224, 232);
+}
+
+.opcao-valor {
+    -unity-font: url("Fontes/BarlowCondensed-Bold.ttf");
+    font-size: 29px;
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-center;
+    min-width: 260px;
+}
+
+.seta {
+    -unity-font: url("Fontes/BarlowCondensed-Bold.ttf");
+    font-size: 30px;
+    color: rgb(255, 214, 32);
+    width: 30px;
+    -unity-text-align: middle-center;
+}
+
+.amostra-cor {
+    width: 30px;
+    height: 30px;
+    border-radius: 15px;
+    border-width: 2px;
+    border-color: rgb(255, 255, 255);
+    margin-left: 10px;
+}
+
+.categoria {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 30px;
+    color: rgb(150, 155, 165);
+    padding: 12px 18px;
+    margin-bottom: 4px;
+    border-left-width: 6px;
+    border-left-color: rgba(0, 0, 0, 0);
+}
+
+.categoria-ativa {
+    color: rgb(20, 20, 26);
+    background-color: rgb(255, 214, 32);
+    border-left-color: rgb(255, 255, 255);
+}
+
+/* ---------- barras de atributo ---------- */
+
+.atributo {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.atributo-nome {
+    width: 150px;
+    font-size: 25px;
+}
+
+.atributo-fundo {
+    flex-grow: 1;
+    height: 16px;
+    background-color: rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    margin: 0 14px;
+}
+
+.atributo-barra {
+    height: 100%;
+    border-radius: 8px;
+    background-color: rgb(255, 214, 32);
+    transition-property: width;
+    transition-duration: 0.2s;
+}
+
+.atributo-valor {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    width: 50px;
+    font-size: 28px;
+    -unity-text-align: middle-right;
+}
+
+/* ---------- escolha de lado (estilo FIFA) ---------- */
+
+.colunas-lado {
+    flex-direction: row;
+    flex-grow: 1;
+    padding: 58px 56px 120px 56px;
+}
+
+.coluna-lado {
+    flex-grow: 1;
+    flex-basis: 0;
+    margin: 0 12px;
+    padding: 24px;
+    background-color: rgba(14, 16, 24, 0.85);
+    border-radius: 6px;
+    border-top-width: 8px;
+    align-items: center;
+}
+
+.coluna-cpu {
+    border-top-color: rgb(120, 125, 135);
+}
+
+.ficha-pessoa {
+    flex-direction: row;
+    align-items: center;
+    width: 92%;
+    height: 96px;
+    margin-top: 16px;
+    padding: 0 18px;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+}
+
+.ficha-numero {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 44px;
+    width: 72px;
+    -unity-text-align: middle-center;
+    border-radius: 6px;
+    margin-right: 16px;
+    color: rgb(20, 20, 26);
+}
+
+.ficha-vazia {
+    opacity: 0.35;
+}
+
+/* ---------- abertura ---------- */
+
+.abertura {
+    flex-grow: 1;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 60px;
+    padding-bottom: 110px;
+    background-color: rgba(8, 10, 16, 0.2);
+}
+
+.aperte-start {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 46px;
+    color: rgb(255, 255, 255);
+    margin-top: 40px;
+    letter-spacing: 6px;
+    text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.7);
+    transition-property: opacity;
+    transition-duration: 0.6s;
+}
+
+/* ---------- HUD da partida ---------- */
+
+.placar {
+    position: absolute;
+    top: 28px;
+    left: 36px;
+    flex-direction: row;
+    align-items: stretch;
+    height: 64px;
+}
+
+.placar-time {
+    flex-direction: row;
+    align-items: center;
+    padding: 0 18px;
+    background-color: rgba(12, 14, 20, 0.88);
+}
+
+.placar-cor {
+    width: 12px;
+    height: 100%;
+}
+
+.placar-nome {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 30px;
+    margin: 0 12px;
+}
+
+.placar-pontos {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 42px;
+    min-width: 46px;
+    -unity-text-align: middle-center;
+    background-color: rgb(245, 245, 240);
+    color: rgb(20, 20, 26);
+}
+
+.placar-info {
+    margin-left: 10px;
+    padding: 0 14px;
+    background-color: rgba(255, 214, 32, 0.95);
+    color: rgb(20, 20, 26);
+    -unity-font: url("Fontes/BarlowCondensed-Bold.ttf");
+    font-size: 24px;
+    -unity-text-align: middle-center;
+}
+
+.mensagem-lance {
+    position: absolute;
+    top: 140px;
+    left: 0;
+    right: 0;
+    -unity-text-align: middle-center;
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 40px;
+    color: rgb(255, 255, 255);
+    text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.75);
+    white-space: normal;
+}
+
+.mensagem-ponto {
+    font-size: 96px;
+    color: rgb(255, 214, 32);
+    text-shadow: 6px 6px 0px rgb(20, 20, 26);
+}
+
+.instrucoes {
+    position: absolute;
+    left: 36px;
+    bottom: 26px;
+    max-width: 1100px;
+    padding: 10px 18px;
+    background-color: rgba(10, 12, 18, 0.65);
+    border-radius: 6px;
+    font-size: 23px;
+    white-space: normal;
+}
+
+.faixa-troca {
+    position: absolute;
+    top: 40%;
+    left: 0;
+    right: 0;
+    height: 150px;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(10, 12, 18, 0.88);
+    border-top-width: 5px;
+    border-bottom-width: 5px;
+    border-color: rgb(255, 214, 32);
+}
+
+.sobreposicao {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(6, 8, 12, 0.78);
+    justify-content: center;
+    align-items: center;
+}
+
+.menu-vertical {
+    width: 620px;
+}
+
+.botao-menu {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 36px;
+    height: 74px;
+    padding-left: 26px;
+    margin-bottom: 10px;
+    -unity-text-align: middle-left;
+    background-color: rgba(255, 255, 255, 0.06);
+    border-left-width: 8px;
+    border-left-color: rgba(0, 0, 0, 0);
+    transition-property: translate;
+    transition-duration: 0.1s;
+}
+
+.botao-selecionado {
+    background-color: rgb(255, 214, 32);
+    color: rgb(20, 20, 26);
+    border-left-color: rgb(255, 255, 255);
+    translate: 12px 0;
+}
+
+.placar-final {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 150px;
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-center;
+    text-shadow: 6px 6px 0px rgba(0, 0, 0, 0.7);
+}
+
+.estatistica {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 620px;
+    font-size: 28px;
+    padding: 6px 0;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ---------- campos de texto (nome, código) ---------- */
+
+.unity-text-field__input {
+    background-color: rgba(0, 0, 0, 0.55);
+    color: rgb(255, 255, 255);
+    border-color: rgb(255, 214, 32);
+    border-width: 2px;
+    font-size: 28px;
+    -unity-font: url("Fontes/BarlowCondensed-Bold.ttf");
+    padding: 4px 12px;
+}
+
+.unity-text-field > .unity-label {
+    color: rgb(190, 195, 205);
+    font-size: 22px;
+}

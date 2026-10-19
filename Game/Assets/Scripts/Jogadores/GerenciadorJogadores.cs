@@ -32,11 +32,32 @@ namespace BetsDeRua
 
         public IReadOnlyList<Jogador> Jogadores => jogadores;
 
+        // Veio do menu: as pessoas, os controles e os lados já foram escolhidos lá
+        private bool doMenu;
+
+        private void Start()
+        {
+            if (!SessaoDeJogo.Configurada) return;
+            doMenu = true;
+            escolhendoTime = false;
+            Time.timeScale = 1f;
+            foreach (PessoaNaPartida pessoa in SessaoDeJogo.Pessoas)
+            {
+                ControleHumano humano = pessoa.dispositivo is Gamepad controle
+                    ? new ControleHumano(pessoa.numero, controle)
+                    : new ControleHumano(pessoa.numero, Keyboard.current);
+                humanos.Add(humano);
+                // Lado 1 começa no taco, Lado 2 na bola
+                Assumir(humano, PrimeiroLivre(pessoa.lado == 0 ? Dupla.Taco : Dupla.Bola));
+            }
+            if (SessaoDeJogo.Pessoas.Count > 0) duplaDoTime = SessaoDeJogo.Pessoas[0].lado == 0 ? Dupla.Taco : Dupla.Bola;
+        }
+
         private void Update()
         {
             // F2 liga e desliga o modo assistir (todos os jogadores viram bots)
             Keyboard teclado = Keyboard.current;
-            if (teclado != null && teclado.f2Key.wasPressedThisFrame) configPartida.soAssistir = !configPartida.soAssistir;
+            if (teclado != null && teclado.f2Key.wasPressedThisFrame && !doMenu) configPartida.soAssistir = !configPartida.soAssistir;
             if (configPartida.soAssistir)
             {
                 // Ninguém joga: solta todo mundo (os bots assumem) e não deixa ninguém entrar
@@ -52,12 +73,15 @@ namespace BetsDeRua
             }
 
             RemoverDesconectados();
-            EntrarNovosControles();
-            EntrarTeclado();
+            if (!doMenu)
+            {
+                EntrarNovosControles();
+                EntrarTeclado();
+            }
 
             foreach (ControleHumano humano in humanos)
             {
-                if (humano.ApertouTrocarDupla) TrocarDupla(humano);
+                if (humano.ApertouTrocarDupla && !doMenu) TrocarDupla(humano);
                 // L1 troca para o parceiro, na defesa e no ataque (o taco no chão é automático)
                 else if (humano.ApertouTrocarJogador) TrocarParceiro(humano);
                 // Rebatedor correndo: □ se joga para a frente e desliza para alcançar a base com o taco
@@ -298,9 +322,10 @@ namespace BetsDeRua
             if (configPartida.soAssistir)
             {
                 GUI.Label(new Rect(Screen.width - 716, Screen.height - 130, 700, 90),
-                          "MODO ASSISTIR: todos são bots (F2 para voltar a jogar)", estilo);
+                          doMenu ? "MODO ASSISTIR: todos são bots (OPTIONS / Esc: pausa)" : "MODO ASSISTIR: todos são bots (F2 para voltar a jogar)", estilo);
                 return;
             }
+            if (HUDPartida.Ativo) return;
             string texto = "JOGADORES (L1/Q troca de jogador · Select ou Tab: trocar de dupla · F2: só assistir)\n";
             if (humanos.Count == 0) texto += "Conecte um controle ou aperte WASD para entrar\n";
             foreach (ControleHumano humano in humanos)

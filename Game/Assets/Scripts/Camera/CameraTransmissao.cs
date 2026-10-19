@@ -162,7 +162,8 @@ namespace BetsDeRua
             // Afastar = recuar na mesma linha, sem mudar o ângulo
             transform.position = new Vector3(focoX, configCamera.altura * afastamento,
                                              -configCamera.distancia * afastamento);
-            transform.rotation = Quaternion.LookRotation(foco - transform.position, Vector3.up);
+            // Levanta um pouco o olhar: a rua desce na tela e aparecem mais casas e céu (menos chão perto da câmera)
+            transform.rotation = Quaternion.LookRotation(foco - transform.position, Vector3.up) * Quaternion.Euler(-configCamera.inclinarParaCima, 0f, 0f);
         }
     }
 }

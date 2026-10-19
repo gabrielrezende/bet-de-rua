@@ -72,6 +72,32 @@ namespace BetsDeRua
         private float ladoDoArremessoBot;       // quanto o arremessador bot sai para o lado neste lance (m)                // o bate-pronto deste arremesso já foi usado           // a bola no ar é a do arremesso (ninguém rebateu nem pegou ainda)
 
         public EstadoLance Estado { get; private set; }
+
+        // ---- Para o HUD (placar, mensagem, instruções) e o treino
+        public int Pontos(int lado) => pontos[lado];
+        public int LadoNoTaco => ladoNoTaco;
+        public int Vencedor => vencedor;
+        public int Meta => configPartida.metaPontos;
+        public int Lanchas => lanchas;
+        public int FaltasCorpo => faltasCorpo;
+        public int TrocasNaPartida => trocasNaPartida;
+        public float DuracaoDaPartida => Time.time - inicioDaPartida;
+        public bool MensagemVisivel => tempoMensagem < configHUD.duracaoMensagem && !string.IsNullOrEmpty(mensagem);
+        public string Mensagem => mensagem;
+        /// <summary>Contador da mensagem: muda a cada mensagem nova (o HUD anima a entrada).</summary>
+        public int NumeroDaMensagem { get; private set; }
+        public bool Treino => treino;
+        public EstatisticasTreino EstatisticasDoTreino { get; } = new EstatisticasTreino();
+        private bool treino;
+
+        /// <summary>Números do treino de arremesso.</summary>
+        public class EstatisticasTreino
+        {
+            public int arremessos, acertos, sequencia, melhorSequencia;
+            public float maiorKmh;
+            public string ultimoTipo = "";
+            public int Aproveitamento => arremessos > 0 ? Mathf.RoundToInt(100f * acertos / arremessos) : 0;
+        }
         public bool Rebatida => rebatida;
         public Arremessador Portador => portador;
         public Rebatedor RebatedorDaVez => rebatedorDaVez;
@@ -103,8 +129,12 @@ namespace BetsDeRua
             corrida.PontosValidados += AoValidarPontos;
             bola.TocouNoCorpo += AoLancha;
             NiveisBots.Lance = this;
+            treino = SessaoDeJogo.Configurada && SessaoDeJogo.Modo == ModoDeJogo.TreinoArremesso;
+            inicioDaPartida = Time.time;
             GuardarCoresDosTimes();
+            GuardarPerfisDosTimes();
             ProximoLance();
+            if (treino) Mostrar("TREINO DE ARREMESSO: derrube a garrafa!");
         }
 
         private void OnDestroy()
@@ -135,7 +165,6 @@ namespace BetsDeRua
         {
             tempoNoEstado += Time.deltaTime;
             tempoMensagem += Time.deltaTime;
-            if (ApertouReiniciar()) { ReiniciarPartida(); return; }
 
             switch (Estado)
             {
@@ -159,7 +188,7 @@ namespace BetsDeRua
                     break;
 
                 case EstadoLance.BolaMorta:
-                    if (tempoNoEstado > configPartida.tempoBolaMorta) ProximoLance();
+                    if (tempoNoEstado > (treino ? configPartida.tempoTreinoEntreArremessos : configPartida.tempoBolaMorta)) ProximoLance();
                     break;
 
                 case EstadoLance.TrocaDePapel:
@@ -186,6 +215,21 @@ namespace BetsDeRua
 
         private void AtualizarBolaViva()
         {
+            if (treino)
+            {
+                VerificarGarrafas();
+                if (Estado != EstadoLance.BolaViva) return;
+                LiberarDefensores(false);
+                ControlarCurva();
+                // Errou: a bola parou ou já passou da garrafa há um tempo
+                if (bola.Parada || tempoNoEstado > configPartida.tempoTreinoBolaViva)
+                {
+                    EstatisticasDoTreino.sequencia = 0;
+                    Mostrar("Passou! Tente de novo");
+                    MudarPara(EstadoLance.BolaMorta);
+                }
+                return;
+            }
             if (portador != null)
             {
                 bola.Colocar(portador.PosicaoMao);
@@ -292,7 +336,7 @@ namespace BetsDeRua
         {
             // Rodízio (GDD): a cada lance a defesa arremessa da outra casinha;
             // quem estava guardando atrás da casinha alvo é quem arremessa agora
-            if (primeiroLance)
+            if (primeiroLance || treino)
             {
                 primeiroLance = false;
                 arremessadorDaVez = arremessador;
@@ -326,7 +370,7 @@ namespace BetsDeRua
             rebatedorDaVez = MaisPerto(rebatedores, GarrafaAlvo.transform.position);
             foreach (Rebatedor rebatedor in rebatedores)
             {
-                if (rebatedor == rebatedorDaVez) rebatedor.PrepararParaArremesso();
+                if (rebatedor == rebatedorDaVez && !treino) rebatedor.PrepararParaArremesso();
                 else rebatedor.Encerrar();
             }
 
@@ -374,18 +418,15 @@ namespace BetsDeRua
                                    $"duração {Time.time - inicioDaPartida:0}s | trocas de papel {trocasNaPartida} | começou no taco: Lado {ladoQueComecou + 1}");
         }
 
-        /// <summary>Start (qualquer controle) ou Enter (teclado).</summary>
-        private static bool ApertouReiniciar()
+        /// <summary>Zera o placar e começa de novo, com o Lado 1 no taco (menu de pausa ou fim da partida).</summary>
+        public void ReiniciarPartida()
         {
-            foreach (UnityEngine.InputSystem.Gamepad controle in UnityEngine.InputSystem.Gamepad.all)
-                if (controle.startButton.wasPressedThisFrame) return true;
-            UnityEngine.InputSystem.Keyboard teclado = UnityEngine.InputSystem.Keyboard.current;
-            return teclado != null && (teclado.enterKey.wasPressedThisFrame || teclado.numpadEnterKey.wasPressedThisFrame);
-        }
-
-        /// <summary>Zera o placar e começa de novo, com o Lado 1 no taco.</summary>
-        private void ReiniciarPartida()
-        {
+            if (treino)
+            {
+                EstatisticasTreino e = EstatisticasDoTreino;
+                e.arremessos = e.acertos = e.sequencia = e.melhorSequencia = 0;
+                e.maiorKmh = 0f;
+            }
             pontos[0] = pontos[1] = 0;
             vencedor = -1;
             // Quem joga volta para o lado em que começou (Lado 1 no taco)
@@ -423,6 +464,31 @@ namespace BetsDeRua
         /// <summary>De que lado (0 = Lado 1, 1 = Lado 2) é este jogador agora (o time troca de dupla na troca de papel).</summary>
         public int LadoDe(Jogador jogador) => jogador.Dupla == Dupla.Taco ? ladoNoTaco : 1 - ladoNoTaco;
 
+        // Personagens de cada time (Lado 1 e Lado 2). Como a cor, o personagem acompanha o time:
+        // na troca de papel, quem estava na bola passa a aparecer no taco com o mesmo rosto e roupa.
+        private readonly List<PerfilPersonagem>[] perfisDoLado = { new List<PerfilPersonagem>(), new List<PerfilPersonagem>() };
+
+        private void GuardarPerfisDosTimes()
+        {
+            foreach (Jogador jogador in gerenciador.Jogadores)
+                perfisDoLado[jogador.Dupla == Dupla.Taco ? 0 : 1].Add(jogador.Perfil);
+        }
+
+        private void AplicarPerfisDosTimes()
+        {
+            int[] indice = new int[2];
+            foreach (Jogador jogador in gerenciador.Jogadores)
+            {
+                int lado = LadoDe(jogador);
+                List<PerfilPersonagem> lista = perfisDoLado[lado];
+                if (lista.Count == 0) continue;
+                PerfilPersonagem perfil = lista[indice[lado]++ % lista.Count];
+                if (perfil == null || perfil == jogador.Perfil) continue;
+                AparenciaBoneco aparencia = jogador.GetComponent<AparenciaBoneco>();
+                if (aparencia != null) aparencia.Montar(perfil);
+            }
+        }
+
         /// <summary>No começo o Lado 1 está no taco: guarda as cores que os bonecos têm agora.</summary>
         private void GuardarCoresDosTimes()
         {
@@ -437,6 +503,7 @@ namespace BetsDeRua
         /// <summary>Pinta cada boneco com a cor do time que está naquele papel agora.</summary>
         private void PintarTimes()
         {
+            AplicarPerfisDosTimes();
             foreach (Jogador jogador in gerenciador.Jogadores)
             {
                 int lado = jogador.Dupla == Dupla.Taco ? ladoNoTaco : 1 - ladoNoTaco;
@@ -488,6 +555,16 @@ namespace BetsDeRua
                 // o rebatedor tinha que ter rebatido). O "taco no chão protege" vale para a bola
                 // jogada na corrida, depois da batida.
                 bool arremesso = bolaDoArremesso;
+                if (treino)
+                {
+                    EstatisticasTreino e = EstatisticasDoTreino;
+                    e.acertos++;
+                    e.sequencia++;
+                    e.melhorSequencia = Mathf.Max(e.melhorSequencia, e.sequencia);
+                    Mostrar(e.sequencia >= 3 ? $"DERRUBOU! {e.sequencia} SEGUIDAS!" : "DERRUBOU!");
+                    MudarPara(EstadoLance.BolaMorta);
+                    return;
+                }
                 if (arremesso)
                 {
                     EntrarTrocaDePapel("QUEIMOU no arremesso!");
@@ -611,7 +688,13 @@ namespace BetsDeRua
             {
                 MudarPara(EstadoLance.BolaViva);
                 bola.Lancar(saida, velocidade, origem.Jogador);
-                bola.CorposAtivos = true; // lancha: o arremesso pode bater no corpo de um rebatedor
+                bola.CorposAtivos = !treino; // lancha: o arremesso pode bater no corpo de um rebatedor
+                if (treino)
+                {
+                    EstatisticasDoTreino.arremessos++;
+                    EstatisticasDoTreino.maiorKmh = Mathf.Max(EstatisticasDoTreino.maiorKmh, kmh);
+                    EstatisticasDoTreino.ultimoTipo = NomeDoTipo(tipo);
+                }
                 bolaDoArremesso = true;
                 batePronto = false;
                 rebatedorDaVez.ArremessoSaiu(velocidade);
@@ -877,6 +960,7 @@ namespace BetsDeRua
 
         private void Mostrar(string texto)
         {
+            NumeroDaMensagem++;
             mensagem = texto;
             tempoMensagem = 0f;
             RegistroPartida.Evento(texto);
@@ -975,40 +1059,46 @@ namespace BetsDeRua
             GUI.Label(new Rect(0, meio + 40, Screen.width, 30), "Start (controle) ou Enter (teclado): jogar de novo", menor);
         }
 
-        private void OnGUI()
+        /// <summary>O que apertar agora (muda com o momento do lance e com quem é pessoa).</summary>
+        public string TextoDasInstrucoes()
         {
-            GUIStyle estilo = new GUIStyle(GUI.skin.label) { fontSize = 14 };
-            estilo.normal.textColor = Color.white;
-
             string instrucoes = "";
             bool tacoHumano = gerenciador.TemHumanoNaDupla(Dupla.Taco);
             bool bolaHumano = gerenciador.TemHumanoNaDupla(Dupla.Bola);
 
+            // Curto, como as dicas de botão dos jogos de esporte: só o que vale para este momento
             if (Estado == EstadoLance.Arremesso)
             {
-                instrucoes += bolaHumano
-                    ? "ARREMESSO: R2 reto (+ analógico dir. para baixo = rasteira) · L2 quicado · R1 pingo · varie a altura!\n" +
-                      "   força: antes do verde cai curta, no verde chega, depois isola · depois de soltar: analógico dir. curva, □ bate-pronto\n"
-                    : "ARREMESSO: a CPU arremessa (Select / Tab troca de dupla)\n";
+                if (bolaHumano)
+                    instrucoes += "ARREMESSO   R2 reto · L2 quicado · R1 pingo · R2 + analógico dir. para baixo = rasteira · solte no verde\n";
                 if (tacoHumano)
-                    instrucoes += "REBATEDOR: perto da base o taco fica no chão sozinho (seta verde = seguro, vermelha piscando = pode ser queimado)\n" +
-                                  "   batida: bola NO AR = R2 (taco alto) · BAIXA = L2 (taco baixo) · R1+R2 cavadinha · direção: analógico direito\n";
+                    instrucoes += "BATIDA   bola no ar = R2 · bola baixa = L2 · R1 + R2 cavadinha · analógico dir. mira\n";
             }
             else if (Estado == EstadoLance.BolaViva)
             {
                 if (rebatedorDaVez != null && rebatedorDaVez.Ativo && tacoHumano)
-                    instrucoes += "BATIDA: bola NO AR = R2 (taco alto) · bola BAIXA = L2 (taco baixo) · R1+R2 cavadinha — bata quando o anel fechar\n";
+                    instrucoes += "BATIDA   bola no ar = R2 · bola baixa = L2 · bata quando o anel fechar\n";
                 if (tacoHumano && rebatida)
-                    instrucoes += "CORRIDA: R1 / Shift sprint · passe perto do parceiro no meio para cruzar · chegue na outra base · □ desliza · L1 troca\n";
+                    instrucoes += "CORRIDA   R1 corre · cruze com o parceiro no meio e chegue na outra base · □ se joga · L1 troca\n";
                 if (bolaHumano)
                     instrucoes += portador != null && portador.Jogador.Controlador != null
-                        ? "COM A BOLA: R2 chuta na garrafa · L2 passe · R1 corre · mira: analógico direito\n" +
-                          "   volte para trás de uma casinha: com os rebatedores seguros, você arremessa dali\n"
-                        : "DEFESA: R2 / L2 pega a bola · □ carrinho ou peixinho (para a bola; depois o gatilho pega) · L1 troca de jogador\n";
+                        ? "COM A BOLA   R2 chuta na garrafa · L2 passe · analógico dir. escolhe a garrafa · atrás da casinha você arremessa\n"
+                        : "DEFESA   R2 / L2 pega a bola · □ carrinho ou peixinho · L1 troca de jogador\n";
             }
-            else if (Estado == EstadoLance.BolaMorta) instrucoes += "Bola morta: novo arremesso";
             else if (Estado == EstadoLance.TrocaDePapel) instrucoes += "Troca de papel: quem defendia vai para o taco";
-            instrucoes += "\nStart / Enter: reiniciar a partida";
+            if (treino)
+                instrucoes = "R2 reto (+ analógico dir. para baixo = rasteira) · L2 quicado · R1 pingo · encha o arco até o verde\n" +
+                             "Depois de soltar: analógico direito curva, □ bate-pronto";
+            return instrucoes.TrimEnd('\n');
+        }
+
+        private void OnGUI()
+        {
+            if (HUDPartida.Ativo) return;
+            GUIStyle estilo = new GUIStyle(GUI.skin.label) { fontSize = 14 };
+            estilo.normal.textColor = Color.white;
+
+            string instrucoes = TextoDasInstrucoes();
             GUI.Label(new Rect(16, 62, 1000, 110), instrucoes, estilo);
 
             DesenharPlacar();

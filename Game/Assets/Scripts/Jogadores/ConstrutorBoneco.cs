@@ -298,10 +298,11 @@ namespace BetsDeRua
                 case Chapeu.BoneParaTras:
                 {
                     float frente = chapeu == Chapeu.Bone ? 1f : -1f;
-                    Peca("Time_Bone", cabeca, centro + new Vector3(0f, ry * 0.12f, 0f), new Vector3(rx, ry, rz) * 1.1f,
+                    // Boné: copa justa na cabeça (acima das orelhas) e aba comprida e fina
+                    Peca("Time_Bone", cabeca, centro + new Vector3(0f, ry * 0.22f, -rz * 0.02f), new Vector3(rx * 1.07f, ry * 0.86f, rz * 1.07f),
                          MalhasBoneco.Calota(0f, 90f), matTime);
-                    Peca("Time_Aba", cabeca, centro + new Vector3(0f, ry * 0.2f, frente * rz * 1.05f),
-                         new Vector3(rx * 0.85f, h * 0.018f, rz * 0.62f), MalhasBoneco.Calota(-90f, 90f), matTime);
+                    Peca("Time_Aba", cabeca, centro + new Vector3(0f, ry * 0.26f, frente * rz * 1.12f),
+                         new Vector3(rx * 0.82f, h * 0.014f, rz * 0.58f), MalhasBoneco.Calota(-90f, 90f), matTime, frente * -8f);
                     break;
                 }
                 case Chapeu.Bucket:

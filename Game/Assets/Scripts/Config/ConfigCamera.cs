@@ -17,6 +17,8 @@ namespace BetsDeRua
         public float distancia = 20f;
         [Tooltip("Campo de visão vertical (graus).")]
         public float campoVisao = 40f;
+        [Tooltip("Quanto a câmera levanta o olhar acima do centro do campo (graus): a rua fica mais embaixo na tela e aparecem mais casas.")]
+        public float inclinarParaCima = 7f;
 
         [Header("Enquadramento: os 4 jogadores e a bola sempre na tela")]
         [Tooltip("Folga além do jogador ou da bola mais na ponta (m).")]

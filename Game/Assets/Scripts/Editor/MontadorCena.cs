@@ -69,7 +69,7 @@ namespace BetsDeRua.Editor
                  new Vector3(comprimento, EspessuraChao, largura), matChao, true);
 
             // ---------- Rua: asfalto com faixa amarela, meio-fio, calçadas e fachadas ----------
-            MontarRua(campo.transform, config);
+            ConstrutorRuaEditor.Montar(campo.transform, config);
 
             // Bases riscadas de giz: casinha da garrafa + área do taco na frente (a zona segura em volta é invisível)
             GameObject bases = new GameObject("Bases");
@@ -264,9 +264,30 @@ namespace BetsDeRua.Editor
             LigarLista(bots, "rebatedores", new Object[] { rebatedorA, rebatedorB });
             LigarLista(bots, "defensores", listaDefensores.ToArray());
 
-            // Salva e põe a cena como a primeira do build
+            // ---------- Vindo do menu: pontos, dificuldade e personagens ----------
+            PartidaDoMenu doMenu = objLance.AddComponent<PartidaDoMenu>();
+            Ligar(doMenu, "configPartida", configPartida);
+            Ligar(doMenu, "gerenciador", gerenciador);
+
+            // ---------- Interface (placar, mensagens, pausa, fim de partida) ----------
+            GameObject objInterface = new GameObject("Interface");
+            UnityEngine.UIElements.UIDocument documento = objInterface.AddComponent<UnityEngine.UIElements.UIDocument>();
+            documento.panelSettings = MontadorMenu.PainelUI();
+            HUDPartida hud = objInterface.AddComponent<HUDPartida>();
+            Ligar(hud, "documento", documento);
+            Ligar(hud, "estilo", AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.StyleSheet>(MontadorMenu.CaminhoEstilo));
+            Ligar(hud, "lance", lance);
+            Ligar(hud, "configPartida", configPartida);
+            MontadorMenu.CriarSistemaDeEventos();
+
+            // ---------- Luz, céu e pós-processamento (o mesmo clima do menu) ----------
+            MontadorMenu.ConfigurarSol(Object.FindFirstObjectByType<Light>());
+            MontadorMenu.ConfigurarCamera(cameraPrincipal);
+            MontadorMenu.CriarVolume();
+
+            // Salva; o menu é a primeira cena do build, a partida a segunda
             EditorSceneManager.SaveScene(cena, CaminhoCena);
-            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(CaminhoCena, true) };
+            MontadorMenu.AtualizarBuild();
             AssetDatabase.SaveAssets();
             Debug.Log("[Bets] Cena Prototipo montada em " + CaminhoCena);
         }
@@ -290,7 +311,7 @@ namespace BetsDeRua.Editor
             return perfil;
         }
 
-        private static T CarregarOuCriarConfig<T>(string caminho) where T : ScriptableObject
+        internal static T CarregarOuCriarConfig<T>(string caminho) where T : ScriptableObject
         {
             T config = AssetDatabase.LoadAssetAtPath<T>(caminho);
             if (config != null) return config;
@@ -304,7 +325,7 @@ namespace BetsDeRua.Editor
         /// Cria (ou atualiza) um material. semLuz = cor chapada, sem sombra,
         /// visível dos dois lados (bom para marcadores).
         /// </summary>
-        private static Material CriarMaterial(string nome, Color cor, bool semLuz = false)
+        internal static Material CriarMaterial(string nome, Color cor, bool semLuz = false)
         {
             CriarPasta("Assets", "Materiais");
             string caminho = $"{PastaMateriais}/{nome}.mat";
@@ -328,7 +349,7 @@ namespace BetsDeRua.Editor
             if (!AssetDatabase.IsValidFolder($"{pai}/{nome}")) AssetDatabase.CreateFolder(pai, nome);
         }
 
-        private static GameObject Cubo(string nome, Transform pai, Vector3 posicao, Vector3 tamanho,
+        internal static GameObject Cubo(string nome, Transform pai, Vector3 posicao, Vector3 tamanho,
                                        Material material, bool comColisao)
         {
             GameObject cubo = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -347,7 +368,7 @@ namespace BetsDeRua.Editor
         /// do fundo da tela a fachada é alta; do lado da câmera é um muro baixo, para não tampar
         /// o campo. A física da bola (FisicaBola) usa as mesmas medidas do ConfigFisica.
         /// </summary>
-        private static void MontarRua(Transform pai, ConfigFisica config)
+        internal static void MontarRua(Transform pai, ConfigFisica config)
         {
             Material matCalcada = CriarMaterial("Calcada", new Color(0.55f, 0.54f, 0.52f));
             Material matMeioFio = CriarMaterial("MeioFio", new Color(0.72f, 0.71f, 0.68f));
@@ -444,7 +465,7 @@ namespace BetsDeRua.Editor
         /// e, encostado na frente dela, o retângulo da área do taco atravessando a rua.
         /// Só contorno, para não cobrir a garrafa nem o jogador.
         /// </summary>
-        private static void BaseDeGiz(string nome, Transform pai, Vector3 posicaoGarrafa, ConfigFisica config,
+        internal static void BaseDeGiz(string nome, Transform pai, Vector3 posicaoGarrafa, ConfigFisica config,
                                       Material material)
         {
             GameObject baseDeGiz = new GameObject(nome);
@@ -480,7 +501,7 @@ namespace BetsDeRua.Editor
             Cubo(nome, pai, posicao, new Vector3(tamanhoX, EspessuraMarca, tamanhoZ), material, false);
         }
 
-        private static Garrafa CriarGarrafa(string nome, Transform pai, Vector3 posicaoBase,
+        internal static Garrafa CriarGarrafa(string nome, Transform pai, Vector3 posicaoBase,
                                             ConfigFisica config, Material material, Material materialTampa)
         {
             // Objeto pai com pivô na base (para balançar a partir do chão)

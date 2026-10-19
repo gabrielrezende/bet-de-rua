@@ -70,6 +70,11 @@ namespace BetsDeRua
         public float imunidadeGarrafaDePe = 0.6f;
         [Tooltip("Com a bola no campo: quanto empurrar o analógico direito para o lado para escolher a garrafa.")]
         public float limiteAnalogicoEscolherGarrafa = 0.6f;
+        [Header("Treino de arremesso")]
+        [Tooltip("Treino: depois deste tempo (s) a bola volta para a mão (se não derrubou antes).")]
+        public float tempoTreinoBolaViva = 3.5f;
+        [Tooltip("Treino: pausa (s) entre um arremesso e o próximo.")]
+        public float tempoTreinoEntreArremessos = 1.2f;
         [Tooltip("Defesa: o bot parceiro só vai na bola se chegar este tanto (s) antes da pessoa.")]
         public float folgaParaPessoaNaBola = 1.0f;
         [Tooltip("Queimou errado: quanto tempo (s) a garrafa fica caída antes de voltar de pé.")]
