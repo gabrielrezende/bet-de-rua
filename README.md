@@ -8,6 +8,10 @@ PC (Steam) primeiro, controle recomendado, teclado e mouse suportados. Estilo FI
 
 **Protótipo cinza**: formas simples para descobrir se o lance é divertido no controle. Sem arte, sem menus, sem online.
 
+As 6 etapas do protótipo estão prontas: campo, jogadores, arremesso, batida, corrida/cruzada/defesa e partida (placar até 10 + cruzada final). Há bots para jogar contra a CPU e um modo assistir (F2) com os 4 jogadores bots.
+
+Para jogar: abra `Game/` no Unity, cena `Assets/Scenes/Prototipo`, e aperte Play. Controles no GDD (seção "Controles", com as decisões do protótipo marcadas). Todos os números ficam em `Game/Assets/Config` (ConfigFisica, ConfigPartida, ConfigCamera, ConfigHUD), ajustáveis com o jogo rodando.
+
 ## Estrutura
 
 - `Game/` — projeto Unity 6 (URP, Input System)

@@ -19,7 +19,10 @@ namespace BetsDeRua
     ///   chão → TrocaDePapel. Com o taco no chão, "não valeu" → BolaMorta.
     /// - Pegou no ar a bola rebatida → TrocaDePapel.
     /// - A defesa com a bola e os dois rebatedores seguros → BolaMorta → novo arremesso.
-    /// Também guarda um placar simples por lado (o placar completo é a Etapa 6).
+    /// - Rodízio: a cada lance a defesa arremessa da outra casinha (quem guardava, arremessa).
+    /// - Partida: chegou na meta = match point; mais uma cruzada validada fecha o jogo
+    ///   (FimDePartida). Perdeu o taco em match point: os pontos caem pela metade.
+    ///   Start (controle) ou Enter (teclado) reinicia a partida.
     /// </summary>
     public class ControladorLance : MonoBehaviour
     {
@@ -27,7 +30,7 @@ namespace BetsDeRua
         [SerializeField] private ConfigPartida configPartida;
         [SerializeField] private ConfigHUD configHUD;
         [SerializeField] private Bola bola;
-        [Tooltip("Quem arremessa no começo de cada lance.")]
+        [Tooltip("Quem arremessa no primeiro lance (depois, os defensores se revezam).")]
         [SerializeField] private Arremessador arremessador;
         [Tooltip("Os dois defensores (arremessador e guardião).")]
         [SerializeField] private Defensor[] defensores;
@@ -50,6 +53,10 @@ namespace BetsDeRua
         private readonly HashSet<Garrafa> garrafasAvaliadas = new HashSet<Garrafa>();
         private readonly int[] pontos = new int[2];
         private int ladoNoTaco;                 // 0 = Lado 1, 1 = Lado 2
+        private int vencedor = -1;              // lado que fechou o jogo (-1 = ninguém ainda)
+        private Arremessador arremessadorDaVez; // quem arremessa neste lance
+        private bool arremessoDeAParaB = true;  // de que casinha sai o arremesso neste lance
+        private bool primeiroLance = true;
 
         public EstadoLance Estado { get; private set; }
         public bool Rebatida => rebatida;
@@ -57,6 +64,11 @@ namespace BetsDeRua
         public Rebatedor RebatedorDaVez => rebatedorDaVez;
         public Garrafa GarrafaA => garrafaA;
         public Garrafa GarrafaB => garrafaB;
+        /// <summary>Garrafa que recebe o arremesso neste lance.</summary>
+        public Garrafa GarrafaAlvo => arremessoDeAParaB ? garrafaB : garrafaA;
+        /// <summary>Garrafa da casinha de onde sai o arremesso neste lance.</summary>
+        public Garrafa GarrafaDeOrigem => arremessoDeAParaB ? garrafaA : garrafaB;
+        public bool EmMatchPoint(int lado) => pontos[lado] >= configPartida.metaPontos;
 
         private Garrafa[] Garrafas => new[] { garrafaA, garrafaB };
 
@@ -104,12 +116,13 @@ namespace BetsDeRua
         {
             tempoNoEstado += Time.deltaTime;
             tempoMensagem += Time.deltaTime;
+            if (ApertouReiniciar()) { ReiniciarPartida(); return; }
 
             switch (Estado)
             {
                 case EstadoLance.Arremesso:
                     // A bola acompanha a mão do arremessador
-                    bola.Colocar(arremessador.PosicaoMao);
+                    bola.Colocar(arremessadorDaVez.PosicaoMao);
                     LiberarDefensores(false);
                     break;
 
@@ -128,6 +141,10 @@ namespace BetsDeRua
                         ladoNoTaco = 1 - ladoNoTaco;
                         ProximoLance();
                     }
+                    break;
+
+                case EstadoLance.FimDePartida:
+                    // Fica parado mostrando o vencedor até alguém apertar Start / Enter
                     break;
             }
             PintarGarrafas();
@@ -162,6 +179,20 @@ namespace BetsDeRua
         /// <summary>Arruma o campo e começa um arremesso novo.</summary>
         private void ProximoLance()
         {
+            // Rodízio (GDD): a cada lance a defesa arremessa da outra casinha;
+            // quem estava guardando atrás da casinha alvo é quem arremessa agora
+            if (primeiroLance)
+            {
+                primeiroLance = false;
+                arremessadorDaVez = arremessador;
+                arremessoDeAParaB = true;
+            }
+            else
+            {
+                arremessoDeAParaB = !arremessoDeAParaB;
+                arremessadorDaVez = OutroDefensor(arremessadorDaVez.Jogador).GetComponent<Arremessador>();
+            }
+
             foreach (Garrafa garrafa in Garrafas) garrafa.Reiniciar();
             garrafasAvaliadas.Clear();
             foreach (Defensor defensor in defensores) defensor.ComBola?.TirarBola();
@@ -177,18 +208,18 @@ namespace BetsDeRua
             rebatida = false;
             resumoBatida = "";
 
-            // Recebe o arremesso o rebatedor que está na base B
-            rebatedorDaVez = MaisPerto(rebatedores, garrafaB.transform.position);
+            // Recebe o arremesso o rebatedor que está na casinha alvo
+            rebatedorDaVez = MaisPerto(rebatedores, GarrafaAlvo.transform.position);
             foreach (Rebatedor rebatedor in rebatedores)
             {
                 if (rebatedor == rebatedorDaVez) rebatedor.PrepararParaArremesso();
                 else rebatedor.Encerrar();
             }
 
-            arremessador.Alvo = garrafaB;
-            arremessador.GarrafaPropria = garrafaA;
-            arremessador.ReceberBola(ModoComBola.Arremesso);
-            bola.Colocar(arremessador.PosicaoMao);
+            arremessadorDaVez.Alvo = GarrafaAlvo;
+            arremessadorDaVez.GarrafaPropria = GarrafaDeOrigem;
+            arremessadorDaVez.ReceberBola(ModoComBola.Arremesso);
+            bola.Colocar(arremessadorDaVez.PosicaoMao);
             // Quem joga com a dupla do taco passa para o rebatedor que vai receber (GDD)
             gerenciador.Ativar(rebatedorDaVez.Jogador);
         }
@@ -205,7 +236,46 @@ namespace BetsDeRua
             MudarPara(EstadoLance.TrocaDePapel);
             EncerrarJogadas();
             bola.Colocar(bola.Posicao); // a bola para onde está
+            // Perdeu o taco em match point: os pontos caem pela metade (GDD)
+            if (configPartida.caiMetadeAoPerderTacoNoMatchPoint && EmMatchPoint(ladoNoTaco))
+            {
+                pontos[ladoNoTaco] /= 2;
+                motivo += $"  Perdeu no match point: caiu para {pontos[ladoNoTaco]}";
+            }
             Mostrar($"{motivo}  —  troca de papel!");
+        }
+
+        private void EntrarFimDePartida(int lado)
+        {
+            vencedor = lado;
+            MudarPara(EstadoLance.FimDePartida);
+            EncerrarJogadas();
+            foreach (Defensor defensor in defensores) defensor.ComBola?.TirarBola();
+            portador = null;
+            bola.Colocar(bola.Posicao);
+            Mostrar($"LADO {lado + 1} FECHOU O JOGO!");
+        }
+
+        /// <summary>Start (qualquer controle) ou Enter (teclado).</summary>
+        private static bool ApertouReiniciar()
+        {
+            foreach (UnityEngine.InputSystem.Gamepad controle in UnityEngine.InputSystem.Gamepad.all)
+                if (controle.startButton.wasPressedThisFrame) return true;
+            UnityEngine.InputSystem.Keyboard teclado = UnityEngine.InputSystem.Keyboard.current;
+            return teclado != null && (teclado.enterKey.wasPressedThisFrame || teclado.numpadEnterKey.wasPressedThisFrame);
+        }
+
+        /// <summary>Zera o placar e começa de novo, com o Lado 1 no taco.</summary>
+        private void ReiniciarPartida()
+        {
+            pontos[0] = pontos[1] = 0;
+            vencedor = -1;
+            // Quem joga volta para o lado em que começou (Lado 1 no taco)
+            if (ladoNoTaco != 0) gerenciador.InverterDuplas();
+            ladoNoTaco = 0;
+            primeiroLance = true;
+            Mostrar("Partida nova!");
+            ProximoLance();
         }
 
         private void EncerrarJogadas()
@@ -295,7 +365,7 @@ namespace BetsDeRua
 
         private void AoArremessar(Arremessador origem, Vector3 saida, Vector3 velocidade, TipoArremesso tipo, float kmh)
         {
-            if (Estado == EstadoLance.Arremesso && origem == arremessador && origem.Modo == ModoComBola.Arremesso)
+            if (Estado == EstadoLance.Arremesso && origem == arremessadorDaVez && origem.Modo == ModoComBola.Arremesso)
             {
                 MudarPara(EstadoLance.BolaViva);
                 bola.Lancar(saida, velocidade, origem.Jogador);
@@ -361,10 +431,20 @@ namespace BetsDeRua
             Mostrar($"CRUZOU!  +{pendentes} pendente (pare no círculo com o taco no chão)");
         }
 
-        private void AoValidarPontos(int quantos)
+        private void AoValidarPontos(int cruzadas)
         {
-            pontos[ladoNoTaco] += quantos;
-            Mostrar(quantos == 1 ? "PONTO!" : $"+{quantos} PONTOS!");
+            int meta = configPartida.metaPontos;
+            // Já estava em match point: esta cruzada validada fecha o jogo
+            if (EmMatchPoint(ladoNoTaco))
+            {
+                EntrarFimDePartida(ladoNoTaco);
+                return;
+            }
+            int ganhou = cruzadas * configPartida.pontosPorCruzada;
+            // Para na meta: o resto não conta, precisa fechar com uma cruzada nova
+            pontos[ladoNoTaco] = Mathf.Min(meta, pontos[ladoNoTaco] + ganhou);
+            if (EmMatchPoint(ladoNoTaco)) Mostrar($"MATCH POINT! Lado {ladoNoTaco + 1} precisa de mais uma cruzada para fechar");
+            else Mostrar(ganhou == 1 ? "PONTO!" : $"+{ganhou} PONTOS!");
         }
 
         // ------------------------------------------------------------------ campo
@@ -386,11 +466,27 @@ namespace BetsDeRua
             naA.Teleportar(baseA + lado, Vector3.right);
             naB.Teleportar(baseB + lado, Vector3.left);
 
-            // Arremessador atrás da garrafa A, guardião atrás da garrafa B
-            Jogador guardiao = OutroDefensor(arremessador.Jogador);
-            arremessador.Jogador.Teleportar(baseA + Vector3.left * configPartida.afastamentoArremessador, Vector3.right);
-            if (guardiao != null)
-                guardiao.Teleportar(baseB + Vector3.right * configPartida.distanciaGuardiao, Vector3.left);
+            // Quem arremessa fica atrás da casinha de origem; o guardião atrás da casinha alvo
+            Jogador guardiao = OutroDefensor(arremessadorDaVez.Jogador);
+            arremessadorDaVez.Jogador.Teleportar(PosicaoDeGuarda(arremessadorDaVez.Jogador), RumoAoAlvo);
+            if (guardiao != null) guardiao.Teleportar(PosicaoDeGuarda(guardiao), -RumoAoAlvo);
+        }
+
+        /// <summary>Direção (no chão) da casinha de origem para a casinha alvo.</summary>
+        private Vector3 RumoAoAlvo => arremessoDeAParaB ? Vector3.right : Vector3.left;
+
+        /// <summary>
+        /// Onde cada defensor espera neste lance: quem arremessa, atrás da casinha de origem;
+        /// o outro (guardião), atrás da casinha alvo. Os bots voltam para cá.
+        /// </summary>
+        public Vector3 PosicaoDeGuarda(Jogador defensor)
+        {
+            bool ehQuemArremessa = arremessadorDaVez != null && defensor == arremessadorDaVez.Jogador;
+            Vector3 origem = new Vector3(GarrafaDeOrigem.transform.position.x, 0f, 0f);
+            Vector3 alvo = new Vector3(GarrafaAlvo.transform.position.x, 0f, 0f);
+            return ehQuemArremessa
+                ? origem - RumoAoAlvo * configPartida.afastamentoArremessador
+                : alvo + RumoAoAlvo * configPartida.distanciaGuardiao;
         }
 
         private static float Distancia(Jogador jogador, Vector3 ponto)
@@ -458,6 +554,45 @@ namespace BetsDeRua
             }
         }
 
+        /// <summary>
+        /// Placar compacto no canto superior esquerdo (REFERENCIAS_FIFA, seção 4):
+        /// pontos dos dois lados, quem está no taco, de que casinha sai o arremesso,
+        /// pontos pendentes e MATCH POINT piscando.
+        /// </summary>
+        private void DesenharPlacar()
+        {
+            const float velocidadePiscar = 3f;
+            GUIStyle placar = new GUIStyle(GUI.skin.label) { fontSize = 22, fontStyle = FontStyle.Bold };
+            placar.normal.textColor = Color.white;
+            GUIStyle detalhe = new GUIStyle(GUI.skin.label) { fontSize = 13 };
+            detalhe.normal.textColor = new Color(0.85f, 0.85f, 0.85f);
+
+            string Lado(int i) => $"LADO {i + 1}{(i == ladoNoTaco ? " (taco)" : "")}";
+            GUI.Label(new Rect(16, 6, 600, 30), $"{Lado(0)}  {pontos[0]}  ×  {pontos[1]}  {Lado(1)}", placar);
+
+            string casinhas = arremessoDeAParaB ? "A → B" : "B → A";
+            string pendente = corrida.PontosPendentes > 0 ? $" · +{corrida.PontosPendentes} pendente" : "";
+            string linha = $"meta {configPartida.metaPontos} + cruzada final · arremesso {casinhas}{pendente}";
+            bool piscando = Mathf.Repeat(Time.unscaledTime * velocidadePiscar, 1f) < 0.6f;
+            if (EmMatchPoint(ladoNoTaco) && vencedor < 0 && piscando) linha += $"   MATCH POINT do Lado {ladoNoTaco + 1}!";
+            GUI.Label(new Rect(16, 36, 900, 22), linha, detalhe);
+        }
+
+        private void DesenharVencedor()
+        {
+            GUIStyle grande = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 48, alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold
+            };
+            grande.normal.textColor = Color.white;
+            GUIStyle menor = new GUIStyle(grande) { fontSize = 20, fontStyle = FontStyle.Normal };
+            float meio = Screen.height * 0.5f;
+            GUI.Label(new Rect(0, meio - 60, Screen.width, 60), $"LADO {vencedor + 1} VENCEU!", grande);
+            GUI.Label(new Rect(0, meio + 5, Screen.width, 30),
+                      $"{pontos[vencedor]} pontos + cruzada final  ·  placar {pontos[0]} × {pontos[1]}", menor);
+            GUI.Label(new Rect(0, meio + 40, Screen.width, 30), "Start (controle) ou Enter (teclado): jogar de novo", menor);
+        }
+
         private void OnGUI()
         {
             GUIStyle estilo = new GUIStyle(GUI.skin.label) { fontSize = 14 };
@@ -489,17 +624,11 @@ namespace BetsDeRua
             }
             else if (Estado == EstadoLance.BolaMorta) instrucoes += "Bola morta: novo arremesso";
             else if (Estado == EstadoLance.TrocaDePapel) instrucoes += "Troca de papel: quem defendia vai para o taco";
-            GUI.Label(new Rect(16, 8, 1000, 100), instrucoes, estilo);
+            instrucoes += "\nStart / Enter: reiniciar a partida";
+            GUI.Label(new Rect(16, 62, 1000, 110), instrucoes, estilo);
 
-            // Placar simples (o completo é a Etapa 6)
-            GUIStyle placar = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 18, alignment = TextAnchor.UpperCenter, fontStyle = FontStyle.Bold
-            };
-            placar.normal.textColor = Color.white;
-            string pendente = corrida.PontosPendentes > 0 ? $"   (+{corrida.PontosPendentes} pendente)" : "";
-            GUI.Label(new Rect(0, Screen.height - 34, Screen.width, 30),
-                      $"LADO 1: {pontos[0]}   ×   LADO 2: {pontos[1]}      no taco: Lado {ladoNoTaco + 1}{pendente}", placar);
+            DesenharPlacar();
+            if (Estado == EstadoLance.FimDePartida) DesenharVencedor();
 
             // Mensagem do lance no alto, no meio, por alguns segundos
             if (tempoMensagem < configHUD.duracaoMensagem && !string.IsNullOrEmpty(mensagem))

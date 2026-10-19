@@ -9,6 +9,14 @@ namespace BetsDeRua
     [CreateAssetMenu(fileName = "ConfigPartida", menuName = "Bets de Rua/Config Partida")]
     public class ConfigPartida : ScriptableObject
     {
+        [Header("Partida")]
+        [Tooltip("Meta de pontos. Chegando nela, a dupla entra em match point e precisa fechar.")]
+        public int metaPontos = 10;
+        [Tooltip("Quanto vale cada cruzada validada. GDD: 1 no padrão, 2 como opção.")]
+        public int pontosPorCruzada = 1;
+        [Tooltip("Perdeu o taco em match point: os pontos caem pela metade (GDD, ligado no padrão).")]
+        public bool caiMetadeAoPerderTacoNoMatchPoint = true;
+
         [Header("Posições iniciais")]
         [Tooltip("Distância do rebatedor ao centro da garrafa, de lado, dentro do círculo (m).")]
         public float afastamentoRebatedor = 0.45f;

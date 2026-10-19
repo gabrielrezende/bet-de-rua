@@ -9,7 +9,7 @@ namespace BetsDeRua
     /// que acontece depois que a bola está viva:
     /// - Defesa: o defensor mais perto da bola corre nela e pega (ou mergulha); com a bola,
     ///   vai para cima da garrafa exposta e chuta, ou passa se o colega estiver bem mais perto.
-    ///   O outro volta para perto da sua garrafa.
+    ///   O outro volta para a posição de guarda do lance (ControladorLance.PosicaoDeGuarda).
     /// - Ataque: com uma pessoa no taco, o parceiro bot corre em espelho (eles se cruzam no meio).
     ///   Sem ninguém, os dois saem correndo quando a batida dá folga, cruzam e param na outra base.
     /// Comportamento simples de propósito: o GDD ("IA e dificuldade") melhora isso depois.
@@ -77,7 +77,7 @@ namespace BetsDeRua
 
                 if (portador != null && portador.Jogador == jogador) JogarComABola(defensor, portador);
                 else if (defensor == perseguidor) PerseguirBola(defensor);
-                else IrPara(jogador, PosicaoDeGuarda(jogador));
+                else IrPara(jogador, lance.PosicaoDeGuarda(jogador));
             }
         }
 
@@ -135,15 +135,6 @@ namespace BetsDeRua
                 float carga = (configFisica.inicioFaixaVerde + configFisica.fimFaixaVerde) * 0.5f;
                 portador.ExecutarPeloBot(TipoArremesso.Forte, carga, alvo.transform.position);
             }
-        }
-
-        /// <summary>Onde cada defensor espera: perto da sua garrafa (arremessador na A, guardião na B).</summary>
-        private Vector3 PosicaoDeGuarda(Jogador jogador)
-        {
-            float meio = configFisica.distanciaBases * 0.5f;
-            return jogador.Papel == Papel.Arremessador
-                ? new Vector3(-meio - configPartida.afastamentoArremessador, 0f, 0f)
-                : new Vector3(meio + configPartida.distanciaGuardiao, 0f, 0f);
         }
 
         private Defensor MaisPertoDaBola()

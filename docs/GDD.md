@@ -145,6 +145,8 @@ O modo padrão usa a regra que você lembra: 2x2, cada cruzada no meio vale 1 po
 1. **Match point:** ao chegar na meta (10 pontos no padrão), a dupla entra em match point; o placar pisca e a trilha muda.
 2. **Fechar o jogo:** precisa de mais uma batida com cruzada validada nas duas bases. Na regra de vila, além disso, um dos dois derruba a casinha onde o parceiro está, com o próprio taco, para fechar como na rua.
 3. **Perdeu o taco no match point:** os pontos caem pela metade (opção ligada no padrão).
+
+> No protótipo (Etapa 6): os pontos param na meta (o que passar não conta) e qualquer cruzada validada depois disso fecha o jogo; a "regra de vila" de derrubar a casinha do parceiro ainda não existe. O rodízio de casinhas, o match point, a regra da metade e o Start/Enter para reiniciar já funcionam; tempo limite, taco-ombro, "3 para trás", "bola no mato" e o sorteio de quem começa ficam para depois.
 4. **Tempo limite:** 8 minutos no ranqueado. Esgotado, vence quem tem mais pontos.
 5. **Empate:** desempate taco-ombro, com a dupla da bola tendo 5 chances para derrubar a casinha 3 vezes; depois inverte. Persistindo, morte súbita: o primeiro ponto validado vence.
 
