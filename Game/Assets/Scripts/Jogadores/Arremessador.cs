@@ -189,7 +189,9 @@ namespace BetsDeRua
             bool usaArco = tipoCarregando != TipoArremesso.Passe && tipoCarregando != TipoArremesso.Lancamento;
             if (BotaoDoTipo(humano, tipoCarregando))
             {
-                carga = Mathf.Min(1f, carga + Time.deltaTime / Mathf.Max(0.05f, config.tempoEncherForca));
+                // No campo o arco enche mais rápido: pegar, virar e já chutar
+                float tempoEncher = Modo == ModoComBola.Campo ? config.tempoEncherChute : config.tempoEncherForca;
+                carga = Mathf.Min(1f, carga + Time.deltaTime / Mathf.Max(0.05f, tempoEncher));
                 if (usaArco)
                 {
                     arco.Mostrar(transform.position, carga);

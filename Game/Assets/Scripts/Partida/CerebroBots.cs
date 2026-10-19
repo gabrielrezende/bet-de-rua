@@ -7,7 +7,7 @@ namespace BetsDeRua
     /// Os bots (CPU) de campo: comandam todo jogador sem pessoa controlando.
     /// O arremesso e a batida da CPU ficam no Arremessador e no Rebatedor; aqui fica o
     /// que acontece depois que a bola está viva:
-    /// - Defesa: o defensor mais perto da bola corre nela e pega (ou mergulha); com a bola,
+    /// - Defesa: o defensor que chega antes onde a bola vai estar corre nela e pega (ou mergulha); com a bola,
     ///   vai para cima da garrafa exposta e chuta, ou passa se o colega estiver bem mais perto.
     ///   O outro volta para a posição de guarda do lance (ControladorLance.PosicaoDeGuarda).
     /// - Ataque: com uma pessoa no taco, o parceiro bot corre em espelho (eles se cruzam no meio).
@@ -35,7 +35,12 @@ namespace BetsDeRua
         // E olham para onde a bola vai estar daqui a este tempo (s)
         private const float OlharAFrente = 1f;
 
+        // Só troca quem persegue a bola se o outro chegar este tanto antes (s)
+        private const float VantagemParaTrocarPerseguidor = 0.4f;
+
         private readonly Dictionary<Jogador, float> reacao = new Dictionary<Jogador, float>();
+        private Defensor perseguidorAtual;
+        private Vector3 pontoDeInterceptacao;
         private bool viagemDecidida;
         private float tempoDesdeBatida;
         private bool vaoCorrer;
@@ -68,7 +73,8 @@ namespace BetsDeRua
             Arremessador portador = lance.Portador;
             // Enquanto o arremesso ainda pode ser rebatido, a defesa espera no lugar
             bool esperandoBatida = !lance.Rebatida && lance.RebatedorDaVez != null && lance.RebatedorDaVez.BolaEmJogo;
-            Defensor perseguidor = portador == null && !esperandoBatida ? MaisPertoDaBola() : null;
+            Defensor perseguidor = portador == null && !esperandoBatida ? EscolherPerseguidor() : null;
+            if (perseguidor == null) perseguidorAtual = null;
 
             foreach (Defensor defensor in defensores)
             {
@@ -86,7 +92,9 @@ namespace BetsDeRua
             Jogador jogador = defensor.Jogador;
             Vector3 velocidadeBola = bola.Velocidade;
             velocidadeBola.y = 0f;
-            Vector3 alvo = bola.Posicao + velocidadeBola * Antecipacao;
+            // Longe: corre para onde vai alcançar a bola; perto: vai direto nela
+            bool perto = DistanciaNoChao(jogador.transform.position, bola.Posicao) < configFisica.alcanceMergulho;
+            Vector3 alvo = perto ? bola.Posicao + velocidadeBola * Antecipacao : pontoDeInterceptacao;
             IrPara(jogador, alvo);
 
             if (defensor.AoAlcance(configFisica.raioPegar))
@@ -137,15 +145,27 @@ namespace BetsDeRua
             }
         }
 
-        private Defensor MaisPertoDaBola()
+        /// <summary>
+        /// Quem vai na bola: quem chega antes onde ela vai estar (não quem está mais perto
+        /// agora). Só troca de perseguidor se o outro chegar bem antes, para não ficar
+        /// trocando a cada frame.
+        /// </summary>
+        private Defensor EscolherPerseguidor()
         {
-            Defensor melhor = null;
-            float melhorDistancia = float.MaxValue;
-            foreach (Defensor defensor in defensores)
+            Interceptacao.Prever(bola);
+            Defensor melhor = Interceptacao.QuemChegaAntes(configFisica, defensores, out Vector3 ponto, out float tempo);
+            if (perseguidorAtual != null && melhor != perseguidorAtual)
             {
-                float d = DistanciaNoChao(defensor.transform.position, bola.Posicao);
-                if (d < melhorDistancia) { melhor = defensor; melhorDistancia = d; }
+                float tempoAtual = Interceptacao.TempoParaAlcancar(configFisica, perseguidorAtual.transform.position,
+                                                                   out Vector3 pontoAtual);
+                if (tempoAtual - tempo < VantagemParaTrocarPerseguidor)
+                {
+                    pontoDeInterceptacao = pontoAtual;
+                    return perseguidorAtual;
+                }
             }
+            perseguidorAtual = melhor;
+            pontoDeInterceptacao = ponto;
             return melhor;
         }
 

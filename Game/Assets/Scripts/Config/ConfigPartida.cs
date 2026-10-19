@@ -70,6 +70,9 @@ namespace BetsDeRua
         public float reacaoBot = 0.25f;
 
         [Header("Controles")]
+        [Tooltip("Na defesa, trocar sozinho você para quem chega antes na bola (e para quem pegou a bola). " +
+                 "Desligado = você fica com quem escolheu e troca com L1 (GDD: modo manual).")]
+        public bool trocaAutomaticaNaDefesa = false;
         [Tooltip("Máximo de pessoas jogando ao mesmo tempo (controles + teclado).")]
         public int maximoJogadoresHumanos = 4;
     }

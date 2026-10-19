@@ -390,8 +390,13 @@ namespace BetsDeRua
             string qualidade = perfeita ? "PERFEITA!" : "Boa";
             resumoBatida = $"{qualidade} {NomeDaBatida(tipo)} · {kmh:0} km/h  ({TextoErro(erroMs)})";
             Mostrar(resumoBatida);
-            // Na defesa, quem joga passa para o defensor mais perto da bola (GDD)
-            gerenciador.Ativar(MaisPerto(defensores, bola.Posicao).Jogador);
+            // Troca automática (opcional): quem joga na defesa passa para quem chega antes na bola
+            if (configPartida.trocaAutomaticaNaDefesa)
+            {
+                Interceptacao.Prever(bola);
+                Defensor quemVai = Interceptacao.QuemChegaAntes(configFisica, defensores, out _, out _);
+                if (quemVai != null) gerenciador.Ativar(quemVai.Jogador);
+            }
         }
 
         private void AoErrarBatida(string motivo, float erroMs)
@@ -415,7 +420,7 @@ namespace BetsDeRua
             bola.Colocar(portador.PosicaoMao);
             // Pegou a bola: acabou a chance de rebater este arremesso
             rebatedorDaVez.Encerrar();
-            gerenciador.Ativar(defensor.Jogador);
+            if (configPartida.trocaAutomaticaNaDefesa) gerenciador.Ativar(defensor.Jogador);
 
             if (noAr && lancador != null && lancador.Dupla == Dupla.Taco)
             {

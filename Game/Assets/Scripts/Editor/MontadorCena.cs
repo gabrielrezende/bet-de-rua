@@ -178,7 +178,10 @@ namespace BetsDeRua.Editor
 
                 Defensor defensor = defensorJogador.gameObject.AddComponent<Defensor>();
                 Ligar(defensor, "config", config);
+                Ligar(defensor, "configHUD", configHUD);
                 Ligar(defensor, "bola", bola);
+                Ligar(defensor, "materialAlcance", matMarcadorGiz);
+                Ligar(defensor, "materialAoAlcance", matMira);
                 listaDefensores.Add(defensor);
             }
 

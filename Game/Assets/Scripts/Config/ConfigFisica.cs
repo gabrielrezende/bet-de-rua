@@ -218,6 +218,8 @@ namespace BetsDeRua
         public float anguloMergulho = 75f;
 
         [Header("Defesa: com a bola na mão")]
+        [Tooltip("No campo, segundos para o arco do chute encher (mais rápido que o arremesso: pegar, virar e já chutar).")]
+        public float tempoEncherChute = 0.6f;
         [Tooltip("R1 passe: velocidade na horizontal (km/h). Baixo, quase rasteiro.")]
         public float passeKmh = 45f;
         [Tooltip("L2 lançamento: velocidade na horizontal (km/h). Por cima.")]
