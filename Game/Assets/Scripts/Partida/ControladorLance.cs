@@ -323,7 +323,7 @@ namespace BetsDeRua
         {
             MudarPara(EstadoLance.TrocaDePapel);
             EncerrarJogadas();
-            bola.Colocar(bola.Posicao); // a bola para onde está
+            // A bola segue com a física dela (quica, rola) até o próximo lance; não congela no ar
             // Perdeu o taco em match point: os pontos caem pela metade (GDD)
             if (configPartida.caiMetadeAoPerderTacoNoMatchPoint && EmMatchPoint(ladoNoTaco))
             {
@@ -340,7 +340,7 @@ namespace BetsDeRua
             EncerrarJogadas();
             foreach (Defensor defensor in defensores) defensor.ComBola?.TirarBola();
             portador = null;
-            bola.Colocar(bola.Posicao);
+            // A bola segue rolando com a física dela (não congela no ar)
             Mostrar($"LADO {lado + 1} FECHOU O JOGO!");
         }
 
@@ -834,7 +834,7 @@ namespace BetsDeRua
                       "   força: antes do verde cai curta, no verde chega na garrafa, depois isola · depois de soltar, analógico dir. curva\n"
                     : "ARREMESSO: a CPU arremessa (Select / Tab troca de dupla)\n";
                 if (tacoHumano)
-                    instrucoes += "REBATEDOR: perto da base o taco fica no chão sozinho (bolinha verde em cima = seguro, vermelha = pode ser queimado)\n" +
+                    instrucoes += "REBATEDOR: perto da base o taco fica no chão sozinho (seta verde = seguro, vermelha piscando = pode ser queimado)\n" +
                                   "   batida: R2 forte · R1 toque · L2 cavadinha · direção: analógico direito / mouse\n";
             }
             else if (Estado == EstadoLance.BolaViva)

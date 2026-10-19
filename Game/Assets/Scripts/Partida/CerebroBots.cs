@@ -192,7 +192,12 @@ namespace BetsDeRua
                 float carga = (configFisica.inicioFaixaVerde + configFisica.fimFaixaVerde) * 0.5f;
                 RegistroPartida.Evento($"{jogador.Nome} (bot) chuta na {alvo.name}: bola chega em {tempoBola:0.00}s, " +
                                        $"dono protege em {tempoDono:0.00}s");
-                portador.ExecutarPeloBot(TipoArremesso.Forte, carga, alvo.transform.position);
+                // Mira com um desvio de lado ao acaso: o bot não acerta sempre na mosca
+                Vector3 rumo = alvo.transform.position - jogador.transform.position;
+                rumo.y = 0f;
+                Vector3 lado = Vector3.Cross(Vector3.up, rumo.sqrMagnitude > 0.0001f ? rumo.normalized : Vector3.forward);
+                Vector3 mira = alvo.transform.position + lado * Random.Range(-configPartida.desvioChuteBot, configPartida.desvioChuteBot);
+                portador.ExecutarPeloBot(TipoArremesso.Forte, carga, mira);
             }
         }
 
@@ -259,16 +264,14 @@ namespace BetsDeRua
             if (!viagemDecidida && tempoDesdeBatida >= EsperaParaDecidirCorrida)
             {
                 viagemDecidida = true;
-                Vector3 velocidadeBola = bola.Velocidade;
-                velocidadeBola.y = 0f;
-                Vector3 ondeVaiEstar = bola.Posicao + velocidadeBola * OlharAFrente;
-                float folga = float.MaxValue;
-                foreach (Defensor defensor in defensores)
-                    folga = Mathf.Min(folga, DistanciaNoChao(defensor.transform.position, ondeVaiEstar));
+                // Dá tempo? A defesa precisa chegar na bola, pegar e jogar na garrafa; eles precisam
+                // chegar na zona da outra base. Corre só se a defesa demora mais (com uma folga de risco).
+                float tempoDefesa = TempoDaDefesaQueimar();
+                float tempoViagem = TempoDaViagem();
                 // Com a bola já na mão da defesa, ninguém sai da base
-                vaoCorrer = lance.Portador == null && folga > configPartida.folgaParaBotCorrer;
+                vaoCorrer = lance.Portador == null && tempoDefesa > tempoViagem + configPartida.margemRiscoCorrida;
                 RegistroPartida.Evento($"bots do taco {(vaoCorrer ? "VÃO CORRER" : "ficam na base")} " +
-                                       $"(defesa a {folga:0.0} m de onde a bola vai estar; precisa > {configPartida.folgaParaBotCorrer:0.0})");
+                                       $"(defesa queima em {tempoDefesa:0.0}s, viagem leva {tempoViagem:0.0}s, folga pedida {configPartida.margemRiscoCorrida:0.0}s)");
                 destinoDaViagem.Clear();
                 origemDaViagem.Clear();
                 if (vaoCorrer)
@@ -385,6 +388,37 @@ namespace BetsDeRua
         {
             float meio = configFisica.distanciaBases * 0.5f;
             return new Vector3(de.x < 0f ? -meio : meio, 0f, configPartida.afastamentoRebatedor);
+        }
+
+        /// <summary>
+        /// Quanto tempo (s) a defesa leva para queimar: o mais rápido chegar na bola, pegar e o chute
+        /// voar até a garrafa. Com a bola já na mão de alguém, só o chute.
+        /// </summary>
+        private float TempoDaDefesaQueimar()
+        {
+            float chegar = 0f;
+            if (lance.Portador == null)
+            {
+                Interceptacao.Prever(bola);
+                if (Interceptacao.QuemChegaAntes(configFisica, defensores, out _, out float tempo) == null) return float.MaxValue;
+                chegar = tempo;
+            }
+            return chegar + configPartida.tempoDefesaPegarEJogar;
+        }
+
+        /// <summary>Quanto tempo (s) o rebatedor mais lento leva até a zona segura da outra base, em sprint.</summary>
+        private float TempoDaViagem()
+        {
+            float meio = configFisica.distanciaBases * 0.5f;
+            float pior = 0f;
+            foreach (Jogador rebatedor in rebatedores)
+            {
+                Vector3 p = rebatedor.transform.position;
+                Vector3 garrafaDoOutroLado = new Vector3(p.x < 0f ? meio : -meio, 0f, 0f);
+                float distancia = ZonaDoTaco.DistanciaAteZona(p, garrafaDoOutroLado, configFisica);
+                pior = Mathf.Max(pior, distancia / Mathf.Max(0.1f, configFisica.velocidadeSprint) + configPartida.tempoArrancadaCorrida);
+            }
+            return pior;
         }
 
         /// <summary>True se os dois rebatedores bot terminaram a viagem: chegaram no destino ou voltaram para a origem.</summary>

@@ -39,6 +39,15 @@ namespace BetsDeRua
             corpo.isKinematic = true;
         }
 
+        private void Start()
+        {
+            // Os jogadores passam pela garrafa sem esbarrar (senão travam nela tentando ir para trás
+            // da casinha). A garrafa continua colidindo com o chão para cair de verdade.
+            foreach (Collider colisor in GetComponentsInChildren<Collider>())
+                foreach (CharacterController jogador in FindObjectsByType<CharacterController>(FindObjectsSortMode.None))
+                    Physics.IgnoreCollision(jogador, colisor);
+        }
+
         /// <summary>
         /// Chamado pela bola quando encosta na garrafa.
         /// velocidadeBola em m/s, pontoContato em coordenadas do mundo.

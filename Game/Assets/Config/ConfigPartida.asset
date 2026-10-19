@@ -40,12 +40,16 @@ MonoBehaviour:
   esperaArremessoAutomatico: 2
   desvioMiraAutomatico: 0.8
   rebatedorAutomatico: 1
-  erroTempoRebatedorAutomaticoMs: 110
+  erroTempoRebatedorAutomaticoMs: 230
   defesaAutomatica: 1
   corridaAutomatica: 1
   folgaParaBotCorrer: 7
+  margemRiscoCorrida: -0.5
+  tempoDefesaPegarEJogar: 1.1
+  tempoArrancadaCorrida: 0.5
   distanciaChuteBot: 9
   folgaParaChutarBot: 0.15
+  desvioChuteBot: 0.35
   reacaoChuteBot: 0.15
   folgaLugarArremessoCpu: 0.5
   reacaoRebatedor: 0.3

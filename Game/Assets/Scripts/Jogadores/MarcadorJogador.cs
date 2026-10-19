@@ -3,9 +3,10 @@ using UnityEngine;
 namespace BetsDeRua
 {
     /// <summary>
-    /// Marcador do jogador controlado (docs/REFERENCIAS_FIFA.md, seção 2):
-    /// triângulo na cor da dupla girando acima da cabeça + círculo de giz no chão.
-    /// Só aparece quando alguém controla o jogador; pisca quando a troca acontece.
+    /// Marcador do jogador controlado, como no FIFA: seta girando acima da cabeça com o nome
+    /// de quem controla ("P1") em cima. Sem círculo no chão (parecia marca de onde a bola ia).
+    /// Rebatedor: a seta fica verde quando ele está seguro e vermelha piscando na zona de perigo.
+    /// Os outros: cor do time. Só aparece quando alguém controla o jogador; cresce na troca.
     /// </summary>
     public class MarcadorJogador : MonoBehaviour
     {
@@ -14,10 +15,16 @@ namespace BetsDeRua
         [SerializeField] private Jogador jogador;
         [Tooltip("Material do triângulo (cor da dupla).")]
         [SerializeField] private Material materialTriangulo;
-        [Tooltip("Material do círculo de giz.")]
+        [Tooltip("Material do círculo de giz (não usado: o círculo saiu).")]
         [SerializeField] private Material materialGiz;
+        [Tooltip("Rebatedor seguro: cor da seta.")]
+        [SerializeField] private Material materialSeguro;
+        [Tooltip("Rebatedor na zona de perigo: cor da seta (pisca).")]
+        [SerializeField] private Material materialPerigo;
 
         private Transform triangulo;
+        private MeshRenderer desenhoTriangulo;
+        private Taco taco;
 
         /// <summary>Material (cor do time) do triângulo em cima da cabeça.</summary>
         public Material MaterialTriangulo
@@ -38,8 +45,10 @@ namespace BetsDeRua
         private void Awake()
         {
             triangulo = CriarFilho("Triangulo", MontarTriangulo(), materialTriangulo);
+            desenhoTriangulo = triangulo.GetComponent<MeshRenderer>();
             circulo = CriarFilho("CirculoGiz", null, materialGiz);
-            MontarCirculoSePreciso();
+            circulo.gameObject.SetActive(false);
+            taco = GetComponentInChildren<Taco>();
             Mostrar(false);
         }
 
@@ -54,7 +63,17 @@ namespace BetsDeRua
             }
             if (!visivel) return;
 
-            MontarCirculoSePreciso();
+            // Cor da seta: rebatedor = seguro (verde) ou perigo (vermelho piscando); os outros = cor do time
+            Material cor = materialTriangulo;
+            bool mostrarSeta = true;
+            if (jogador.Papel == Papel.Rebatedor && materialSeguro != null && materialPerigo != null)
+            {
+                bool seguro = jogador.DentroDoCirculo() && taco != null && taco.NoChao;
+                cor = seguro ? materialSeguro : materialPerigo;
+                if (!seguro) mostrarSeta = Mathf.Repeat(Time.time * configHUD.piscadasPorSegundoPerigo, 1f) < 0.6f;
+            }
+            desenhoTriangulo.sharedMaterial = cor;
+            triangulo.gameObject.SetActive(mostrarSeta);
 
             // Piscada: cresce e volta ao normal
             tempoPiscando += Time.deltaTime;
@@ -71,16 +90,31 @@ namespace BetsDeRua
             triangulo.rotation = Quaternion.Euler(0f, Time.time * configHUD.giroTriangulo, 0f);
             triangulo.localScale = Vector3.one * (configHUD.tamanhoTriangulo * escala);
 
-            // O círculo fica no chão e não gira com o corpo
-            circulo.position = new Vector3(transform.position.x, 0.01f, transform.position.z);
-            circulo.rotation = Quaternion.identity;
-            circulo.localScale = Vector3.one * escala;
+        }
+
+        /// <summary>Nome de quem controla ("P1") em cima da seta.</summary>
+        private void OnGUI()
+        {
+            if (!estavaVisivel || jogador.Controlador == null) return;
+            Camera camera = Camera.main;
+            if (camera == null) return;
+            float alturaNome = configFisica.alturaJogador + configHUD.alturaTrianguloAcimaCabeca + configHUD.tamanhoTriangulo * 0.6f;
+            Vector3 tela = camera.WorldToScreenPoint(transform.position + Vector3.up * alturaNome);
+            if (tela.z <= 0f) return;
+            GUIStyle estilo = new GUIStyle(GUI.skin.label) { fontSize = 18, fontStyle = FontStyle.Bold, alignment = TextAnchor.LowerCenter };
+            estilo.normal.textColor = Color.white;
+            string nome = $"P{jogador.Controlador.Numero}";
+            Rect area = new Rect(tela.x - 50f, Screen.height - tela.y - 28f, 100f, 26f);
+            // Sombra para ler em cima de qualquer fundo
+            GUIStyle sombra = new GUIStyle(estilo);
+            sombra.normal.textColor = new Color(0f, 0f, 0f, 0.8f);
+            GUI.Label(new Rect(area.x + 1.5f, area.y + 1.5f, area.width, area.height), nome, sombra);
+            GUI.Label(area, nome, estilo);
         }
 
         private void Mostrar(bool visivel)
         {
             triangulo.gameObject.SetActive(visivel);
-            circulo.gameObject.SetActive(visivel);
         }
 
         private Transform CriarFilho(string nome, Mesh malha, Material material)

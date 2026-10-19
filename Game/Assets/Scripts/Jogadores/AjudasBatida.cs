@@ -46,6 +46,8 @@ namespace BetsDeRua
         /// <summary>Círculo de alcance do taco em volta dos pés do rebatedor.</summary>
         public void MostrarAlcance(Vector3 pes)
         {
+            // Desligado no padrão: o círculo no chão parecia marca de onde a bola ia
+            if (!configHUD.mostrarAlcanceBatida) { alcance.gameObject.SetActive(false); return; }
             alcance.gameObject.SetActive(true);
             malhaAlcance = MalhasProcedurais.AnelNoChao(configFisica.alcanceTaco, configHUD.espessuraRaioAlcance, malhaAlcance);
             alcance.sharedMesh = malhaAlcance;

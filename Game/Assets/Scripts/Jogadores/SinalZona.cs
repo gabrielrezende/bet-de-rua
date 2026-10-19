@@ -33,6 +33,8 @@ namespace BetsDeRua
 
         private void LateUpdate()
         {
+            // Quem a pessoa controla já tem a seta verde/vermelha: a bolinha some nele
+            sinal.gameObject.SetActive(jogador.Controlador == null);
             bool seguro = jogador.DentroDoCirculo() && taco != null && taco.NoChao;
             if (estavaSeguro != seguro)
             {

@@ -92,11 +92,21 @@ namespace BetsDeRua
         public bool corridaAutomatica = true;
         [Tooltip("Rebatedores bot só saem correndo se o defensor mais perto estiver a mais que isso da bola (m).")]
         public float folgaParaBotCorrer = 7f;
+        [Tooltip("Rebatedores bot só correm se a defesa demora pelo menos este tanto (s) a mais para queimar do que " +
+                 "eles para chegar na outra base. Maior = bots mais cautelosos (nível difícil); menor = arriscam mais.")]
+        public float margemRiscoCorrida = 0.4f;
+        [Tooltip("Tempo (s) que a defesa leva, depois de chegar na bola, para pegar e o chute voar até a garrafa.")]
+        public float tempoDefesaPegarEJogar = 1.1f;
+        [Tooltip("Tempo (s) a mais na viagem do rebatedor: arrancar, acelerar e o taco descer na base.")]
+        public float tempoArrancadaCorrida = 0.5f;
         [Tooltip("Defensor bot chuta na garrafa exposta quando chega a esta distância dela (m).")]
         public float distanciaChuteBot = 9f;
         [Tooltip("Defensor bot só chuta se a bola chegar na garrafa este tanto (s) antes do dono voltar para a base. " +
                  "Senão anda com a bola para perto da garrafa (errar daria tempo para o ataque cruzar).")]
         public float folgaParaChutarBot = 0.15f;
+        [Tooltip("Defensor bot mira na garrafa com um desvio de lado ao acaso de até este tanto (m). " +
+                 "A bola acerta com uns 0,23 m de folga para cada lado, então 0,35 = acerta mais ou menos 2 em 3.")]
+        public float desvioChuteBot = 0.35f;
         [Tooltip("Tempo de reação (s) do defensor bot antes de soltar o chute (ele não enche o arco como a pessoa).")]
         public float reacaoChuteBot = 0.15f;
         [Tooltip("O arremessador bot só arremessa quando está a até esta distância (m) do lugar dele, atrás da garrafa " +

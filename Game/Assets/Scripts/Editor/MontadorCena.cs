@@ -597,6 +597,8 @@ namespace BetsDeRua.Editor
                 Ligar(marcador, "jogador", jogador);
                 Ligar(marcador, "materialTriangulo", matMarcador);
                 Ligar(marcador, "materialGiz", matGiz);
+                Ligar(marcador, "materialSeguro", matZonaSegura);
+                Ligar(marcador, "materialPerigo", matZonaPerigo);
                 return jogador;
             }
 

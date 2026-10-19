@@ -24,6 +24,12 @@ namespace BetsDeRua
         [Tooltip("Quanto o marcador cresce na piscada (1 = nada).")]
         public float escalaPiscar = 1.6f;
 
+        [Tooltip("Mostra o círculo do alcance do taco no chão em volta do rebatedor da vez. Desligado no padrão " +
+                 "(confundia com a marca de onde a bola vai).")]
+        public bool mostrarAlcanceBatida = false;
+        [Tooltip("Rebatedor controlado na zona de perigo: quantas vezes por segundo a seta vermelha pisca.")]
+        public float piscadasPorSegundoPerigo = 3f;
+
         [Header("Sinal de zona do rebatedor (verde = seguro, vermelho = perigo)")]
         [Tooltip("Altura do sinal acima da cabeça (m). Fica abaixo do triângulo do jogador controlado.")]
         public float alturaSinalZona = 0.18f;
