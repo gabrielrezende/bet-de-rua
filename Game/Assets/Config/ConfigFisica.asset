@@ -68,7 +68,7 @@ MonoBehaviour:
   recargaSprint: 4
   alturaJogador: 1.75
   raioJogador: 0.3
-  comprimentoTaco: 0.73
+  comprimentoTaco: 1
   espessuraTaco: 0.1
   alturaMaoTaco: 0.7
   velocidadeParadoJogador: 0.2
@@ -93,6 +93,10 @@ MonoBehaviour:
   alturaChegadaPingo: 0.25
   raioMira: 2
   curvaMiraAnalogico: 2.2
+  miraFinaNoAnalogico: 0
+  erroArremessoPorVelocidade: 0.6
+  velocidadeBatePronto: 0.7
+  descidaBatePronto: 6
   fatorDistanciaSemForca: 0.45
   fatorDistanciaForcaMaxima: 1.9
   rasteiraMinimaKmh: 35
@@ -109,6 +113,7 @@ MonoBehaviour:
   alturaMaximaAlcance: 1.6
   janelaPerfeitaMs: 70
   janelaBoaMs: 170
+  anguloMaximoBatida: 80
   tempoMaximoEsperaBatida: 3
   tempoPrevisao: 3
   passoPrevisao: 0.01
@@ -116,6 +121,15 @@ MonoBehaviour:
   batidaForteMinimaKmh: 70
   batidaForteMaximaKmh: 110
   batidaToqueKmh: 38
+  batidaVarridaMinimaKmh: 45
+  batidaVarridaMaximaKmh: 85
+  anguloBatidaVarrida: 2
+  alturaLimiteTacoBaixo: 0.13
+  toleranciaAlturaTaco: 0.05
+  espirradaMinimaKmh: 10
+  espirradaMaximaKmh: 25
+  aberturaEspirrada: 60
+  subidaEspirrada: 1.5
   batidaCavadinhaKmh: 55
   anguloBatidaForte: 18
   anguloBatidaToque: 3

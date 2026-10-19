@@ -30,6 +30,20 @@ namespace BetsDeRua
         [Tooltip("Rebatedor controlado na zona de perigo: quantas vezes por segundo a seta vermelha pisca.")]
         public float piscadasPorSegundoPerigo = 3f;
 
+        [Header("Boneco: animação por código")]
+        [Tooltip("Passadas por segundo andando devagar.")]
+        public float passadasPorSegundoBase = 1.1f;
+        [Tooltip("Passadas por segundo a mais para cada m/s de velocidade.")]
+        public float passadasPorMetro = 0.32f;
+        [Tooltip("Quanto a perna balança no sprint (graus).")]
+        public float amplitudePernaMaxima = 50f;
+        [Tooltip("Quanto o corpo inclina para a frente no sprint (graus).")]
+        public float inclinacaoCorrendo = 15f;
+        [Tooltip("Duração do gesto de soltar a bola (s).")]
+        public float duracaoGestoLancar = 0.3f;
+        [Tooltip("Duração do gesto de abaixar para pegar a bola (s).")]
+        public float duracaoGestoPegar = 0.35f;
+
         [Header("Sinal de zona do rebatedor (verde = seguro, vermelho = perigo)")]
         [Tooltip("Altura do sinal acima da cabeça (m). Fica abaixo do triângulo do jogador controlado.")]
         public float alturaSinalZona = 0.18f;

@@ -37,6 +37,12 @@ namespace BetsDeRua
             Aplicar();
         }
 
+        /// <summary>True durante o giro da batida; FracaoGiro vai de 0 a 1 (para o boneco girar junto).</summary>
+        public bool Girando => tempoGiro < config.duracaoGiroTaco;
+        public float FracaoGiro => Mathf.Clamp01(tempoGiro / Mathf.Max(0.01f, config.duracaoGiroTaco));
+        /// <summary>True enquanto os tacos batem em X na cruzada.</summary>
+        public bool BatendoTacos => tempoBaterTacos < config.duracaoBaterTacos;
+
         /// <summary>Faz o taco girar uma vez (a batida, acertando ou não).</summary>
         public void Girar()
         {
@@ -97,7 +103,8 @@ namespace BetsDeRua
         /// </summary>
         private float AnguloNoChao()
         {
-            float cosseno = Mathf.Clamp(config.alturaMaoTaco / config.comprimentoTaco, -1f, 1f);
+            // Altura da mão de quem segura (muda com a altura do personagem)
+            float cosseno = Mathf.Clamp(transform.localPosition.y / config.comprimentoTaco, -1f, 1f);
             return -Mathf.Acos(cosseno) * Mathf.Rad2Deg;
         }
 

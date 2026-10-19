@@ -49,6 +49,10 @@ namespace BetsDeRua
         /// <summary>Avisa (quem, posição de saída, velocidade da bola, tipo, km/h na horizontal).</summary>
         public event Action<Arremessador, Vector3, Vector3, TipoArremesso, float> Arremessou;
 
+        /// <summary>True enquanto enche o arco (o boneco leva o braço para trás).</summary>
+        public bool Carregando => carregando;
+        public float Carga => carga;
+
         /// <summary>True enquanto a bola está na mão deste jogador.</summary>
         public bool ComBola { get; private set; }
         public ModoComBola Modo { get; private set; }
@@ -363,6 +367,7 @@ namespace BetsDeRua
                 case TipoArremesso.Rasteira: kmh = Mathf.Lerp(config.rasteiraMinimaKmh, config.rasteiraMaximaKmh, fracao); break;
                 default: kmh = Mathf.Lerp(config.forteMinimaKmh, config.forteMaximaKmh, fracao); break;
             }
+            if (!passeParaColega) kmh *= jogador.FatorForca;
             float rapidezHorizontal = kmh / 3.6f;
 
             // Força = distância: na faixa verde a bola chega no ponto mirado; antes, cai curta;

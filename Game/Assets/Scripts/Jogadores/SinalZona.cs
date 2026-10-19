@@ -41,7 +41,7 @@ namespace BetsDeRua
                 desenho.sharedMaterial = seguro ? materialSeguro : materialPerigo;
                 estavaSeguro = seguro;
             }
-            sinal.localPosition = Vector3.up * (configFisica.alturaJogador + configHUD.alturaSinalZona);
+            sinal.localPosition = Vector3.up * (jogador.Altura + configHUD.alturaSinalZona);
             sinal.localScale = Vector3.one * configHUD.tamanhoSinalZona;
         }
     }

@@ -84,7 +84,7 @@ namespace BetsDeRua
                 escala = Mathf.Lerp(configHUD.escalaPiscar, 1f, t);
             }
 
-            float alturaTopo = configFisica.alturaJogador + configHUD.alturaTrianguloAcimaCabeca;
+            float alturaTopo = jogador.Altura + configHUD.alturaTrianguloAcimaCabeca;
             triangulo.localPosition = Vector3.up * alturaTopo;
             // Gira em torno do eixo vertical do mundo, sem herdar a rotação do corpo
             triangulo.rotation = Quaternion.Euler(0f, Time.time * configHUD.giroTriangulo, 0f);
@@ -98,7 +98,7 @@ namespace BetsDeRua
             if (!estavaVisivel || jogador.Controlador == null) return;
             Camera camera = Camera.main;
             if (camera == null) return;
-            float alturaNome = configFisica.alturaJogador + configHUD.alturaTrianguloAcimaCabeca + configHUD.tamanhoTriangulo * 0.6f;
+            float alturaNome = jogador.Altura + configHUD.alturaTrianguloAcimaCabeca + configHUD.tamanhoTriangulo * 0.6f;
             Vector3 tela = camera.WorldToScreenPoint(transform.position + Vector3.up * alturaNome);
             if (tela.z <= 0f) return;
             GUIStyle estilo = new GUIStyle(GUI.skin.label) { fontSize = 18, fontStyle = FontStyle.Bold, alignment = TextAnchor.LowerCenter };

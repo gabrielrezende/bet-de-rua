@@ -143,7 +143,7 @@ namespace BetsDeRua
             {
                 if (corpo == null) continue;
                 Vector3 pe = corpo.transform.position;
-                if (posicao.y > pe.y + config.alturaJogador + raio) continue;
+                if (posicao.y > pe.y + corpo.Altura + raio) continue;
 
                 Vector3 deslocamento = posicao - pe;
                 deslocamento.y = 0f;

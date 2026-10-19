@@ -193,7 +193,7 @@ namespace BetsDeRua
                     momentoIdeal = Time.time + (i - 1 + fracao) * config.passoPrevisao;
                     Vector3 lateral = pontoCruzamento - linha; // distância para o lado, na linha de contato
                     lateral.y = 0f;
-                    alcancavel = lateral.magnitude <= config.alcanceTaco
+                    alcancavel = lateral.magnitude <= config.alcanceTaco * jogador.FatorAlcance
                                  && pontoCruzamento.y <= config.alturaMaximaAlcance;
                     temCruzamento = true;
                     break;
@@ -297,7 +297,7 @@ namespace BetsDeRua
             Vector3 linha = PontoDaLinhaDeContato;
             Vector3 lateral = pontoCruzamento - linha;
             lateral.y = 0f;
-            float folga = config.alcanceTaco * 0.6f;
+            float folga = config.alcanceTaco * jogador.FatorAlcance * 0.6f;
             if (lateral.magnitude <= folga) { jogador.DefinirEntradaBot(Vector2.zero, false); return; }
             Vector3 alvo = transform.position + lateral.normalized * (lateral.magnitude - folga);
             if (!ZonaDoTaco.NaZonaSeguraDeAlguma(alvo, config)) { jogador.DefinirEntradaBot(Vector2.zero, false); return; }
@@ -324,10 +324,14 @@ namespace BetsDeRua
         }
 
         /// <summary>O taco gira: decide se acertou, errou ou se a batida espera a bola chegar.</summary>
+        /// <summary>O último tipo de batida tentado (o boneco agacha na varrida).</summary>
+        public TipoBatida UltimoTipo { get; private set; }
+
         private void Girar(TipoBatida tipo, float cargaBatida)
         {
             if (jaGirou) return;
             jaGirou = true;
+            UltimoTipo = tipo;
             taco.Girar();
 
             if (!temCruzamento && !cruzou)
@@ -391,7 +395,7 @@ namespace BetsDeRua
                     kmh = Mathf.Lerp(config.batidaForteMinimaKmh, config.batidaForteMaximaKmh, cargaBatida);
                     angulo = config.anguloBatidaForte; break;
             }
-            kmh *= fator;
+            kmh *= fator * jogador.FatorForca;
 
             Vector3 direcao = ParaAFrente(Quaternion.AngleAxis(torto, Vector3.up) * DirecaoDaBatida());
             float rapidez = kmh / 3.6f;

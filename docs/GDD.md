@@ -765,6 +765,31 @@ O ícone curto em qualquer conceito: círculo de giz + tacos cruzados, legível 
 
 Gíria de rua, bem-humorado, nunca forçado: "Licença, bets!", "Queimou!", "Olha o carro!", "Última e eu vou embora". Nada de linguagem de aposta ("aposte", "ganhe dinheiro") em nenhum material.
 
+## Seu personagem
+
+Cada pessoa monta o próprio personagem e joga **sempre com ele**: sozinho com bot, em dupla com um amigo, no ranqueado ou em partidas com gente desconhecida. Nunca é um boneco aleatório. Numa dupla, entram o seu personagem e o do seu parceiro. Isso é um dos diferenciais do jogo: a pessoa se vê na rua.
+
+**O criador (como no FIFA)**
+
+- **Idade:** criança, adolescente ou adulto (muda proporções: a criança tem a cabeça proporcionalmente maior).
+- **Corpo:** altura, peso e tipo de corpo (magro, médio, forte).
+- **Rosto:** formato da cabeça, rosto, nariz, olhos, boca, cabelo e cor do cabelo, barba, cor da pele.
+- **Braços e marcas:** tipo de braço, tatuagens, curativo no joelho, joelheira.
+- **Roupa:** a camiseta e o boné seguem a cor do time na partida; o resto (calção, tênis, chinelo, acessórios) é da pessoa.
+
+**Atributos com troca justa** (nenhuma escolha é simplesmente melhor):
+
+| Escolha | Ponto forte | Ponto fraco |
+| --- | --- | --- |
+| Corpo forte (mais pesado) | Batida e arremesso mais fortes (+8%) | Corre menos (-7%) |
+| Corpo magro | Corre mais (+5%) | Menos força (-7%) |
+| Mais alto | Alcança mais longe com o taco | (a definir: por exemplo, mais lento para abaixar no taco baixo) |
+| Criança / adolescente | Leve e ágil (a definir) | Menos força (-10% / -4%) |
+
+- **Nota geral (0 a 99)**, como no FIFA, resume velocidade, força e alcance, para mostrar o personagem e equilibrar partidas.
+- **No protótipo** já existe a ficha do personagem (`PerfilPersonagem`, um arquivo por personagem em `Game/Assets/Config/Personagens`): nome, idade, altura, tipo de corpo e cor da pele mudam o boneco (altura, largura) e os atributos (velocidade, força, alcance do taco). Os campos de rosto, cabelo e tatuagem já estão na ficha, esperando o modelo de verdade.
+- **O boneco do protótipo** é de peças simples (cabeça com boné, tronco, braços, pernas e tênis), animado por código: passada que cresce do andar ao sprint, braço do arremesso indo para trás com o arco e chicoteando ao soltar, tronco girando com o taco na batida, agachar na varrida, abaixar para pegar, pose esticada no mergulho e braço para cima no "TEC!". Depois entram modelos e animações de verdade (por exemplo, do Mixamo ou de um artista), ligados aos mesmos momentos do jogo.
+
 ## Ambientes, skins e loja
 
 Cada ambiente tem um jeito próprio de quicar a bola e um detalhe de infância; as skins são só visuais e contam história, nunca dão vantagem.

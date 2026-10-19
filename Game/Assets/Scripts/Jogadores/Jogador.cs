@@ -21,6 +21,8 @@ namespace BetsDeRua
         [SerializeField] private ConfigFisica config;
         [SerializeField] private Dupla dupla;
         [SerializeField] private Papel papel;
+        [Tooltip("A ficha do personagem (altura, corpo, pele): muda o boneco e os atributos.")]
+        [SerializeField] private PerfilPersonagem perfil;
         [Tooltip("Nome curto que aparece na tela.")]
         [SerializeField] private string nome = "Jogador";
 
@@ -250,14 +252,14 @@ namespace BetsDeRua
 
         private float VelocidadeSemBola(float intensidade, bool sprintando)
         {
-            if (sprintando) return config.velocidadeSprint;
+            if (sprintando) return config.velocidadeSprint * FatorVelocidade;
             if (entradaDevagar) return config.velocidadeAndar * Mathf.Min(1f, intensidade / config.limiteAnalogicoAndar);
 
             // Analógico leve: anda; empurrando mais: vai acelerando até correr
             float limite = config.limiteAnalogicoAndar;
             if (intensidade <= limite) return config.velocidadeAndar * intensidade / limite;
             float t = (intensidade - limite) / (1f - limite);
-            return Mathf.Lerp(config.velocidadeAndar, config.velocidadeCorrer, t);
+            return Mathf.Lerp(config.velocidadeAndar, config.velocidadeCorrer * FatorVelocidade, t);
         }
 
         private void AtualizarEstamina(bool sprintando, float dt)
@@ -293,21 +295,30 @@ namespace BetsDeRua
         /// <summary>True quando ele está com a bola no campo (não no arremesso): pode correr e dar sprint com ela.</summary>
         public bool PodeCorrerComBola { get; set; }
 
-        /// <summary>Material do corpo (a cor do time).</summary>
+        public PerfilPersonagem Perfil => perfil;
+        /// <summary>Altura do personagem (m).</summary>
+        public float Altura => perfil != null ? perfil.altura : config.alturaJogador;
+        /// <summary>Atributos da ficha (1 = normal).</summary>
+        public float FatorVelocidade => perfil != null ? perfil.FatorVelocidade : 1f;
+        public float FatorForca => perfil != null ? perfil.FatorForca : 1f;
+        public float FatorAlcance => perfil != null ? perfil.FatorAlcance : 1f;
+
+        /// <summary>Material da cor do time (camiseta e boné: as peças "Time_...").</summary>
         public Material MaterialCorpo
         {
             get
             {
-                Transform corpoVisual = transform.Find("Corpo");
-                return corpoVisual != null ? corpoVisual.GetComponent<MeshRenderer>().sharedMaterial : null;
+                foreach (MeshRenderer peca in GetComponentsInChildren<MeshRenderer>(true))
+                    if (peca.name.StartsWith("Time_")) return peca.sharedMaterial;
+                return null;
             }
         }
 
-        /// <summary>Pinta o corpo com a cor do time (na troca de papel a cor acompanha o time).</summary>
+        /// <summary>Pinta camiseta e boné com a cor do time (na troca de papel a cor acompanha o time).</summary>
         public void PintarCorpo(Material material)
         {
-            Transform corpoVisual = transform.Find("Corpo");
-            if (corpoVisual != null) corpoVisual.GetComponent<MeshRenderer>().sharedMaterial = material;
+            foreach (MeshRenderer peca in GetComponentsInChildren<MeshRenderer>(true))
+                if (peca.name.StartsWith("Time_")) peca.sharedMaterial = material;
         }
 
         /// <summary>Vira o corpo, na hora, para uma direção no chão.</summary>
