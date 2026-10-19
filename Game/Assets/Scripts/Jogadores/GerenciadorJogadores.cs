@@ -101,6 +101,9 @@ namespace BetsDeRua
         {
             Keyboard teclado = Keyboard.current;
             if (teclado == null || humanos.Exists(h => h.Teclado != null)) return;
+            // Com controle ligado, o teclado não entra sozinho (um clique ou tecla sem querer
+            // criava um 2º jogador parado no seu time)
+            if (Gamepad.all.Count > 0) return;
             if (humanos.Count >= configPartida.maximoJogadoresHumanos) return;
 
             bool apertouTeclaDeJogo = teclado.wKey.wasPressedThisFrame || teclado.aKey.wasPressedThisFrame

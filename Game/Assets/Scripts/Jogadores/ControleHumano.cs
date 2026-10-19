@@ -114,7 +114,7 @@ namespace BetsDeRua
 
         /// <summary>True enquanto algum gatilho (ou o clique) está apertado: depois de pegar, espera soltar antes de carregar o lance.</summary>
         public bool SegurandoAlgumGatilho => !Conectado ? default : Controle != null
-            ? Controle.rightTrigger.isPressed || Controle.leftTrigger.isPressed || Controle.rightShoulder.isPressed
+            ? Controle.rightTrigger.isPressed || Controle.leftTrigger.isPressed
             : Teclado.rKey.isPressed || Teclado.eKey.isPressed
               || (Mouse.current != null && (Mouse.current.leftButton.isPressed || Mouse.current.rightButton.isPressed));
 

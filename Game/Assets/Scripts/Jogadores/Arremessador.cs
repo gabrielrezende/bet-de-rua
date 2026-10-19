@@ -99,6 +99,8 @@ namespace BetsDeRua
         {
             if (cameraPrincipal == null) cameraPrincipal = Camera.main;
             jogador.ComBolaNaMao = ComBola;
+            // No campo dá para correr com a bola (R1); no arremesso, não (anda até 4 m/s)
+            jogador.PodeCorrerComBola = ComBola && Modo == ModoComBola.Campo;
             AtualizarLimite();
 
             ControleHumano humano = jogador.Controlador;
@@ -297,14 +299,14 @@ namespace BetsDeRua
 
         /// <summary>
         /// Arremesso: R2 reto (forte), L2 sempre quicando, R1 pingo (por cima).
-        /// Campo: R2 chute na garrafa, R1 passe, L2 lançamento para o colega.
+        /// Campo: R2 chute na garrafa, L2 passe para o colega; o R1 fica para correr com a bola.
         /// </summary>
         private bool BotaoSegurado(ControleHumano humano, out TipoArremesso tipo)
         {
             bool campo = Modo == ModoComBola.Campo;
             if (humano.SegurandoGatilhoForte) { tipo = TipoArremesso.Forte; return true; }
-            if (humano.SegurandoGatilhoPorCima) { tipo = campo ? TipoArremesso.Lancamento : TipoArremesso.Quicado; return true; }
-            if (humano.SegurandoGatilhoCurto) { tipo = campo ? TipoArremesso.Passe : TipoArremesso.Pingo; return true; }
+            if (humano.SegurandoGatilhoPorCima) { tipo = campo ? TipoArremesso.Passe : TipoArremesso.Quicado; return true; }
+            if (!campo && humano.SegurandoGatilhoCurto) { tipo = TipoArremesso.Pingo; return true; }
             tipo = TipoArremesso.Forte;
             return false;
         }
@@ -314,9 +316,9 @@ namespace BetsDeRua
             switch (tipo)
             {
                 case TipoArremesso.Quicado:
-                case TipoArremesso.Lancamento: return humano.SegurandoGatilhoPorCima;
-                case TipoArremesso.Pingo:
-                case TipoArremesso.Passe: return humano.SegurandoGatilhoCurto;
+                case TipoArremesso.Lancamento:
+                case TipoArremesso.Passe: return humano.SegurandoGatilhoPorCima;
+                case TipoArremesso.Pingo: return humano.SegurandoGatilhoCurto;
                 default: return humano.SegurandoGatilhoForte;
             }
         }

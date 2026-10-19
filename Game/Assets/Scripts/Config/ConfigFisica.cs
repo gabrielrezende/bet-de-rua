@@ -231,6 +231,8 @@ namespace BetsDeRua
         public float janelaPerfeitaMs = 50f;
         [Tooltip("Janela da batida boa (ms). Fora dela, o taco passa no vazio.")]
         public float janelaBoaMs = 120f;
+        [Tooltip("A batida vai sempre para a frente: no máximo este ângulo (graus) para os lados, contando da direção de volta pela rua.")]
+        public float anguloMaximoBatida = 80f;
         [Tooltip("Depois deste tempo (s) do arremesso, ou com a bola parada, o rebatedor desiste de esperar a bola " +
                  "(e a defesa já pode ir buscar).")]
         public float tempoMaximoEsperaBatida = 3f;

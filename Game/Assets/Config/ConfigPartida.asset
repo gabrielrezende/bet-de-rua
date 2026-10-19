@@ -45,6 +45,7 @@ MonoBehaviour:
   corridaAutomatica: 1
   folgaParaBotCorrer: 7
   margemRiscoCorrida: -0.5
+  intervaloReavaliarCorrida: 1
   tempoDefesaPegarEJogar: 1.1
   tempoArrancadaCorrida: 0.5
   distanciaChuteBot: 9

@@ -261,6 +261,14 @@ namespace BetsDeRua
                 viagemDecidida = false;
                 tempoDesdeBatida = 0f;
             }
+            // Ficaram na base mas a bola continua solta (a defesa ainda não pegou): olham de novo
+            // de tempo em tempo, porque a bola pode ter ido longe ou a defesa errado
+            if (viagemDecidida && !vaoCorrer && lance.Portador == null
+                && tempoDesdeBatida >= EsperaParaDecidirCorrida + configPartida.intervaloReavaliarCorrida)
+            {
+                viagemDecidida = false;
+                tempoDesdeBatida = EsperaParaDecidirCorrida;
+            }
             if (!viagemDecidida && tempoDesdeBatida >= EsperaParaDecidirCorrida)
             {
                 viagemDecidida = true;

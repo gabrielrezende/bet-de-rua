@@ -845,7 +845,7 @@ namespace BetsDeRua
                     instrucoes += "CORRIDA: R1 / Shift sprint · passe perto do parceiro no meio para cruzar · chegue na outra base · □ desliza · L1 troca\n";
                 if (bolaHumano)
                     instrucoes += portador != null && portador.Jogador.Controlador != null
-                        ? "COM A BOLA: R2 chuta na garrafa · R1 passe · L2 lançamento · mira: analógico direito\n" +
+                        ? "COM A BOLA: R2 chuta na garrafa · L2 passe · R1 corre · mira: analógico direito\n" +
                           "   volte para trás de uma casinha: com os rebatedores seguros, você arremessa dali\n"
                         : "DEFESA: R2 / L2 pega a bola · □ carrinho ou peixinho (para a bola; depois o gatilho pega) · L1 troca de jogador\n";
             }

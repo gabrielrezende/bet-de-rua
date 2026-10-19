@@ -95,6 +95,8 @@ namespace BetsDeRua
         [Tooltip("Rebatedores bot só correm se a defesa demora pelo menos este tanto (s) a mais para queimar do que " +
                  "eles para chegar na outra base. Maior = bots mais cautelosos (nível difícil); menor = arriscam mais.")]
         public float margemRiscoCorrida = 0.4f;
+        [Tooltip("Rebatedores bot que decidiram ficar olham de novo a cada este tanto de segundos, enquanto a bola está solta.")]
+        public float intervaloReavaliarCorrida = 1f;
         [Tooltip("Tempo (s) que a defesa leva, depois de chegar na bola, para pegar e o chute voar até a garrafa.")]
         public float tempoDefesaPegarEJogar = 1.1f;
         [Tooltip("Tempo (s) a mais na viagem do rebatedor: arrancar, acelerar e o taco descer na base.")]

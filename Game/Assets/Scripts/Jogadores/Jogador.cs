@@ -139,7 +139,7 @@ namespace BetsDeRua
             if (Controlador == null && !entradaDoBotNesteFrame) DefinirEntrada(Vector2.zero, false, false);
             entradaDoBotNesteFrame = false;
             if (AtualizarMergulho()) return;
-            if (ComBolaNaMao || GatilhosOcupados)
+            if ((ComBolaNaMao && !PodeCorrerComBola) || GatilhosOcupados)
             {
                 // Com a bola ou esperando a batida: sem sprint e sem "andar devagar"
                 // (os gatilhos viram arremesso / batida)
@@ -244,7 +244,7 @@ namespace BetsDeRua
         private float VelocidadeAlvo(float intensidade, bool sprintando)
         {
             if (intensidade <= 0.001f) return 0f;
-            if (ComBolaNaMao) return Mathf.Min(VelocidadeSemBola(intensidade, false), config.velocidadeComBola);
+            if (ComBolaNaMao && !PodeCorrerComBola) return Mathf.Min(VelocidadeSemBola(intensidade, false), config.velocidadeComBola);
             return VelocidadeSemBola(intensidade, sprintando);
         }
 
@@ -289,6 +289,9 @@ namespace BetsDeRua
             if (avanco > Mathf.Max(0f, folga))
                 velocidade -= direcaoLimite * ((avanco - Mathf.Max(0f, folga)) / dt);
         }
+
+        /// <summary>True quando ele está com a bola no campo (não no arremesso): pode correr e dar sprint com ela.</summary>
+        public bool PodeCorrerComBola { get; set; }
 
         /// <summary>Material do corpo (a cor do time).</summary>
         public Material MaterialCorpo

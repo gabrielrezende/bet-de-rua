@@ -311,7 +311,7 @@ namespace BetsDeRua
             }
             kmh *= fator;
 
-            Vector3 direcao = Quaternion.AngleAxis(torto, Vector3.up) * DirecaoDaBatida();
+            Vector3 direcao = ParaAFrente(Quaternion.AngleAxis(torto, Vector3.up) * DirecaoDaBatida());
             float rapidez = kmh / 3.6f;
             float radianos = angulo * Mathf.Deg2Rad;
             Vector3 velocidade = direcao * (rapidez * Mathf.Cos(radianos)) + Vector3.up * (rapidez * Mathf.Sin(radianos));
@@ -324,6 +324,21 @@ namespace BetsDeRua
             ajudas.EsconderMarca();
             ajudas.EsconderAnel();
             Rebateu?.Invoke(tipo, kmh, erroMs, perfeita);
+        }
+
+        /// <summary>
+        /// A batida vai sempre para a frente (para o lado de quem arremessou), abrindo no máximo
+        /// anguloMaximoBatida para os lados: rebater para trás não é jogada.
+        /// </summary>
+        private Vector3 ParaAFrente(Vector3 direcao)
+        {
+            Vector3 frente = -DirecaoChegada;
+            frente.y = 0f;
+            direcao.y = 0f;
+            if (frente.sqrMagnitude < 0.0001f || direcao.sqrMagnitude < 0.0001f) return frente.normalized;
+            float angulo = Vector3.SignedAngle(frente, direcao, Vector3.up);
+            float limitado = Mathf.Clamp(angulo, -config.anguloMaximoBatida, config.anguloMaximoBatida);
+            return Quaternion.AngleAxis(limitado, Vector3.up) * frente.normalized;
         }
 
         /// <summary>Para onde a bola vai: analógico direito / mouse; sem nada, de volta pela rua.</summary>
