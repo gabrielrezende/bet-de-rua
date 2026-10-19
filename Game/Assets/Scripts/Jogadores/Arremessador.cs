@@ -97,6 +97,14 @@ namespace BetsDeRua
 
             ControleHumano humano = jogador.Controlador;
             bool humanoJogando = humano != null && humano.Conectado;
+            // Pegou no mergulho: só mira e lança depois de levantar
+            if (jogador.Mergulhando)
+            {
+                carregando = false;
+                carga = 0f;
+                EsconderVisuais();
+                return;
+            }
             if (!ComBola || Alvo == null || !humanoJogando)
             {
                 // Sem ninguém (ou controle desconectado no meio): cancela a mira e a carga, sem soltar a bola
@@ -116,7 +124,7 @@ namespace BetsDeRua
         private void LateUpdate()
         {
             // Depois do movimento do frame: o corpo fica sempre virado para a mira
-            if (ComBola && Alvo != null && jogador.Controlador != null && jogador.Controlador.Conectado)
+            if (ComBola && Alvo != null && jogador.Controlador != null && jogador.Controlador.Conectado && !jogador.Mergulhando)
             {
                 jogador.OlharPara(pontoMira - transform.position);
                 mira.Mostrar(PosicaoMao, pontoMira, Alvo.transform.position);
@@ -213,6 +221,8 @@ namespace BetsDeRua
         private void ArremessarComoCpu()
         {
             if (!configPartida.arremessadorAutomatico) return;
+            // Ainda andando para o lugar do arremesso (sem bola morta ninguém é teleportado): espera chegar
+            if (!jogador.EstaParado) { esperaCpu = 0f; return; }
             jogador.OlharPara(Alvo.transform.position - transform.position);
             esperaCpu += Time.deltaTime;
             if (esperaCpu < configPartida.esperaArremessoAutomatico) return;
@@ -228,7 +238,7 @@ namespace BetsDeRua
         /// <summary>Um bot solta a bola: tipo, força do arco e ponto mirado no chão.</summary>
         public void ExecutarPeloBot(TipoArremesso tipo, float cargaBot, Vector3 pontoMirado)
         {
-            if (!ComBola) return;
+            if (!ComBola || jogador.Mergulhando) return; // caído do mergulho: levanta primeiro
             pontoMira = new Vector3(pontoMirado.x, 0f, pontoMirado.z);
             jogador.OlharPara(pontoMira - transform.position);
             Soltar(tipo, cargaBot);

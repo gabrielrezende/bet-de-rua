@@ -43,9 +43,8 @@ namespace BetsDeRua
             foreach (ControleHumano humano in humanos)
             {
                 if (humano.ApertouTrocarDupla) TrocarDupla(humano);
-                // Na dupla do taco o L1 segura o taco no chão; só a defesa troca de jogador com ele
-                else if (humano.ApertouTrocarJogador && humano.Jogador != null && humano.Jogador.Dupla == Dupla.Bola)
-                    TrocarParceiro(humano);
+                // L1 troca para o parceiro, na defesa e no ataque (o taco no chão é automático)
+                else if (humano.ApertouTrocarJogador) TrocarParceiro(humano);
 
                 if (humano.Jogador != null)
                     humano.Jogador.DefinirEntrada(humano.Movimento, humano.Sprint, humano.Devagar);
@@ -188,7 +187,7 @@ namespace BetsDeRua
                           "MODO ASSISTIR: todos são bots (F2 para voltar a jogar)", estilo);
                 return;
             }
-            string texto = "JOGADORES (defesa: L1/Q troca de jogador · Select ou Tab: trocar de dupla · F2: só assistir)\n";
+            string texto = "JOGADORES (L1/Q troca de jogador · Select ou Tab: trocar de dupla · F2: só assistir)\n";
             if (humanos.Count == 0) texto += "Conecte um controle ou aperte WASD para entrar\n";
             foreach (ControleHumano humano in humanos)
             {

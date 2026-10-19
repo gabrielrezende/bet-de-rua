@@ -18,8 +18,16 @@ namespace BetsDeRua
         public float larguraCampo = 14f;
         [Tooltip("Distância entre o centro das duas bases (m).")]
         public float distanciaBases = 20f;
-        [Tooltip("Diâmetro do círculo da base (m). O real tem 0,6; ampliado para ler na tela.")]
-        public float diametroBase = 1.2f;
+        [Tooltip("Área do taco (retângulo de giz na frente da garrafa, atravessando a rua): largura (m), " +
+                 "de um lado ao outro da rua. Mudou algum desenho? Rode o menu Bets > Montar cena Prototipo.")]
+        public float larguraAreaTaco = 1.4f;
+        [Tooltip("Área do taco: profundidade (m), na direção do arremesso.")]
+        public float profundidadeAreaTaco = 0.6f;
+        [Tooltip("Lado da casinha de giz da garrafa (m): o quadradinho encostado atrás da área do taco, no meio.")]
+        public float ladoCasinhaGarrafa = 0.35f;
+        [Tooltip("Zona segura (invisível): folga em volta da área do taco e da casinha (m). Com o rebatedor aí " +
+                 "dentro, o taco fica no chão sozinho e a garrafa está protegida; fora, a garrafa fica exposta.")]
+        public float margemZonaSegura = 0.6f;
         [Tooltip("Largura da faixa do meio, onde a cruzada vale (m).")]
         public float larguraFaixaMeio = 3f;
         [Tooltip("Espessura das linhas de giz da faixa do meio (m).")]
@@ -68,8 +76,18 @@ namespace BetsDeRua
         public float velocidadeDerrubaKmh = 15f;
         [Tooltip("Multiplica o empurrão que a bola dá na garrafa ao derrubar.")]
         public float forcaDerrubada = 1f;
-        [Tooltip("Quanto da velocidade a bola guarda ao bater na garrafa (0 a 1).")]
+        [Tooltip("Bolada fraca (não derruba): quanto da velocidade a bola guarda ao voltar da garrafa (0 a 1).")]
         [Range(0f, 1f)] public float quiqueGarrafa = 0.4f;
+        [Tooltip("Lancha: quanto da velocidade a bola guarda ao desviar no corpo do rebatedor (0 a 1).")]
+        [Range(0f, 1f)] public float quiqueCorpo = 0.3f;
+        [Tooltip("Bolada que derruba: a bola segue em frente guardando esta parte da velocidade (0 a 1).")]
+        [Range(0f, 1f)] public float velocidadeQueSegueAoDerrubar = 0.6f;
+        [Tooltip("Raspão: se a bola passar a até esta distância da garrafa (m, de borda a borda), ela balança sem cair.")]
+        public float distanciaRaspao = 0.08f;
+        [Tooltip("Raspão: velocidade mínima da bola para fazer a garrafa balançar (km/h).")]
+        public float velocidadeRaspaoKmh = 25f;
+        [Tooltip("Raspão: o balanço é esta fração do balanço de bolada fraca (0 a 1).")]
+        [Range(0f, 1f)] public float fracaoBalancoRaspao = 0.5f;
         [Tooltip("Inclinação máxima do balanço de 'quase!' quando a bola é fraca (graus).")]
         public float anguloBalanco = 10f;
         [Tooltip("Duração do balanço de 'quase!' (s).")]
@@ -80,7 +98,7 @@ namespace BetsDeRua
         public float velocidadeAndar = 2f;
         [Tooltip("Velocidade correndo (m/s): analógico todo.")]
         public float velocidadeCorrer = 5f;
-        [Tooltip("Velocidade no sprint (m/s): R2/RT ou Shift.")]
+        [Tooltip("Velocidade no sprint (m/s): R1/RB ou Shift.")]
         public float velocidadeSprint = 7f;
         [Tooltip("Até quanto do analógico (0 a 1) conta como andar. Acima disso vai acelerando até correr.")]
         [Range(0.1f, 0.9f)] public float limiteAnalogicoAndar = 0.5f;
@@ -216,6 +234,12 @@ namespace BetsDeRua
         public float raioPegarNoMergulho = 1.3f;
         [Tooltip("Quanto o corpo deita no mergulho (graus).")]
         public float anguloMergulho = 75f;
+        [Tooltip("Bola abaixo desta altura (m) = carrinho (de pé na frente, deitado para trás); acima = peixinho (de peito).")]
+        public float alturaMaximaCarrinho = 0.35f;
+        [Tooltip("Depois do bote, a deslizada no chão: quanto a velocidade cai por segundo (m/s²). Menor = desliza mais longe.")]
+        public float freioDeslizada = 16f;
+        [Tooltip("Parte final do tempo caído (0 a 1) em que ele vai levantando o corpo.")]
+        [Range(0.1f, 1f)] public float fracaoLevantar = 0.4f;
 
         [Header("Defesa: com a bola na mão")]
         [Tooltip("No campo, segundos para o arco do chute encher (mais rápido que o arremesso: pegar, virar e já chutar).")]

@@ -8,7 +8,9 @@ namespace BetsDeRua
     /// - Cruzada: os dois dentro da faixa do meio e a até distanciaCruzada um do outro;
     ///   aparece um anel no chão e X (A) / Espaço bate os tacos = +1 ponto pendente.
     ///   Sem ninguém na dupla, os bots cruzam sozinhos.
-    /// - O ponto só vale quando os dois estão seguros: dentro de um círculo, com o taco no chão.
+    /// - Regra da rua: depois de cruzar, cada um tem que chegar na base do OUTRO lado e
+    ///   encostar o taco (zona segura). Os dois chegaram: o ponto vale, e só aí pode cruzar
+    ///   de novo. Dá para ir e voltar quantas vezes quiser enquanto a bola não volta.
     /// </summary>
     public class Corrida : MonoBehaviour
     {
@@ -28,13 +30,20 @@ namespace BetsDeRua
         private MeshFilter anel;
         private Mesh malhaAnel;
         private Taco tacoA, tacoB;
-        private bool cruzouNestaPassagem;   // evita contar duas vezes a mesma passagem pelo meio
+        // Lado (-1 = base A, +1 = base B) da última base em que cada um encostou o taco
+        private float ultimaBaseA, ultimaBaseB;
+        // Depois de uma cruzada: cada um precisa encostar o taco na base do outro lado
+        private bool esperandoChegarNaBase;
+        private bool chegouA, chegouB;
+        private float baseDeSaidaA, baseDeSaidaB;
 
         /// <summary>True depois da batida, enquanto a bola está viva.</summary>
         public bool Ativa { get; private set; }
         public int PontosPendentes { get; private set; }
         /// <summary>True se os dois estão no ponto de cruzar agora.</summary>
         public bool PodeCruzar { get; private set; }
+        /// <summary>True depois de uma cruzada, até os dois encostarem o taco na base do outro lado.</summary>
+        public bool EsperandoChegarNaBase => esperandoChegarNaBase;
 
         private void Awake()
         {
@@ -53,7 +62,9 @@ namespace BetsDeRua
         public void Ativar()
         {
             Ativa = true;
-            cruzouNestaPassagem = false;
+            esperandoChegarNaBase = false;
+            ultimaBaseA = LadoDaBase(rebatedorA.transform.position);
+            ultimaBaseB = LadoDaBase(rebatedorB.transform.position);
         }
 
         /// <summary>Fim do lance: pontos pendentes que não viraram ponto são perdidos.</summary>
@@ -62,8 +73,11 @@ namespace BetsDeRua
             Ativa = false;
             PontosPendentes = 0;
             PodeCruzar = false;
+            esperandoChegarNaBase = false;
             anel.gameObject.SetActive(false);
         }
+
+        private static float LadoDaBase(Vector3 posicao) => posicao.x < 0f ? -1f : 1f;
 
         /// <summary>True se o rebatedor está seguro: dentro de um círculo com o taco no chão.</summary>
         public bool Seguro(Jogador rebatedor)
@@ -85,21 +99,29 @@ namespace BetsDeRua
             bool bNaFaixa = Mathf.Abs(b.x) <= meiaFaixa;
             float distancia = new Vector2(a.x - b.x, a.z - b.z).magnitude;
 
-            // Os dois saíram da faixa: a próxima passagem pode cruzar de novo ("mais uma")
-            if (!aNaFaixa && !bNaFaixa) cruzouNestaPassagem = false;
+            // Lembra a última base em que cada um encostou o taco
+            if (Seguro(rebatedorA)) ultimaBaseA = LadoDaBase(a);
+            if (Seguro(rebatedorB)) ultimaBaseB = LadoDaBase(b);
 
-            PodeCruzar = aNaFaixa && bNaFaixa && distancia <= configPartida.distanciaCruzada && !cruzouNestaPassagem;
+            // Depois da cruzada: cada um tem que encostar o taco na base do outro lado
+            if (esperandoChegarNaBase)
+            {
+                if (Seguro(rebatedorA) && LadoDaBase(a) != baseDeSaidaA) chegouA = true;
+                if (Seguro(rebatedorB) && LadoDaBase(b) != baseDeSaidaB) chegouB = true;
+                if (chegouA && chegouB)
+                {
+                    // Os dois chegaram: o ponto vale, e já pode voltar para cruzar de novo
+                    esperandoChegarNaBase = false;
+                    int validados = PontosPendentes;
+                    PontosPendentes = 0;
+                    PontosValidados?.Invoke(validados);
+                }
+            }
+
+            PodeCruzar = aNaFaixa && bNaFaixa && distancia <= configPartida.distanciaCruzada && !esperandoChegarNaBase;
             MostrarAnel(a, b);
 
             if (PodeCruzar && AlguemApertouCruzar()) Cruzar();
-
-            // O ponto vale quando os dois param seguros nos círculos
-            if (PontosPendentes > 0 && AmbosSeguros)
-            {
-                int validados = PontosPendentes;
-                PontosPendentes = 0;
-                PontosValidados?.Invoke(validados);
-            }
         }
 
         private bool AlguemApertouCruzar()
@@ -118,15 +140,19 @@ namespace BetsDeRua
 
         private void Cruzar()
         {
-            cruzouNestaPassagem = true;
             PontosPendentes++;
+            // Agora cada um tem que chegar na base do outro lado (saiu da última em que encostou)
+            esperandoChegarNaBase = true;
+            chegouA = chegouB = false;
+            baseDeSaidaA = ultimaBaseA;
+            baseDeSaidaB = ultimaBaseB;
             Cruzou?.Invoke(PontosPendentes);
         }
 
         private void MostrarAnel(Vector3 a, Vector3 b)
         {
             bool perto = Mathf.Abs(a.x) <= configFisica.larguraFaixaMeio && Mathf.Abs(b.x) <= configFisica.larguraFaixaMeio
-                         && !cruzouNestaPassagem;
+                         && !esperandoChegarNaBase;
             anel.gameObject.SetActive(perto);
             if (!perto) return;
             // Anel em volta dos dois; fica cheio (mais grosso) quando dá para cruzar

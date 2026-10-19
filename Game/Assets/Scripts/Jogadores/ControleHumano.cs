@@ -61,9 +61,12 @@ namespace BetsDeRua
             }
         }
 
-        /// <summary>R2 (RT) ou Shift: sprint.</summary>
+        /// <summary>
+        /// R1 (RB) ou Shift: sprint. Com a bola na mão ou esperando o arremesso não há sprint,
+        /// e aí o R1 é o lance curto (ver SegurandoGatilhoCurto).
+        /// </summary>
         public bool Sprint => !Conectado ? default : Controle != null
-            ? Controle.rightTrigger.isPressed
+            ? Controle.rightShoulder.isPressed
             : Teclado.leftShiftKey.isPressed || Teclado.rightShiftKey.isPressed;
 
         /// <summary>L2 (LT) ou Alt: andar devagar.</summary>
@@ -101,11 +104,6 @@ namespace BetsDeRua
             return true;
         }
 
-        /// <summary>L1 (LB) ou Q, segurando: rebatedor mantém o taco encostado no chão.</summary>
-        public bool SegurandoTacoNoChao => !Conectado ? default : Controle != null
-            ? Controle.leftShoulder.isPressed
-            : Teclado.qKey.isPressed;
-
         /// <summary>□ (X do Xbox) ou R: pegar a bola; longe dela, mergulha / dá carrinho.</summary>
         public bool ApertouPegar => !Conectado ? default : Controle != null
             ? Controle.buttonWest.wasPressedThisFrame
@@ -116,7 +114,7 @@ namespace BetsDeRua
             ? Controle.buttonSouth.wasPressedThisFrame
             : Teclado.spaceKey.wasPressedThisFrame;
 
-        /// <summary>L1 (LB) ou Q: trocar para o parceiro da dupla (na defesa).</summary>
+        /// <summary>L1 (LB) ou Q: trocar para o parceiro da dupla (na defesa e no ataque).</summary>
         public bool ApertouTrocarJogador => !Conectado ? default : Controle != null
             ? Controle.leftShoulder.wasPressedThisFrame
             : Teclado.qKey.wasPressedThisFrame;

@@ -12,7 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f9f333b2aaa7406f839fca9e47d5730, type: 3}
   m_Name: ConfigPartida
   m_EditorClassIdentifier: Assembly-CSharp::BetsDeRua.ConfigPartida
-  afastamentoRebatedor: 0.45
+  metaPontos: 10
+  pontosPorCruzada: 1
+  caiMetadeAoPerderTacoNoMatchPoint: 1
+  afastamentoRebatedor: 1.1
   afastamentoArremessador: 1.2
   distanciaGuardiao: 4
   corDuplaTaco: {r: 0.2, g: 0.45, b: 0.95, a: 1}
@@ -34,4 +37,5 @@ MonoBehaviour:
   folgaParaBotCorrer: 7
   distanciaChuteBot: 9
   reacaoBot: 0.25
+  trocaAutomaticaNaDefesa: 0
   maximoJogadoresHumanos: 4

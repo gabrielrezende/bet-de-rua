@@ -7,8 +7,9 @@ namespace BetsDeRua
     /// Pegar a bola na defesa (GDD, "Dinâmica do lance", passo 4):
     /// - □ (X do Xbox) / R perto da bola (até raioPegar) = pega.
     ///   Antes dela quicar = "pegou no ar" (o ataque perde o taco).
-    /// - □ com a bola um pouco mais longe (até alcanceMergulho) = mergulho, ou carrinho
-    ///   se a bola estiver no chão: um bote rápido que pega se alcançar; errou, fica caído.
+    /// - □ com a bola um pouco mais longe (até alcanceMergulho) = carrinho (bola rasteira) ou
+    ///   peixinho (bola quicando), mirando onde a bola vai estar: bote rápido, desliza e levanta.
+    ///   Pegou no bote: segura a bola deslizando e só mira e lança depois de levantar.
     /// - Passe do colega chegando perto é pego sozinho.
     /// Quem decide se valeu é o ControladorLance (ouvindo o evento Pegou).
     /// </summary>
@@ -99,20 +100,50 @@ namespace BetsDeRua
 
         /// <summary>
         /// Tenta pegar (é o que o □ faz; os bots também usam). Perto: pega.
-        /// Um pouco longe: mergulha na direção da bola. Longe demais: nada.
+        /// Um pouco longe: mergulha (carrinho ou peixinho) para ONDE A BOLA VAI ESTAR,
+        /// não para onde ela está agora. Longe demais: nada.
         /// </summary>
         public void TentarPegar()
         {
             if (!BolaLivre || jogador.Mergulhando) return;
             if (AoAlcance(config.raioPegar)) { Pegar(); return; }
 
-            Vector3 rumo = bola.Posicao - transform.position;
+            Vector3 rumoAgora = bola.Posicao - transform.position;
+            rumoAgora.y = 0f;
+            if (rumoAgora.magnitude > config.alcanceMergulho || bola.Posicao.y > config.alturaMaximaPegar) return;
+
+            Vector3 ponto = PontoDoBote();
+            Vector3 rumo = ponto - transform.position;
             rumo.y = 0f;
-            if (rumo.magnitude <= config.alcanceMergulho && bola.Posicao.y <= config.alturaMaximaPegar)
+            jogador.Mergulhar(rumo, ponto.y <= config.alturaMaximaCarrinho);
+            procurandoNoBote = true;
+        }
+
+        private readonly System.Collections.Generic.List<Vector3> previsao = new System.Collections.Generic.List<Vector3>();
+        private const float PassoPrevisaoBote = 0.02f;
+
+        /// <summary>
+        /// Onde mirar o bote: o primeiro ponto da trajetória da bola que o corpo alcança no
+        /// tempo do bote (ele sai a velocidadeMergulho e pega a até raioPegarNoMergulho).
+        /// Se nenhum der, o ponto em que a bola passa mais perto.
+        /// </summary>
+        private Vector3 PontoDoBote()
+        {
+            bola.PreverTrajetoria(config.duracaoBoteMergulho, PassoPrevisaoBote, previsao);
+            Vector3 maisPerto = bola.Posicao;
+            float menorFolga = float.MaxValue;
+            for (int i = 0; i < previsao.Count; i++)
             {
-                jogador.Mergulhar(rumo);
-                procurandoNoBote = true;
+                Vector3 p = previsao[i];
+                if (p.y > config.alturaMaximaPegar) continue;
+                float t = i * PassoPrevisaoBote;
+                Vector3 d = p - transform.position;
+                d.y = 0f;
+                float folga = d.magnitude - (config.velocidadeMergulho * t + config.raioPegarNoMergulho);
+                if (folga <= 0f) return p;
+                if (folga < menorFolga) { menorFolga = folga; maisPerto = p; }
             }
+            return maisPerto;
         }
 
         /// <summary>True se a bola está a até 'raio' metros (no chão) e numa altura que dá para pegar.</summary>

@@ -34,6 +34,7 @@ namespace BetsDeRua
         // Mergulho / carrinho
         private float tempoMergulho = float.MaxValue;
         private Vector3 direcaoMergulho;
+        private bool mergulhoDeCarrinho;
         private Transform[] partesDoCorpo;      // corpo e rosto, que deitam no mergulho
         private Vector3[] posicoesOriginais;
         private Quaternion[] rotacoesOriginais;
@@ -95,13 +96,17 @@ namespace BetsDeRua
             entradaDoBotNesteFrame = true;
         }
 
-        /// <summary>Mergulho (ou carrinho, com a bola no chão) na direção dada.</summary>
-        public void Mergulhar(Vector3 direcao)
+        /// <summary>
+        /// Mergulho na direção dada: carrinho (bola rasteira: de pé na frente, deitado para trás)
+        /// ou peixinho (bola quicando: de peito). Bote rápido, desliza no chão e levanta.
+        /// </summary>
+        public void Mergulhar(Vector3 direcao, bool carrinho)
         {
             if (Mergulhando) return;
             direcao.y = 0f;
             if (direcao.sqrMagnitude < 0.0001f) direcao = transform.forward;
             direcaoMergulho = direcao.normalized;
+            mergulhoDeCarrinho = carrinho;
             OlharPara(direcaoMergulho);
             tempoMergulho = 0f;
         }
@@ -181,6 +186,19 @@ namespace BetsDeRua
                 Quaternion alvo = Quaternion.LookRotation(direcao, Vector3.up);
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, alvo, config.velocidadeVirar * dt);
             }
+            else if (papel == Papel.Rebatedor && DentroDoCirculo())
+            {
+                // Rebatedor parado na base: vira para a área do taco, para a ponta do taco
+                // encostar no desenho de giz (e não ficar de costas, com o taco para fora)
+                Vector3 paraArea = ZonaDoTaco.CentroDaArea(ZonaDoTaco.GarrafaMaisPerto(transform.position, config), config)
+                                   - transform.position;
+                paraArea.y = 0f;
+                if (paraArea.sqrMagnitude > 0.01f)
+                {
+                    Quaternion alvo = Quaternion.LookRotation(paraArea, Vector3.up);
+                    transform.rotation = Quaternion.RotateTowards(transform.rotation, alvo, config.velocidadeVirar * dt);
+                }
+            }
         }
 
         /// <summary>Cuida do mergulho. Retorna true se o jogador está mergulhando (não anda normal).</summary>
@@ -193,11 +211,22 @@ namespace BetsDeRua
             }
             float dt = Time.deltaTime;
             tempoMergulho += dt;
-            // Bote: sai rápido na direção da bola; depois fica caído, parado
-            velocidade = NoBoteDoMergulho ? direcaoMergulho * config.velocidadeMergulho : Vector3.zero;
+            // Bote: sai rápido na direção da bola. Depois desliza no chão, perdendo velocidade
+            float tempoNoChao = tempoMergulho - config.duracaoBoteMergulho;
+            float rapidez = NoBoteDoMergulho
+                ? config.velocidadeMergulho
+                : Mathf.Max(0f, config.velocidadeMergulho - config.freioDeslizada * tempoNoChao);
+            velocidade = direcaoMergulho * rapidez;
             corpo.Move((velocidade + Vector3.down) * dt);
+
+            // Corpo: deita rápido no bote; no fim do tempo caído, vai levantando
             float deitado = Mathf.Clamp01(tempoMergulho / Mathf.Max(0.01f, config.duracaoBoteMergulho * 0.5f));
-            DeitarCorpo(deitado * config.anguloMergulho);
+            float duracaoTotal = config.duracaoBoteMergulho + config.duracaoCaidoMergulho;
+            float inicioLevantar = duracaoTotal - config.duracaoCaidoMergulho * config.fracaoLevantar;
+            if (tempoMergulho > inicioLevantar)
+                deitado *= 1f - Mathf.Clamp01((tempoMergulho - inicioLevantar) / Mathf.Max(0.01f, duracaoTotal - inicioLevantar));
+            // Carrinho deita para trás (pés na frente); peixinho deita para a frente (de peito)
+            DeitarCorpo(deitado * config.anguloMergulho * (mergulhoDeCarrinho ? -1f : 1f));
             return true;
         }
 
@@ -268,22 +297,16 @@ namespace BetsDeRua
             if (direcao.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(direcao, Vector3.up);
         }
 
-        /// <summary>True se o jogador está dentro do círculo da base com centro em 'centroBase'.</summary>
-        public bool DentroDoCirculoDe(Vector3 centroBase)
+        /// <summary>True se o jogador está na zona segura da garrafa em 'posicaoGarrafa' (ver ZonaDoTaco).</summary>
+        public bool DentroDoCirculoDe(Vector3 posicaoGarrafa)
         {
-            Vector3 p = transform.position;
-            return new Vector2(p.x - centroBase.x, p.z - centroBase.z).magnitude <= config.diametroBase * 0.5f;
+            return ZonaDoTaco.NaZonaSegura(transform.position, posicaoGarrafa, config);
         }
 
-        /// <summary>True se o jogador está dentro do círculo de alguma base.</summary>
+        /// <summary>True se o jogador está na zona segura de alguma base.</summary>
         public bool DentroDoCirculo()
         {
-            float raioBase = config.diametroBase * 0.5f;
-            float meioBases = config.distanciaBases * 0.5f;
-            Vector3 p = transform.position;
-            float distanciaA = new Vector2(p.x + meioBases, p.z).magnitude;
-            float distanciaB = new Vector2(p.x - meioBases, p.z).magnitude;
-            return Mathf.Min(distanciaA, distanciaB) <= raioBase;
+            return ZonaDoTaco.NaZonaSeguraDeAlguma(transform.position, config);
         }
     }
 }

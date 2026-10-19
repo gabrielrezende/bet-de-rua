@@ -12,6 +12,16 @@ namespace BetsDeRua
         [SerializeField] private ConfigFisica config;
         [Tooltip("Garrafas que a bola pode acertar.")]
         [SerializeField] private Garrafa[] garrafas;
+        [Tooltip("Corpos que a bola pode acertar quando CorposAtivos (os rebatedores, para a lancha).")]
+        [SerializeField] private Jogador[] corpos;
+
+        /// <summary>
+        /// True enquanto a bola pode bater no corpo dos rebatedores (o arremesso, até a batida).
+        /// Desliga sozinho no primeiro toque.
+        /// </summary>
+        public bool CorposAtivos { get; set; }
+        /// <summary>A bola tocou no corpo de um jogador (e desviou). Usado para a lancha.</summary>
+        public event System.Action<Jogador> TocouNoCorpo;
 
         // Posição "física" do centro da bola (o visual fica um pouco acima, por ser maior)
         private Vector3 posicao;
@@ -78,6 +88,36 @@ namespace BetsDeRua
             Parada = parada;
             if (posicao.y <= config.raioBola + 0.001f) QuicouDesdeLancamento = true;
             if (!Parada) ColidirComGarrafas(config.raioBola);
+            if (!Parada && CorposAtivos) ColidirComCorpos(config.raioBola);
+        }
+
+        /// <summary>Corpo = cilindro em pé (raio e altura do jogador). Bateu: desvia e avisa.</summary>
+        private void ColidirComCorpos(float raio)
+        {
+            if (corpos == null) return;
+            foreach (Jogador corpo in corpos)
+            {
+                if (corpo == null) continue;
+                Vector3 pe = corpo.transform.position;
+                if (posicao.y > pe.y + config.alturaJogador + raio) continue;
+
+                Vector3 deslocamento = posicao - pe;
+                deslocamento.y = 0f;
+                float distanciaMinima = config.raioJogador + raio;
+                if (deslocamento.sqrMagnitude >= distanciaMinima * distanciaMinima) continue;
+
+                Vector3 normal = deslocamento.sqrMagnitude > 0.000001f
+                    ? deslocamento.normalized
+                    : -new Vector3(velocidade.x, 0f, velocidade.z).normalized;
+                if (Vector3.Dot(velocidade, normal) >= 0f) continue;
+
+                // Desvia no corpo, perdendo força, e segue em jogo
+                velocidade = Vector3.Reflect(velocidade, normal) * config.quiqueCorpo;
+                posicao = new Vector3(pe.x, posicao.y, pe.z) + normal * distanciaMinima;
+                CorposAtivos = false;
+                TocouNoCorpo?.Invoke(corpo);
+                return;
+            }
         }
 
         /// <summary>
@@ -115,7 +155,15 @@ namespace BetsDeRua
                 Vector3 deslocamento = posicao - baseGarrafa;
                 deslocamento.y = 0f;
                 float distanciaMinima = garrafa.Raio + raio;
-                if (deslocamento.sqrMagnitude >= distanciaMinima * distanciaMinima) continue;
+                if (deslocamento.sqrMagnitude >= distanciaMinima * distanciaMinima)
+                {
+                    // Passou raspando e rápida: a garrafa balança sem cair
+                    float distanciaRaspao = distanciaMinima + config.distanciaRaspao;
+                    if (deslocamento.sqrMagnitude < distanciaRaspao * distanciaRaspao
+                        && velocidade.magnitude * 3.6f >= config.velocidadeRaspaoKmh)
+                        garrafa.ReceberRaspao(velocidade);
+                    continue;
+                }
 
                 Vector3 normal = deslocamento.sqrMagnitude > 0.000001f
                     ? deslocamento.normalized
@@ -125,9 +173,14 @@ namespace BetsDeRua
 
                 float alturaContato = Mathf.Clamp(posicao.y - baseGarrafa.y, 0f, garrafa.Altura);
                 Vector3 ponto = baseGarrafa + normal * garrafa.Raio + Vector3.up * alturaContato;
-                garrafa.ReceberBolada(velocidade, ponto);
+                if (garrafa.ReceberBolada(velocidade, ponto))
+                {
+                    // Derrubou: a garrafa sai da frente e a bola segue, perdendo parte da força
+                    velocidade *= config.velocidadeQueSegueAoDerrubar;
+                    continue;
+                }
 
-                // A bola volta, perdendo velocidade
+                // Bolada fraca: a bola volta, perdendo velocidade
                 velocidade = Vector3.Reflect(velocidade, normal) * config.quiqueGarrafa;
                 posicao = new Vector3(baseGarrafa.x, posicao.y, baseGarrafa.z) + normal * distanciaMinima;
             }

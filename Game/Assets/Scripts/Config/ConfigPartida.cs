@@ -14,11 +14,20 @@ namespace BetsDeRua
         public int metaPontos = 10;
         [Tooltip("Quanto vale cada cruzada validada. GDD: 1 no padrão, 2 como opção.")]
         public int pontosPorCruzada = 1;
+        [Tooltip("Lancha: o arremesso bateu no corpo de um rebatedor (o da vez ou o parceiro). A bola segue em jogo. " +
+                 "Com este tanto de lanchas a dupla do taco perde os tacos (troca de papel).")]
+        public int lanchasParaPerderTaco = 3;
+        [Tooltip("Queimou errado: a defesa derrubou a garrafa com o taco do dono já no chão. " +
+                 "O ataque ganha este tanto de pontos (0 = só não vale).")]
+        public int pontosQueimaErrada = 1;
         [Tooltip("Perdeu o taco em match point: os pontos caem pela metade (GDD, ligado no padrão).")]
         public bool caiMetadeAoPerderTacoNoMatchPoint = true;
+        [Tooltip("Pegar a bola rebatida direto no ar, antes de quicar, tira os tacos do ataque. " +
+                 "Desligado no protótipo: na rua quase toda bola chega quicando ou volta da parede.")]
+        public bool pegarNoArPerdeTaco = false;
 
         [Header("Posições iniciais")]
-        [Tooltip("Distância do rebatedor ao centro da garrafa, de lado, dentro do círculo (m).")]
+        [Tooltip("Distância do rebatedor à garrafa, de lado (+Z), no começo do lance (m). Fica ao lado da área do taco, na zona segura.")]
         public float afastamentoRebatedor = 0.45f;
         [Tooltip("Quanto o arremessador fica atrás da garrafa da base dele (m).")]
         public float afastamentoArremessador = 1.2f;
@@ -66,6 +75,14 @@ namespace BetsDeRua
         public float folgaParaBotCorrer = 7f;
         [Tooltip("Defensor bot chuta na garrafa exposta quando chega a esta distância dela (m).")]
         public float distanciaChuteBot = 9f;
+        [Tooltip("Defensor bot só chuta se a bola chegar na garrafa este tanto (s) antes do dono voltar para a base. " +
+                 "Senão anda com a bola para perto da garrafa (errar daria tempo para o ataque cruzar).")]
+        public float folgaParaChutarBot = 0.15f;
+        [Tooltip("Apoio: com a bola a mais que isso (m) da casinha que ele guarda, o defensor bot que não vai " +
+                 "na bola sai para o meio do caminho, para receber o passe.")]
+        public float distanciaParaApoio = 8f;
+        [Tooltip("Apoio: onde ele fica, entre a casinha que guarda (0) e a bola (1).")]
+        [Range(0f, 1f)] public float fracaoApoio = 0.45f;
         [Tooltip("Tempo de reação do defensor bot antes de pegar ou chutar (s).")]
         public float reacaoBot = 0.25f;
 

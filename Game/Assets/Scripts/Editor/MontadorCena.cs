@@ -43,7 +43,9 @@ namespace BetsDeRua.Editor
             Material matMuro = CriarMaterial("Muro", new Color(0.5f, 0.5f, 0.5f));
             Material matFaixa = CriarMaterial("FaixaMeio", new Color(0.3f, 0.3f, 0.31f));
             Material matGiz = CriarMaterial("Giz", new Color(0.95f, 0.95f, 0.95f));
-            Material matGarrafa = CriarMaterial("Garrafa", new Color(0.8f, 0.82f, 0.85f));
+            // Garrafa escura, verde de PET, para contrastar com o giz e o asfalto
+            Material matGarrafa = CriarMaterial("Garrafa", new Color(0.12f, 0.42f, 0.22f));
+            Material matTampa = CriarMaterial("TampaGarrafa", new Color(0.95f, 0.95f, 0.95f));
             Material matBola = CriarMaterial("Bola", new Color(0.85f, 0.95f, 0.2f));
             Material matDuplaTaco = CriarMaterial("DuplaTaco", configPartida.corDuplaTaco);
             Material matDuplaBola = CriarMaterial("DuplaBola", configPartida.corDuplaBola);
@@ -93,16 +95,16 @@ namespace BetsDeRua.Editor
             Cubo("LinhaB", faixa.transform, new Vector3(larguraFaixa * 0.5f, AlturaGiz, 0f),
                  new Vector3(config.espessuraLinhaGiz, EspessuraMarca, largura), matGiz, false);
 
-            // Bases: círculos de giz
+            // Bases riscadas de giz: casinha da garrafa + área do taco na frente (a zona segura em volta é invisível)
             GameObject bases = new GameObject("Bases");
             bases.transform.SetParent(campo.transform);
-            Circulo("BaseA", bases.transform, new Vector3(-meioBases, AlturaBase, 0f), config.diametroBase, matGiz);
-            Circulo("BaseB", bases.transform, new Vector3(meioBases, AlturaBase, 0f), config.diametroBase, matGiz);
+            BaseDeGiz("BaseA", bases.transform, new Vector3(-meioBases, 0f, 0f), config, matGiz);
+            BaseDeGiz("BaseB", bases.transform, new Vector3(meioBases, 0f, 0f), config, matGiz);
 
             // ---------- Garrafas ----------
             GameObject garrafas = new GameObject("Garrafas");
-            Garrafa garrafaA = CriarGarrafa("GarrafaA", garrafas.transform, new Vector3(-meioBases, 0f, 0f), config, matGarrafa);
-            Garrafa garrafaB = CriarGarrafa("GarrafaB", garrafas.transform, new Vector3(meioBases, 0f, 0f), config, matGarrafa);
+            Garrafa garrafaA = CriarGarrafa("GarrafaA", garrafas.transform, new Vector3(-meioBases, 0f, 0f), config, matGarrafa, matTampa);
+            Garrafa garrafaB = CriarGarrafa("GarrafaB", garrafas.transform, new Vector3(meioBases, 0f, 0f), config, matGarrafa, matTampa);
             Garrafa[] todas = { garrafaA, garrafaB };
 
             // ---------- Bola ----------
@@ -140,6 +142,8 @@ namespace BetsDeRua.Editor
             GerenciadorJogadores gerenciador = raizJogadores.AddComponent<GerenciadorJogadores>();
             Ligar(gerenciador, "configPartida", configPartida);
             LigarLista(gerenciador, "jogadores", todosJogadores);
+            // Lancha: a bola do arremesso pode bater no corpo dos rebatedores
+            LigarLista(bola, "corpos", new Object[] { rebatedorA, rebatedorB });
 
             // ---------- Câmera de transmissão ----------
             Camera cameraPrincipal = Camera.main;
@@ -149,6 +153,7 @@ namespace BetsDeRua.Editor
             Ligar(transmissao, "configFisica", config);
             Ligar(transmissao, "alvo", objBola.transform);
             LigarLista(transmissao, "outrosAlvos", System.Array.ConvertAll(todosJogadores, j => (Object)j.transform));
+            LigarLista(transmissao, "prioritarios", new Object[] { rebatedorA.transform, rebatedorB.transform });
 
             // ---------- Arremesso: mira no chão e arco de força ----------
             GameObject objMira = new GameObject("MiraNoChao");
@@ -316,20 +321,49 @@ namespace BetsDeRua.Editor
             return cubo;
         }
 
-        private static void Circulo(string nome, Transform pai, Vector3 posicao, float diametro, Material material)
+        /// <summary>
+        /// Base riscada no asfalto, vista de cima: a casinha (quadradinho com a garrafa no meio)
+        /// e, encostado na frente dela, o retângulo da área do taco atravessando a rua.
+        /// Só contorno, para não cobrir a garrafa nem o jogador.
+        /// </summary>
+        private static void BaseDeGiz(string nome, Transform pai, Vector3 posicaoGarrafa, ConfigFisica config,
+                                      Material material)
         {
-            // Cilindro achatado sem colisão = círculo pintado no chão
-            GameObject circulo = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            circulo.name = nome;
-            circulo.transform.SetParent(pai);
-            circulo.transform.localPosition = posicao;
-            circulo.transform.localScale = new Vector3(diametro, EspessuraMarca * 0.5f, diametro);
-            circulo.GetComponent<MeshRenderer>().sharedMaterial = material;
-            Object.DestroyImmediate(circulo.GetComponent<Collider>());
+            GameObject baseDeGiz = new GameObject(nome);
+            baseDeGiz.transform.SetParent(pai);
+            baseDeGiz.transform.localPosition = posicaoGarrafa + Vector3.up * AlturaBase;
+
+            // Contas em "para o arremesso" (eixo X local virado para o meio do campo)
+            float sentido = ZonaDoTaco.ParaOArremesso(posicaoGarrafa);
+            float e = config.espessuraLinhaGiz;
+            float lado = config.ladoCasinhaGarrafa;
+            float largura = config.larguraAreaTaco;
+            float profundidade = config.profundidadeAreaTaco;
+            float frenteCasinha = lado * 0.5f;
+            float frenteArea = frenteCasinha + profundidade;
+
+            // Casinha: fundo e lados (a frente é a linha de trás da área do taco)
+            LinhaDeGiz("CasinhaFundo", baseDeGiz.transform, new Vector3(-frenteCasinha * sentido, 0f, 0f), e, lado + e, material);
+            LinhaDeGiz("CasinhaLadoA", baseDeGiz.transform, new Vector3(0f, 0f, -lado * 0.5f), lado, e, material);
+            LinhaDeGiz("CasinhaLadoB", baseDeGiz.transform, new Vector3(0f, 0f, lado * 0.5f), lado, e, material);
+
+            // Área do taco: retângulo inteiro
+            float meioArea = (frenteCasinha + frenteArea) * 0.5f * sentido;
+            LinhaDeGiz("AreaTras", baseDeGiz.transform, new Vector3(frenteCasinha * sentido, 0f, 0f), e, largura + e, material);
+            LinhaDeGiz("AreaFrente", baseDeGiz.transform, new Vector3(frenteArea * sentido, 0f, 0f), e, largura + e, material);
+            LinhaDeGiz("AreaLadoA", baseDeGiz.transform, new Vector3(meioArea, 0f, -largura * 0.5f), profundidade, e, material);
+            LinhaDeGiz("AreaLadoB", baseDeGiz.transform, new Vector3(meioArea, 0f, largura * 0.5f), profundidade, e, material);
+        }
+
+        /// <summary>Uma linha de giz no chão: 'tamanhoX' × 'tamanhoZ' (m), sem colisão.</summary>
+        private static void LinhaDeGiz(string nome, Transform pai, Vector3 posicao, float tamanhoX, float tamanhoZ,
+                                       Material material)
+        {
+            Cubo(nome, pai, posicao, new Vector3(tamanhoX, EspessuraMarca, tamanhoZ), material, false);
         }
 
         private static Garrafa CriarGarrafa(string nome, Transform pai, Vector3 posicaoBase,
-                                            ConfigFisica config, Material material)
+                                            ConfigFisica config, Material material, Material materialTampa)
         {
             // Objeto pai com pivô na base (para balançar a partir do chão)
             GameObject raiz = new GameObject(nome);
@@ -343,6 +377,17 @@ namespace BetsDeRua.Editor
             corpoVisual.transform.localPosition = new Vector3(0f, config.alturaGarrafa * 0.5f, 0f);
             corpoVisual.transform.localScale = new Vector3(config.diametroGarrafa, config.alturaGarrafa * 0.5f, config.diametroGarrafa);
             corpoVisual.GetComponent<MeshRenderer>().sharedMaterial = material;
+
+            // Tampa clara em cima, para ler como garrafa (só visual, sem colisão).
+            // Vem depois do corpo: a cor de "exposta" pinta o primeiro desenho (o corpo).
+            GameObject tampa = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            tampa.name = "Tampa";
+            tampa.transform.SetParent(raiz.transform);
+            float alturaTampa = config.alturaGarrafa * 0.08f;
+            tampa.transform.localPosition = new Vector3(0f, config.alturaGarrafa + alturaTampa * 0.5f, 0f);
+            tampa.transform.localScale = new Vector3(config.diametroGarrafa * 0.4f, alturaTampa * 0.5f, config.diametroGarrafa * 0.4f);
+            tampa.GetComponent<MeshRenderer>().sharedMaterial = materialTampa;
+            Object.DestroyImmediate(tampa.GetComponent<Collider>());
 
             Rigidbody corpo = raiz.AddComponent<Rigidbody>();
             corpo.mass = config.massaGarrafa;

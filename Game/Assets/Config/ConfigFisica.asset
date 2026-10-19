@@ -16,6 +16,8 @@ MonoBehaviour:
   larguraCampo: 14
   distanciaBases: 20
   diametroBase: 1.2
+  ladoCasinhaGiz: 0.45
+  margemPeNaLinha: 0.2
   larguraFaixaMeio: 3
   espessuraLinhaGiz: 0.08
   alturaMuro: 0.6
@@ -32,12 +34,16 @@ MonoBehaviour:
   atritoRolar: 1.2
   velocidadeParada: 0.05
   passoSimulacao: 0.004
-  alturaGarrafa: 0.3
-  diametroGarrafa: 0.1
+  alturaGarrafa: 0.4
+  diametroGarrafa: 0.12
   massaGarrafa: 0.3
   velocidadeDerrubaKmh: 15
   forcaDerrubada: 1
   quiqueGarrafa: 0.4
+  velocidadeQueSegueAoDerrubar: 0.6
+  distanciaRaspao: 0.08
+  velocidadeRaspaoKmh: 25
+  fracaoBalancoRaspao: 0.5
   anguloBalanco: 10
   duracaoBalanco: 0.7
   velocidadeAndar: 2
@@ -47,6 +53,8 @@ MonoBehaviour:
   aceleracaoJogador: 14
   frenagemJogador: 18
   velocidadeVirar: 720
+  velocidadeComBola: 4
+  avancoMaximoComBola: 0
   duracaoSprint: 6
   recargaSprint: 4
   alturaJogador: 1.75
@@ -75,3 +83,35 @@ MonoBehaviour:
   erroDesgovernadaMinimo: 3
   erroDesgovernadaMaximo: 7
   subidaExtraDesgovernada: 0.3
+  alcanceTaco: 1.5
+  avancoContatoBatida: 0.6
+  alturaMaximaAlcance: 1.6
+  janelaPerfeitaMs: 50
+  janelaBoaMs: 120
+  tempoPrevisao: 3
+  passoPrevisao: 0.01
+  tempoEncherBatida: 0.7
+  batidaForteMinimaKmh: 70
+  batidaForteMaximaKmh: 110
+  batidaToqueKmh: 38
+  batidaCavadinhaKmh: 55
+  anguloBatidaForte: 18
+  anguloBatidaToque: 3
+  anguloBatidaCavadinha: 42
+  fatorBatidaBoa: 0.8
+  erroDirecaoBatidaBoa: 12
+  duracaoGiroTaco: 0.18
+  raioPegar: 1
+  alturaMaximaPegar: 2.2
+  alcanceMergulho: 3.5
+  velocidadeMergulho: 8
+  duracaoBoteMergulho: 0.35
+  duracaoCaidoMergulho: 0.6
+  raioPegarNoMergulho: 1.3
+  anguloMergulho: 75
+  tempoEncherChute: 0.6
+  passeKmh: 45
+  lancamentoKmh: 38
+  alturaChegadaPasse: 1
+  alturaChegadaLancamento: 1.3
+  raioReceberPasse: 1.4

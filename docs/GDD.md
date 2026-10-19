@@ -119,8 +119,9 @@ O modo padrão usa a regra que você lembra: 2x2, cada cruzada no meio vale 1 po
 | --- | --- | --- |
 | Valor da cruzada | 1 ponto | 2 pontos |
 | Meta | 10 pontos + cruzada final de fechamento | 5, 12 ou 24 |
-| Bola pega no ar | Perde o taco | Perde o jogo ("regra de vila") |
+| Bola pega no ar | Desligado no protótipo (na rua quase toda bola chega quicando) | Perde o taco ou perde o jogo ("regra de vila") |
 | Bola para trás | 3 para trás = perde o taco | Desligado |
+| Lancha (bola no corpo) | 3 lanchas = perde o taco; a bola segue em jogo | 1 lancha já perde o taco |
 | Perdeu o taco com a meta batida | Pontos caem pela metade | Desligado |
 | Licença, bets | 1 pausa de 30 s por dupla por partida | Ilimitada |
 | Tempo limite | 8 min; ao fim, ganha quem tem mais pontos, empate vai para o taco-ombro | Sem limite |
@@ -131,6 +132,11 @@ O modo padrão usa a regra que você lembra: 2x2, cada cruzada no meio vale 1 po
 - **Queimar o rebatedor:** a casinha só é derrubada se a bola acertar a garrafa enquanto o taco do dono está fora do círculo de giz; a física decide, sem juiz.
 - **Taco no chão:** o rebatedor parado dentro do círculo está sempre protegido; o jogo mostra o círculo verde quando está seguro e vermelho quando está exposto.
 - **Cruzada:** é validada automaticamente quando os dois tacos se encontram na faixa central, com animação e som de "tec!" de madeira.
+- **Lancha:** se o arremesso bate no corpo de um rebatedor (o da vez ou o parceiro parado na outra base), a defesa marca uma lancha; a bola desvia e segue em jogo. Com 3 lanchas a dupla perde os tacos. A regra existe para ninguém proteger a garrafa com o corpo, e é por isso que o arremessador pode andar atrás da casinha: para sair de trás do parceiro e ter uma linha limpa até a garrafa alvo. (Decisão do protótipo, pesquisada nas regras de rua: Wikipédia "Bete-ombro".)
+- **Sem bola morta:** a bola nunca para. Errou a garrafa, a bola segue rolando e alguém tem que ir buscar. Quem está com a bola volta para trás de uma casinha e, com os dois rebatedores seguros, já arremessa dali, na casinha do outro lado; enquanto ele não chega, o ataque pode continuar cruzando. Ninguém volta para o lugar: as posições só se reorganizam na troca de papel (queimada, bola pega no ar, 3 lanchas). **Queimou errado:** derrubar a garrafa com o taco do dono já no chão dá 1 ponto ao time do taco (a garrafa volta de pé e o jogo segue). Por isso jogar na garrafa é uma decisão: se o rebatedor vai chegar na base antes da bola, é melhor andar com a bola até perto da garrafa e prender o ataque. (Decisão do protótipo.)
+- **Defesa pelo campo inteiro:** os dois da bola andam pelo campo todo, o tempo todo. Quem está mais perto vai na bola; o outro, com a bola longe, sai para o meio do caminho para receber o passe (e não deixar o ataque cruzar à vontade). A única restrição: para arremessar, quem lança não pode estar à frente da linha da garrafa do lado dele.
+- **Cruzada de ida e volta:** cruzou no meio, cada um tem que chegar na base do outro lado e encostar o taco; aí vale 1 ponto e pode voltar para cruzar de novo, quantas vezes quiser enquanto a defesa não volta com a bola. Arriscar mais uma é decisão do jogador. Com uma pessoa e um bot na dupla do taco, o bot corre em espelho: você sai, ele sai; você volta, ele volta.
+- **Mergulho:** □ perto da bola pega; com a bola passando um pouco mais longe, □ vira um bote para onde a bola vai estar: carrinho (bola rasteira, de pé na frente) ou peixinho (bola quicando, de peito). Desliza no chão, pega se alcançar, levanta e só então mira e lança. Errou: fica no chão um instante (o risco).
 - **Quem começa:** minigame de "molhado ou seco" com o taco girando no ar, decidido por sorteio.
 
 **Rodízio: quem arremessa e quem rebate**
@@ -186,7 +192,7 @@ No arremesso, o ataque fica um em cada casinha; a defesa tem o arremessador na c
 
 No modo em que cada pessoa controla a dupla inteira, a câmera padrão é a de transmissão, igual ao FIFA: lateral, elevada, mostrando a rua inteira de uma casinha à outra. Como o campo do bets é comprido e estreito, essa vista mostra tudo de uma vez: as duas casinhas, a bola, quem corre atrás dela e a faixa do meio.
 
-- **Sempre os quatro na tela:** a câmera enquadra os 4 jogadores e a bola o tempo todo, deslizando de lado e se afastando o quanto precisar (até 2x). Se a bola for longe demais para caber todo mundo, a bola tem prioridade e a câmera vai atrás dela. (Decisão do protótipo, Etapa 3: substitui o "segue a bola" e o zoom no arremesso.)
+- **Sempre os quatro na tela:** a câmera enquadra os 4 jogadores e a bola o tempo todo, deslizando de lado e se afastando o quanto precisar (até 2x). Se a bola for longe demais para caber todo mundo, **os rebatedores têm prioridade**: a cruzada no meio nunca sai da tela, porque a defesa precisa ver quantos pontos estão saindo e se já dá para tentar queimar; a bola fora da tela vira uma seta amarela na borda com a distância. (Decisão do protótipo: substitui a "bola tem prioridade" da Etapa 3.)
 - **Sem zoom no arremesso:** a câmera não aproxima na mira, para não tirar ninguém da tela; a sombra da bola e as marcas no chão resolvem a profundidade da vista de lado.
 - **Linha de trajetória:** enquanto mira, uma linha pontilhada no chão sai de quem arremessa ou rebate. No sofá todo mundo vê a mesma tela, então a linha é **curta** (cerca de 5 m): mostra a direção sem entregar o ponto exato. Online, cada um poderá ver a linha inteira na própria tela.
 - **Marcadores:** um triângulo colorido em cima de cada personagem controlado por você; o ativo pisca. O nome do jogador aparece embaixo, como no FIFA.
@@ -213,13 +219,13 @@ O esquema segue três princípios do FIFA: **poucos botões**, **cada botão com
 - **△ (Y) = por cima**, como o lançamento: cavadinha, pingo, lançamento longo.
 - **□ (X) = pegar a bola**, do chão ou no ar; com direção, mergulho.
 - **R1 (RB) + ação = colocado**, com precisão, como o chute colocado. O efeito na bola vai no analógico direito.
-- **R2 (RT) = correr**; para o rebatedor, é também sair da base.
-- **L1 (LB) = trocar de jogador**; o analógico direito escolhe um jogador específico.
+- **R1 (RB) = correr (sprint)**; para o rebatedor, é também sair da base. Com a bola na mão ou esperando o arremesso não há sprint, e aí o R1 é o lance curto (quicado, passe, toque). (Decisão do protótipo: o sprint saiu do R2 e foi para o R1.)
+- **L1 (LB) = trocar de jogador**, na defesa e no ataque; o analógico direito escolhe um jogador específico.
 - **L2 (LT) = andar devagar / postura**: o guardião anda de lado olhando a bola, como a marcação do FIFA.
 
-**Com a bola na mão para arremessar, o esquema vira "twin-stick"** (decisão do protótipo, Etapa 3): o analógico esquerdo anda, o direito mira, e os gatilhos e botões de cima arremessam — **R2 (RT) forte, R1 (RB) quicado, L2 (LT) pingo**, sempre segurando para encher o arco de força e soltando na faixa verde. Como quem está com a bola não dá sprint (4 m/s), o R2 fica livre para arremessar. Os botões da frente (○, X, △, □) ficam livres nesse momento para efeitos e jogadas especiais (a definir).
+**Com a bola na mão para arremessar, o esquema vira "twin-stick"** (decisão do protótipo, Etapa 3): o analógico esquerdo anda, o direito mira, e os gatilhos e botões de cima arremessam — **R2 (RT) forte, R1 (RB) quicado, L2 (LT) pingo**, sempre segurando para encher o arco de força e soltando na faixa verde. Como quem está com a bola não dá sprint (4 m/s), o R1 fica livre para o quicado. Os botões da frente (○, X, △, □) ficam livres nesse momento para efeitos e jogadas especiais (a definir).
 
-**Taco no chão: segurar L1 (LB).** (Decisão do protótipo, Etapa 5: substitui o "taco no chão automático".) Dentro do círculo, o rebatedor segura L1 (teclado: Q) para manter o taco encostado no chão; aí ele não pode ser queimado. Soltou o L1, rebateu ou saiu do círculo, o taco levanta, a garrafa dele fica vermelha e a casinha está exposta. Como os gatilhos rebatem, o L1 é o dedo livre; na defesa ele continua trocando de jogador. Os bots encostam o taco sozinhos quando estão parados no círculo. A tensão continua toda na decisão de quando soltar e sair, que é exatamente o que o guardião espera.
+**Taco no chão automático.** (Decisão do protótipo, depois da Etapa 6: volta ao automático e substitui o "segurar L1" da Etapa 5.) Na zona segura da base, o taco desce sozinho e encosta no chão, mesmo andando; aí ele não pode ser queimado. Saiu da zona, o taco levanta, a garrafa fica vermelha e a casinha está exposta. Depois do giro da batida, se ainda estiver dentro, o taco volta ao chão sozinho: a janela de risco é só o giro. Vale igual para pessoas e bots. A tensão continua toda na decisão de quando sair da zona, e o L1 fica livre para trocar de jogador também no ataque. A base segue a rua, vista de cima: a garrafa fica no meio de uma **casinha** de giz pequena (`ladoCasinhaGarrafa`, 35 cm), e encostado na frente dela, do lado do arremesso, há um **retângulo da área do taco** atravessando a rua (`larguraAreaTaco` 1,4 m × `profundidadeAreaTaco` 0,6 m), onde a ponta do taco encosta. Em volta dos dois há uma **zona segura invisível** (`margemZonaSegura`, 60 cm): o rebatedor fica ali, ao lado, e a garrafa nunca some atrás dele. A garrafa é verde-escura com tampa clara, para contrastar com o giz.
 
 **Atacando (rebatedor)**
 
@@ -232,19 +238,19 @@ O esquema segue três princípios do FIFA: **poucos botões**, **cada botão com
 | Cavadinha | L2 (LT) | Passa por cima do fielder; vai longe, mas arrisca ser pega no ar |
 | Batida colocada | A definir (botão da frente) | Menos força, mais precisão: manda a bola no canto vazio |
 | Não rebater | Não apertar nada | O taco no chão protege a garrafa; sem chance de ponto |
-| Trocar de rebatedor (1x1) | L1 (LB) | Normalmente automático: fica ativo quem vai receber o arremesso |
+| Trocar de rebatedor (1x1) | L1 (LB) | Normalmente automático: fica ativo quem vai receber o arremesso; o L1 troca para o parceiro a qualquer momento |
 
-> Decisão do protótipo (Etapa 4): a batida segue o mesmo esquema "twin-stick" do arremesso. Com a bola vindo, os gatilhos rebatem (R2 forte, R1 toque, L2 cavadinha) e o R2 só volta a ser sprint depois. Tempo: perfeita a ±50 ms do momento certo, boa a ±120 ms; o atraso em ms aparece na tela. No teclado: WASD anda, mouse dá a direção, clique esquerdo forte, clique direito toque, E cavadinha.
+> Decisão do protótipo (Etapa 4): a batida segue o mesmo esquema "twin-stick" do arremesso. Com a bola vindo, os gatilhos rebatem (R2 forte, R1 toque, L2 cavadinha) e o R1 só volta a ser sprint depois. Tempo: perfeita a ±50 ms do momento certo, boa a ±120 ms; o atraso em ms aparece na tela. No teclado: WASD anda, mouse dá a direção, clique esquerdo forte, clique direito toque, E cavadinha.
 
 **Correndo e cruzando**
 
 | Ação | PlayStation (Xbox) | Como funciona |
 | --- | --- | --- |
-| Sair correndo | Analógico esquerdo (+ R2 sprint) | Sair do círculo levanta o taco; no 1x1 o parceiro bot corre em espelho, para os dois se cruzarem no meio |
+| Sair correndo | Analógico esquerdo (+ R1 sprint) | Sair do círculo levanta o taco; no 1x1 o parceiro bot corre em espelho, para os dois se cruzarem no meio |
 | Mover na corrida | Analógico esquerdo | Desviar do fielder e escolher a linha até a faixa do meio |
 | Cruzar | X (A) no anel | Dentro da faixa e a até 1,5 m do parceiro, aparece um anel; apertar quando fica verde bate os tacos |
-| Ficar na base | Parar dentro do círculo segurando L1 (LB) | Encosta o taco: valida o ponto e deixa protegido |
-| Mais uma | R2 (RT) de novo | Sai da base para outra cruzada |
+| Ficar na base | Voltar para dentro do círculo (pé na linha basta) | O taco desce sozinho: valida o ponto e deixa protegido |
+| Mais uma | Sair do círculo de novo (R1 sprint) | Sai da base para outra cruzada |
 
 **Arremessando**
 
@@ -284,7 +290,7 @@ Como o beisebol tem nome para cada arremesso, o bets ganha o seu repertório com
 
 **Defendendo em campo (fielder e guardião)**
 
-> Decisão do protótipo (Etapa 5): com a bola na mão, o defensor usa o mesmo esquema "twin-stick" do arremesso (esquerdo anda a 4 m/s, direito mira, gatilhos soltam a bola). □ continua sendo pegar. Queimada = a bola lançada pela defesa derruba a garrafa com o taco do dono fora do chão; encostar a bola no rebatedor não queima. Garrafa derrubada com o taco no chão: "não valeu", e o lance recomeça. Pegar a bola rebatida antes de quicar: troca de papel. O lance acaba quando a defesa está com a bola e os dois rebatedores estão seguros.
+> Decisão do protótipo (Etapa 5): com a bola na mão, o defensor usa o mesmo esquema "twin-stick" do arremesso (esquerdo anda a 4 m/s, direito mira, gatilhos soltam a bola). □ continua sendo pegar. Queimada = a bola lançada pela defesa derruba a garrafa com o taco do dono fora do chão; encostar a bola no rebatedor não queima. Garrafa derrubada com o taco no chão: "não valeu", e o lance recomeça. Pegar a bola rebatida antes de quicar: troca de papel. Não há bola morta: quando a defesa está com a bola atrás de uma casinha e os dois rebatedores estão seguros, quem está com a bola já arremessa dali.
 
 | Ação | PlayStation (Xbox) | Como funciona |
 | --- | --- | --- |
@@ -422,7 +428,7 @@ Aceleração e freada têm peso: mudar de direção bruscamente custa meio passo
 7. **Validar o ponto.** O ponto aparece amarelo (+1 pendente) e só fica verde quando cada um encosta o taco no círculo da base oposta, como na rua. Se a casinha for derrubada antes, o ponto pendente é perdido.
 8. **Mais uma ou fica?** Na base, parar dentro do círculo encosta o taco e deixa seguro; R2 (RT) sai para outra cruzada. É aqui que mora a decisão: olhar onde está a bola e se o fielder já dominou.
 9. **O rebatedor defende a casinha.** Quando a defesa chuta na garrafa, o dono daquela casinha pode correr na direção da bola e tentar rebatê-la com ○ (B) se ela passar a até 1,5 m do taco. Rebateu: casinha salva e a bola fica viva de novo (novas cruzadas valem). Errou estando fora do círculo: risco de queimada. Dentro do círculo parado com o taco no chão ele já está protegido, e rebater é bônus.
-10. **Fim do lance (bola morta).** Acontece quando: a casinha cai com o taco fora (queimada, troca de papel); a bola é pega no ar (troca de papel); a terceira bola vai para trás (troca de papel); ou a defesa devolve a bola ao arremessador dentro do círculo dele com os dois rebatedores seguros nas bases. Aí recomeça o arremesso.
+10. **Fim do lance (bola morta).** Acontece quando: a casinha cai com o taco fora (queimada, troca de papel); a bola é pega no ar (troca de papel); a terceira bola vai para trás (troca de papel); ou a terceira lancha (troca de papel). Fora isso não há bola morta: quem está com a bola volta para trás de uma casinha e, com os dois rebatedores seguros nas bases, já arremessa dali, sem parar o jogo.
 
 **O guardião: quem fica atrás da casinha**
 

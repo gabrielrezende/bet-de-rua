@@ -16,10 +16,13 @@ namespace BetsDeRua
     /// - BolaViva: depois do arremesso. A defesa pega a bola (□), chuta na garrafa, passa;
     ///   o ataque corre e cruza (Corrida).
     /// - Queimada: a bola lançada pela defesa derruba a garrafa com o taco do dono fora do
-    ///   chão → TrocaDePapel. Com o taco no chão, "não valeu" → BolaMorta.
-    /// - Pegou no ar a bola rebatida → TrocaDePapel.
-    /// - A defesa com a bola e os dois rebatedores seguros → BolaMorta → novo arremesso.
-    /// - Rodízio: a cada lance a defesa arremessa da outra casinha (quem guardava, arremessa).
+    ///   chão → TrocaDePapel. Com o taco no chão, "queimou errado": a garrafa volta, o jogo segue e o ataque ganha ponto.
+    /// - Pegou no ar a bola rebatida → TrocaDePapel (só com ConfigPartida.pegarNoArPerdeTaco; desligado no padrão).
+    /// - Lancha: o arremesso bateu no corpo de um rebatedor; a bola segue. 3 lanchas → TrocaDePapel.
+    /// - Sem bola morta (regra da rua): quem está com a bola volta para trás de uma casinha e,
+    ///   com os dois rebatedores seguros, já arremessa dali (Arremesso de novo, sem parar o jogo).
+    ///   Rodízio natural: quem pegou a bola arremessa da casinha mais perto.
+    /// - BolaMorta só sobra como segurança (tempo esgotado).
     /// - Partida: chegou na meta = match point; mais uma cruzada validada fecha o jogo
     ///   (FimDePartida). Perdeu o taco em match point: os pontos caem pela metade.
     ///   Start (controle) ou Enter (teclado) reinicia a partida.
@@ -57,11 +60,14 @@ namespace BetsDeRua
         private Arremessador arremessadorDaVez; // quem arremessa neste lance
         private bool arremessoDeAParaB = true;  // de que casinha sai o arremesso neste lance
         private bool primeiroLance = true;
+        private int lanchas;                    // lanchas da dupla que está no taco agora
+        private float tempoSemBolaNoArremesso;
 
         public EstadoLance Estado { get; private set; }
         public bool Rebatida => rebatida;
         public Arremessador Portador => portador;
         public Rebatedor RebatedorDaVez => rebatedorDaVez;
+        public Arremessador ArremessadorDaVez => arremessadorDaVez;
         public Garrafa GarrafaA => garrafaA;
         public Garrafa GarrafaB => garrafaB;
         /// <summary>Garrafa que recebe o arremesso neste lance.</summary>
@@ -86,6 +92,7 @@ namespace BetsDeRua
             }
             corrida.Cruzou += AoCruzar;
             corrida.PontosValidados += AoValidarPontos;
+            bola.TocouNoCorpo += AoLancha;
             ProximoLance();
         }
 
@@ -108,6 +115,7 @@ namespace BetsDeRua
                 corrida.Cruzou -= AoCruzar;
                 corrida.PontosValidados -= AoValidarPontos;
             }
+            if (bola != null) bola.TocouNoCorpo -= AoLancha;
         }
 
         // ------------------------------------------------------------------ ciclo
@@ -124,6 +132,14 @@ namespace BetsDeRua
                     // A bola acompanha a mão do arremessador
                     bola.Colocar(arremessadorDaVez.PosicaoMao);
                     LiberarDefensores(false);
+                    // Segurança: o arremessador ficou sem a bola (arremesso ignorado) e o jogo travaria
+                    tempoSemBolaNoArremesso = arremessadorDaVez.ComBola ? 0f : tempoSemBolaNoArremesso + Time.deltaTime;
+                    if (tempoSemBolaNoArremesso > 1f)
+                    {
+                        Debug.LogWarning($"[Lance] {arremessadorDaVez.Jogador.Nome} estava sem bola no arremesso; devolvendo.");
+                        tempoSemBolaNoArremesso = 0f;
+                        arremessadorDaVez.ReceberBola(ModoComBola.Arremesso);
+                    }
                     break;
 
                 case EstadoLance.BolaViva:
@@ -139,6 +155,7 @@ namespace BetsDeRua
                     {
                         gerenciador.InverterDuplas();
                         ladoNoTaco = 1 - ladoNoTaco;
+                        lanchas = 0;
                         ProximoLance();
                     }
                     break;
@@ -163,10 +180,56 @@ namespace BetsDeRua
             VerificarGarrafas();
             if (Estado != EstadoLance.BolaViva) return;
 
-            // Defesa com a bola e os dois rebatedores seguros por um tempinho: fim do lance
-            tempoSeguro = portador != null && corrida.AmbosSeguros ? tempoSeguro + Time.deltaTime : 0f;
-            if (tempoSeguro >= configPartida.tempoSeguroParaEncerrar) EntrarBolaMorta(null);
+            // Sem bola morta (regra da rua): o lance segue até quem está com a bola voltar para
+            // trás de uma casinha com os dois rebatedores seguros; aí ele já arremessa dali.
+            // Enquanto ele não chega, o ataque pode continuar cruzando.
+            bool prontoParaArremessar = portador != null && AtrasDeUmaCasinha(portador.transform.position) && corrida.AmbosSeguros;
+            tempoSeguro = prontoParaArremessar ? tempoSeguro + Time.deltaTime : 0f;
+            if (tempoSeguro >= configPartida.tempoSeguroParaEncerrar) ArremessarDeNovoSemParar();
             else if (tempoNoEstado > configPartida.tempoMaximoBolaViva) EntrarBolaMorta("Tempo esgotado");
+        }
+
+        /// <summary>
+        /// Quem está com a bola atrás de uma casinha vira o arremessador dali, sem parar o jogo
+        /// e sem mudar ninguém de lugar. Arremessa na casinha do outro lado.
+        /// </summary>
+        private void ArremessarDeNovoSemParar()
+        {
+            Arremessador novo = portador;
+            arremessoDeAParaB = CasinhaMaisPerto(novo.transform.position) == garrafaA;
+            arremessadorDaVez = novo;
+            portador = null;
+            foreach (Garrafa garrafa in Garrafas) garrafa.Reiniciar();
+            garrafasAvaliadas.Clear();
+            corrida.Encerrar();
+            EntrarArremesso();
+            Mostrar($"{novo.Jogador.Nome} arremessa da casinha {(arremessoDeAParaB ? "A" : "B")}");
+        }
+
+        /// <summary>Garrafa da casinha mais perto de 'ponto' (pela distância no eixo das bases).</summary>
+        public Garrafa CasinhaMaisPerto(Vector3 ponto)
+        {
+            return Mathf.Abs(ponto.x - garrafaA.transform.position.x) <= Mathf.Abs(ponto.x - garrafaB.transform.position.x)
+                ? garrafaA : garrafaB;
+        }
+
+        /// <summary>
+        /// True se 'ponto' está atrás da casinha mais perto (do lado de fora do campo), de onde
+        /// se pode arremessar. Usa a mesma folga do arremesso para ir um pouco à frente da garrafa.
+        /// </summary>
+        public bool AtrasDeUmaCasinha(Vector3 ponto)
+        {
+            Vector3 garrafa = CasinhaMaisPerto(ponto).transform.position;
+            float paraFora = -ZonaDoTaco.ParaOArremesso(garrafa);
+            return (ponto.x - garrafa.x) * paraFora >= -configFisica.avancoMaximoComBola;
+        }
+
+        /// <summary>Onde um defensor com a bola vai para arremessar de novo: atrás da casinha mais perto.</summary>
+        public Vector3 PontoParaArremessar(Vector3 de)
+        {
+            Vector3 garrafa = CasinhaMaisPerto(de).transform.position;
+            float paraFora = -ZonaDoTaco.ParaOArremesso(garrafa);
+            return new Vector3(garrafa.x + paraFora * configPartida.afastamentoArremessador, 0f, 0f);
         }
 
         private void MudarPara(EstadoLance novo)
@@ -273,6 +336,7 @@ namespace BetsDeRua
             // Quem joga volta para o lado em que começou (Lado 1 no taco)
             if (ladoNoTaco != 0) gerenciador.InverterDuplas();
             ladoNoTaco = 0;
+            lanchas = 0;
             primeiroLance = true;
             Mostrar("Partida nova!");
             ProximoLance();
@@ -280,6 +344,7 @@ namespace BetsDeRua
 
         private void EncerrarJogadas()
         {
+            bola.CorposAtivos = false;
             corrida.Encerrar();
             foreach (Rebatedor rebatedor in rebatedores) rebatedor.Encerrar();
             LiberarDefensores(false);
@@ -315,12 +380,37 @@ namespace BetsDeRua
                 }
                 if (Protegida(garrafa))
                 {
-                    EntrarBolaMorta("Não valeu: taco no chão!");
-                    return;
+                    // Queimou errado: o taco do dono já estava no chão. A garrafa volta de pé,
+                    // o jogo segue (sem bola morta) e o ataque ganha ponto (regra da rua)
+                    garrafa.Reiniciar();
+                    garrafasAvaliadas.Remove(garrafa);
+                    int ganhou = configPartida.pontosQueimaErrada;
+                    if (ganhou > 0 && !EmMatchPoint(ladoNoTaco))
+                    {
+                        // Para na meta: fechar o jogo continua exigindo uma cruzada
+                        pontos[ladoNoTaco] = Mathf.Min(configPartida.metaPontos, pontos[ladoNoTaco] + ganhou);
+                        Mostrar($"QUEIMOU ERRADO! Taco no chão: +{ganhou} para o Lado {ladoNoTaco + 1}");
+                    }
+                    else Mostrar("QUEIMOU ERRADO! Taco no chão");
+                    continue;
                 }
                 EntrarTrocaDePapel("QUEIMOU!");
                 return;
             }
+        }
+
+        /// <summary>
+        /// Quanto tempo (s) o dono da garrafa leva para protegê-la: correr até a zona segura
+        /// em sprint e o taco descer. Zero se já está protegida. Os bots usam para decidir se vale jogar.
+        /// </summary>
+        public float TempoParaProteger(Garrafa garrafa)
+        {
+            if (Protegida(garrafa)) return 0f;
+            Rebatedor dono = MaisPerto(rebatedores, garrafa.transform.position);
+            Vector3 d = dono.transform.position - garrafa.transform.position;
+            d.y = 0f;
+            float falta = Mathf.Max(0f, d.magnitude - configFisica.margemZonaSegura - configFisica.ladoCasinhaGarrafa * 0.5f);
+            return falta / Mathf.Max(0.1f, configFisica.velocidadeSprint) + configFisica.tempoMovimentoTaco;
         }
 
         /// <summary>A garrafa exposta mais perto (se nenhuma estiver exposta, a mais perto).</summary>
@@ -369,6 +459,7 @@ namespace BetsDeRua
             {
                 MudarPara(EstadoLance.BolaViva);
                 bola.Lancar(saida, velocidade, origem.Jogador);
+                bola.CorposAtivos = true; // lancha: o arremesso pode bater no corpo de um rebatedor
                 rebatedorDaVez.ArremessoSaiu(velocidade);
                 resumoArremesso = $"{NomeDoTipo(tipo)} · {kmh:0} km/h";
                 Mostrar(resumoArremesso);
@@ -379,12 +470,16 @@ namespace BetsDeRua
                 portador = null;
                 bola.Lancar(saida, velocidade, origem.Jogador);
                 Mostrar(tipo == TipoArremesso.Forte ? $"Chute na garrafa · {kmh:0} km/h" : NomeDoTipo(tipo));
+                return;
             }
+            Debug.LogWarning($"[Lance] Arremesso ignorado: {origem.Jogador.Nome} (modo {origem.Modo}) no estado {Estado}; " +
+                             $"arremessa agora: {arremessadorDaVez?.Jogador.Nome}, portador: {portador?.Jogador.Nome}");
         }
 
         private void AoRebater(TipoBatida tipo, float kmh, float erroMs, bool perfeita)
         {
             rebatida = true;
+            bola.CorposAtivos = false;
             rebatedorDaVez.Encerrar();
             corrida.Ativar();
             string qualidade = perfeita ? "PERFEITA!" : "Boa";
@@ -413,6 +508,7 @@ namespace BetsDeRua
             if (Estado != EstadoLance.BolaViva || portador != null || defensor.ComBola == null) return;
 
             Jogador lancador = bola.UltimoLancador;
+            bola.CorposAtivos = false;
             portador = defensor.ComBola;
             portador.Alvo = EscolherAlvo(portador.transform.position);
             portador.Parceiro = OutroDefensor(defensor.Jogador);
@@ -422,7 +518,7 @@ namespace BetsDeRua
             rebatedorDaVez.Encerrar();
             if (configPartida.trocaAutomaticaNaDefesa) gerenciador.Ativar(defensor.Jogador);
 
-            if (noAr && lancador != null && lancador.Dupla == Dupla.Taco)
+            if (configPartida.pegarNoArPerdeTaco && noAr && lancador != null && lancador.Dupla == Dupla.Taco)
             {
                 EntrarTrocaDePapel("PEGOU NO AR!");
                 return;
@@ -431,9 +527,26 @@ namespace BetsDeRua
             if (lancador == null || lancador.Dupla == Dupla.Taco) Mostrar($"{defensor.Jogador.Nome} dominou a bola");
         }
 
+        /// <summary>
+        /// Lancha (regra da rua): o arremesso bateu no corpo de um rebatedor, o da vez ou o parceiro.
+        /// Conta contra a dupla do taco; a bola desvia e segue em jogo. Juntou o limite: perde os tacos.
+        /// </summary>
+        private void AoLancha(Jogador rebatedor)
+        {
+            if (Estado != EstadoLance.BolaViva || rebatida) return;
+            rebatedorDaVez.Encerrar(); // a bola desviada não pode mais ser rebatida
+            lanchas++;
+            if (lanchas >= configPartida.lanchasParaPerderTaco)
+            {
+                EntrarTrocaDePapel($"{lanchas} LANCHAS!");
+                return;
+            }
+            Mostrar($"LANCHA! Bola no corpo do {rebatedor.Nome}  ({lanchas} de {configPartida.lanchasParaPerderTaco})");
+        }
+
         private void AoCruzar(int pendentes)
         {
-            Mostrar($"CRUZOU!  +{pendentes} pendente (pare no círculo com o taco no chão)");
+            Mostrar($"CRUZOU!  +{pendentes} pendente (cada um até a base do outro lado)");
         }
 
         private void AoValidarPontos(int cruzadas)
@@ -486,6 +599,14 @@ namespace BetsDeRua
         /// </summary>
         public Vector3 PosicaoDeGuarda(Jogador defensor)
         {
+            // Colega com a bola no campo: vai guardar atrás da casinha em que ele vai arremessar
+            if (portador != null && portador.Jogador != defensor)
+            {
+                Garrafa origemPrevista = CasinhaMaisPerto(portador.transform.position);
+                Garrafa alvoPrevisto = origemPrevista == garrafaA ? garrafaB : garrafaA;
+                float paraFora = -ZonaDoTaco.ParaOArremesso(alvoPrevisto.transform.position);
+                return new Vector3(alvoPrevisto.transform.position.x + paraFora * configPartida.distanciaGuardiao, 0f, 0f);
+            }
             bool ehQuemArremessa = arremessadorDaVez != null && defensor == arremessadorDaVez.Jogador;
             Vector3 origem = new Vector3(GarrafaDeOrigem.transform.position.x, 0f, 0f);
             Vector3 alvo = new Vector3(GarrafaAlvo.transform.position.x, 0f, 0f);
@@ -577,7 +698,8 @@ namespace BetsDeRua
 
             string casinhas = arremessoDeAParaB ? "A → B" : "B → A";
             string pendente = corrida.PontosPendentes > 0 ? $" · +{corrida.PontosPendentes} pendente" : "";
-            string linha = $"meta {configPartida.metaPontos} + cruzada final · arremesso {casinhas}{pendente}";
+            string textoLanchas = lanchas > 0 ? $" · lanchas {lanchas}/{configPartida.lanchasParaPerderTaco}" : "";
+            string linha = $"meta {configPartida.metaPontos} + cruzada final · arremesso {casinhas}{pendente}{textoLanchas}";
             bool piscando = Mathf.Repeat(Time.unscaledTime * velocidadePiscar, 1f) < 0.6f;
             if (EmMatchPoint(ladoNoTaco) && vencedor < 0 && piscando) linha += $"   MATCH POINT do Lado {ladoNoTaco + 1}!";
             GUI.Label(new Rect(16, 36, 900, 22), linha, detalhe);
@@ -613,7 +735,7 @@ namespace BetsDeRua
                     ? "ARREMESSO: R2 / clique esq. forte · R1 / clique dir. quicado · L2 / E pingo (solte na faixa verde)\n"
                     : "ARREMESSO: a CPU arremessa (Select / Tab troca de dupla)\n";
                 if (tacoHumano)
-                    instrucoes += "REBATEDOR: segure L1 / Q para o taco ficar no chão (garrafa vermelha = pode ser queimada)\n" +
+                    instrucoes += "REBATEDOR: dentro do círculo o taco fica no chão sozinho (garrafa vermelha = fora, pode ser queimada)\n" +
                                   "   batida: R2 forte · R1 toque · L2 cavadinha · direção: analógico direito / mouse\n";
             }
             else if (Estado == EstadoLance.BolaViva)
@@ -621,10 +743,11 @@ namespace BetsDeRua
                 if (rebatedorDaVez != null && rebatedorDaVez.Ativo && tacoHumano)
                     instrucoes += "BATIDA: R2 forte · R1 toque · L2 cavadinha — bata quando o anel fechar\n";
                 if (tacoHumano && rebatida)
-                    instrucoes += "CORRIDA: corra (R2 sprint) · no meio, X (A) / Espaço cruza · pare no círculo segurando L1 / Q\n";
+                    instrucoes += "CORRIDA: R1 / Shift sprint · no meio, X (A) / Espaço cruza · volte para o círculo · L1 / Q troca de jogador\n";
                 if (bolaHumano)
                     instrucoes += portador != null && portador.Jogador.Controlador != null
-                        ? "COM A BOLA: R2 chuta na garrafa · R1 passe · L2 lançamento · mira: analógico direito\n"
+                        ? "COM A BOLA: R2 chuta na garrafa · R1 passe · L2 lançamento · mira: analógico direito\n" +
+                          "   volte para trás de uma casinha: com os rebatedores seguros, você arremessa dali\n"
                         : "DEFESA: □ (X) / R pega a bola · longe dela, mergulha / carrinho · L1 / Q troca de jogador\n";
             }
             else if (Estado == EstadoLance.BolaMorta) instrucoes += "Bola morta: novo arremesso";

@@ -22,7 +22,7 @@ namespace BetsDeRua
         [Tooltip("Folga além do jogador ou da bola mais na ponta (m).")]
         public float margemEnquadramento = 3f;
         [Tooltip("Quanto a câmera pode se afastar no máximo (2 = duas vezes mais longe que o mais perto). " +
-                 "Se nem assim couber todo mundo, a bola tem prioridade.")]
+                 "Se nem assim couber todo mundo, os rebatedores têm prioridade e a bola vira uma seta na borda.")]
         public float afastamentoMaximo = 2f;
         [Tooltip("Quanto a câmera pode mostrar além dos muros do fundo (m).")]
         public float margemAlemDoMuro = 1.5f;

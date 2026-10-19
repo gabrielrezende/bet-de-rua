@@ -45,6 +45,7 @@ namespace BetsDeRua
         private float tempoDesdeBatida;
         private bool vaoCorrer;
         private readonly Dictionary<Jogador, Vector3> destinoDaViagem = new Dictionary<Jogador, Vector3>();
+        private readonly Dictionary<Jogador, Vector3> origemDaViagem = new Dictionary<Jogador, Vector3>();
         private EstadoLance estadoAnterior;
 
         private void Update()
@@ -57,9 +58,11 @@ namespace BetsDeRua
                     viagemDecidida = false;
                     tempoDesdeBatida = 0f;
                     destinoDaViagem.Clear();
+                    origemDaViagem.Clear();
                 }
                 estadoAnterior = lance.Estado;
             }
+            if (lance.Estado == EstadoLance.Arremesso && configPartida.defesaAutomatica) PosicionarParaOArremesso();
             if (lance.Estado != EstadoLance.BolaViva) return;
 
             if (configPartida.defesaAutomatica) ComandarDefesa();
@@ -83,7 +86,39 @@ namespace BetsDeRua
 
                 if (portador != null && portador.Jogador == jogador) JogarComABola(defensor, portador);
                 else if (defensor == perseguidor) PerseguirBola(defensor);
-                else IrPara(jogador, lance.PosicaoDeGuarda(jogador));
+                else IrPara(jogador, esperandoBatida ? lance.PosicaoDeGuarda(jogador) : PosicaoDeApoio(jogador));
+            }
+        }
+
+        /// <summary>
+        /// Quem não vai na bola: a defesa anda pelo campo inteiro. Com a bola longe da casinha
+        /// que ele guarda, sai para o meio do caminho para receber o passe (e o colega não ter
+        /// que correr tudo de volta); com a bola perto, fica guardando a casinha.
+        /// </summary>
+        private Vector3 PosicaoDeApoio(Jogador jogador)
+        {
+            Vector3 guarda = lance.PosicaoDeGuarda(jogador);
+            Vector3 casinha = lance.CasinhaMaisPerto(guarda).transform.position;
+            Vector3 bolaNoChao = new Vector3(bola.Posicao.x, 0f, bola.Posicao.z);
+            if (DistanciaNoChao(casinha, bolaNoChao) <= configPartida.distanciaParaApoio) return guarda;
+            Vector3 apoio = Vector3.Lerp(casinha, bolaNoChao, configPartida.fracaoApoio);
+            float limiteZ = configFisica.larguraCampo * 0.5f - 1f;
+            apoio.z = Mathf.Clamp(apoio.z, -limiteZ, limiteZ);
+            return apoio;
+        }
+
+        /// <summary>
+        /// Arremesso sem bola morta: ninguém é teleportado, então cada defensor anda até o lugar
+        /// dele. O arremessador vai para o meio, atrás da garrafa, para sair de trás do parceiro
+        /// rebatedor (senão a bola pega nele: lancha); o outro vai guardar atrás da casinha alvo.
+        /// </summary>
+        private void PosicionarParaOArremesso()
+        {
+            foreach (Defensor defensor in defensores)
+            {
+                Jogador jogador = defensor.Jogador;
+                if (jogador.Controlador != null) continue;
+                IrPara(jogador, lance.PosicaoDeGuarda(jogador));
             }
         }
 
@@ -113,8 +148,9 @@ namespace BetsDeRua
             Jogador jogador = defensor.Jogador;
             if (!lance.AlgumaExposta())
             {
-                // Nada exposto: segura a bola e espera (o lance acaba com todos seguros)
-                IrPara(jogador, jogador.transform.position);
+                // Nada exposto: volta para trás da casinha mais perto para arremessar de novo
+                // (sem bola morta: o próximo arremesso sai dali)
+                IrPara(jogador, lance.PontoParaArremessar(jogador.transform.position));
                 return;
             }
             Garrafa alvo = lance.EscolherAlvo(jogador.transform.position);
@@ -132,7 +168,13 @@ namespace BetsDeRua
                 }
             }
 
-            if (minhaDistancia > configPartida.distanciaChuteBot)
+            // Vale jogar? Só se a bola chega na garrafa antes do dono voltar e encostar o taco.
+            // Se não chega, errar só dá tempo para o ataque cruzar de novo: anda com a bola
+            // para perto da garrafa e prende o ataque na base.
+            float rapidezChute = configFisica.forteMaximaKmh / 3.6f;
+            float tempoBola = configFisica.tempoEncherChute + minhaDistancia / Mathf.Max(1f, rapidezChute);
+            bool chegaAntes = tempoBola + configPartida.folgaParaChutarBot < lance.TempoParaProteger(alvo);
+            if (minhaDistancia > configPartida.distanciaChuteBot || !chegaAntes)
             {
                 IrPara(jogador, alvo.transform.position);
                 return;
@@ -191,8 +233,15 @@ namespace BetsDeRua
                 return;
             }
 
-            // Ninguém no taco: depois que a bola anda um pouco, decide uma vez se vale correr
+            // Ninguém no taco: depois que a bola anda um pouco, decide se vale correr. Chegou na
+            // outra base com o ponto feito: decide de novo se arrisca mais uma viagem (regra da rua:
+            // dá para ir e voltar quantas vezes quiser enquanto a defesa não pega a bola).
             tempoDesdeBatida += Time.deltaTime;
+            if (viagemDecidida && vaoCorrer && ChegaramAoDestino() && !corrida.EsperandoChegarNaBase)
+            {
+                viagemDecidida = false;
+                tempoDesdeBatida = 0f;
+            }
             if (!viagemDecidida && tempoDesdeBatida >= EsperaParaDecidirCorrida)
             {
                 viagemDecidida = true;
@@ -202,7 +251,10 @@ namespace BetsDeRua
                 float folga = float.MaxValue;
                 foreach (Defensor defensor in defensores)
                     folga = Mathf.Min(folga, DistanciaNoChao(defensor.transform.position, ondeVaiEstar));
-                vaoCorrer = folga > configPartida.folgaParaBotCorrer;
+                // Com a bola já na mão da defesa, ninguém sai da base
+                vaoCorrer = lance.Portador == null && folga > configPartida.folgaParaBotCorrer;
+                destinoDaViagem.Clear();
+                origemDaViagem.Clear();
                 if (vaoCorrer)
                 {
                     // Cada um vai para a outra base, um de cada lado, para passarem lado a lado no meio
@@ -212,14 +264,40 @@ namespace BetsDeRua
                     {
                         bool estaNaA = rebatedor.transform.position.x < 0f;
                         destinoDaViagem[rebatedor] = new Vector3(estaNaA ? meio : -meio, 0f, estaNaA ? lado : -lado);
+                        origemDaViagem[rebatedor] = rebatedor.transform.position;
                     }
                 }
             }
             foreach (Jogador rebatedor in rebatedores)
             {
-                if (vaoCorrer && destinoDaViagem.TryGetValue(rebatedor, out Vector3 destino)) IrPara(rebatedor, destino);
+                if (vaoCorrer && destinoDaViagem.TryGetValue(rebatedor, out Vector3 destino)) IrPara(rebatedor, ParaOndeVai(rebatedor, destino));
                 else IrPara(rebatedor, rebatedor.transform.position);
             }
+        }
+
+        /// <summary>
+        /// A defesa pegou a bola no meio da viagem: quem ainda não passou do meio desiste e volta
+        /// para a base de onde saiu (perde o ponto, mas não é queimado); quem já passou, segue.
+        /// </summary>
+        private Vector3 ParaOndeVai(Jogador rebatedor, Vector3 destino)
+        {
+            if (lance.Portador == null || !origemDaViagem.TryGetValue(rebatedor, out Vector3 origem)) return destino;
+            bool passouDoMeio = Mathf.Sign(rebatedor.transform.position.x) != Mathf.Sign(origem.x);
+            return passouDoMeio ? destino : origem;
+        }
+
+        /// <summary>True se os dois rebatedores bot terminaram a viagem: chegaram no destino ou voltaram para a origem.</summary>
+        private bool ChegaramAoDestino()
+        {
+            foreach (Jogador rebatedor in rebatedores)
+            {
+                if (!destinoDaViagem.TryGetValue(rebatedor, out Vector3 destino)) continue;
+                bool noDestino = DistanciaNoChao(rebatedor.transform.position, destino) <= Chegou;
+                bool naOrigem = origemDaViagem.TryGetValue(rebatedor, out Vector3 origem)
+                                && DistanciaNoChao(rebatedor.transform.position, origem) <= Chegou;
+                if (!noDestino && !naOrigem) return false;
+            }
+            return true;
         }
 
         // ------------------------------------------------------------------ ajudas
