@@ -198,5 +198,35 @@ namespace BetsDeRua
         public float erroDirecaoBatidaBoa = 12f;
         [Tooltip("Duração do giro do taco na batida (s).")]
         public float duracaoGiroTaco = 0.18f;
+
+        [Header("Defesa: pegar a bola e mergulhar")]
+        [Tooltip("Até quantos metros da bola (no chão) □ pega ela.")]
+        public float raioPegar = 1f;
+        [Tooltip("Bola mais alta que isso (m) não dá para pegar.")]
+        public float alturaMaximaPegar = 2.2f;
+        [Tooltip("Com a bola entre raioPegar e esta distância (m), □ vira mergulho / carrinho.")]
+        public float alcanceMergulho = 3.5f;
+        [Tooltip("Velocidade do bote do mergulho (m/s).")]
+        public float velocidadeMergulho = 8f;
+        [Tooltip("Duração do bote do mergulho (s): é quando ele pode alcançar a bola.")]
+        public float duracaoBoteMergulho = 0.35f;
+        [Tooltip("Tempo caído depois do mergulho (s), sem poder andar. O risco de mergulhar.")]
+        public float duracaoCaidoMergulho = 0.6f;
+        [Tooltip("No bote, pega a bola a até esta distância (m).")]
+        public float raioPegarNoMergulho = 1.3f;
+        [Tooltip("Quanto o corpo deita no mergulho (graus).")]
+        public float anguloMergulho = 75f;
+
+        [Header("Defesa: com a bola na mão")]
+        [Tooltip("R1 passe: velocidade na horizontal (km/h). Baixo, quase rasteiro.")]
+        public float passeKmh = 45f;
+        [Tooltip("L2 lançamento: velocidade na horizontal (km/h). Por cima.")]
+        public float lancamentoKmh = 38f;
+        [Tooltip("Altura em que o passe chega no colega (m).")]
+        public float alturaChegadaPasse = 1f;
+        [Tooltip("Altura em que o lançamento chega no colega (m).")]
+        public float alturaChegadaLancamento = 1.3f;
+        [Tooltip("Passe do colega é pego sozinho quando a bola chega a até esta distância (m).")]
+        public float raioReceberPasse = 1.4f;
     }
 }

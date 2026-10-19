@@ -235,8 +235,9 @@ namespace BetsDeRua
             float sorteio = UnityEngine.Random.value;
             tipoCpu = sorteio < 0.6f ? TipoBatida.Forte : sorteio < 0.8f ? TipoBatida.Toque : TipoBatida.Cavadinha;
             cargaCpu = UnityEngine.Random.Range(0.5f, 1f);
-            // Rebate para a frente, abrindo até 60° para os lados
-            direcaoCpu = Quaternion.AngleAxis(UnityEngine.Random.Range(-60f, 60f), Vector3.up) * -DirecaoChegada;
+            // Rebate para a frente, mas para os lados (de 25° a 70°), longe de quem arremessou
+            float abertura = UnityEngine.Random.Range(25f, 70f) * (UnityEngine.Random.value < 0.5f ? -1f : 1f);
+            direcaoCpu = Quaternion.AngleAxis(abertura, Vector3.up) * -DirecaoChegada;
         }
 
         private void JogarComoCpu()
@@ -312,7 +313,7 @@ namespace BetsDeRua
             // Sai pelo menos do chão, para a bola não "grudar" rolando dentro do quique
             Vector3 saida = bola.Posicao;
             saida.y = Mathf.Max(saida.y, config.raioBola * 2f);
-            bola.Lancar(saida, velocidade);
+            bola.Lancar(saida, velocidade, jogador);
 
             BolaEmJogo = false;
             ajudas.EsconderMarca();

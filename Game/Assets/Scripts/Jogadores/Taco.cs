@@ -4,8 +4,9 @@ namespace BetsDeRua
 {
     /// <summary>
     /// O taco do rebatedor. Este objeto é o pivô na mão; o taco visível é filho dele.
-    /// Taco no chão automático: parado dentro do círculo, o taco desce e encosta
-    /// no chão (seguro). Andando ou fora do círculo, ele sobe para o ombro.
+    /// Taco no chão: dentro do círculo, segurando L1 (Q), o taco desce e encosta no chão
+    /// (seguro, não pode ser queimado). Soltou ou saiu do círculo, ele sobe para o ombro.
+    /// Os bots encostam sozinhos quando estão parados no círculo.
     /// </summary>
     public class Taco : MonoBehaviour
     {
@@ -60,9 +61,16 @@ namespace BetsDeRua
             Aplicar();
         }
 
+        /// <summary>
+        /// Taco no chão: só dentro do círculo. Pessoa jogando: enquanto segura L1 (Q).
+        /// Bot: sozinho, quando está parado no círculo.
+        /// </summary>
         private bool DeveFicarNoChao()
         {
-            return dono.EstaParado && dono.DentroDoCirculo();
+            if (!dono.DentroDoCirculo()) return false;
+            ControleHumano humano = dono.Controlador;
+            if (humano != null) return humano.SegurandoTacoNoChao;
+            return dono.EstaParado;
         }
 
         /// <summary>

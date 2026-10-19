@@ -21,6 +21,10 @@ namespace BetsDeRua
         public Vector3 Velocidade => velocidade;
         /// <summary>True quando a bola está parada no chão.</summary>
         public bool Parada { get; private set; } = true;
+        /// <summary>True se a bola já encostou no chão desde o último lançamento (pegar antes = "no ar").</summary>
+        public bool QuicouDesdeLancamento { get; private set; }
+        /// <summary>Quem lançou a bola por último (arremesso, chute, passe ou batida). Null = ninguém.</summary>
+        public Jogador UltimoLancador { get; private set; }
 
         private void Awake()
         {
@@ -30,12 +34,14 @@ namespace BetsDeRua
             AtualizarVisual();
         }
 
-        /// <summary>Põe a bola numa posição com uma velocidade inicial (m/s).</summary>
-        public void Lancar(Vector3 posicaoInicial, Vector3 velocidadeInicial)
+        /// <summary>Põe a bola numa posição com uma velocidade inicial (m/s), lançada por 'lancador'.</summary>
+        public void Lancar(Vector3 posicaoInicial, Vector3 velocidadeInicial, Jogador lancador = null)
         {
             posicao = posicaoInicial;
             velocidade = velocidadeInicial;
             Parada = false;
+            QuicouDesdeLancamento = posicao.y <= config.raioBola + 0.001f;
+            UltimoLancador = lancador;
             AtualizarVisual();
         }
 
@@ -70,6 +76,7 @@ namespace BetsDeRua
             bool parada = Parada;
             FisicaBola.Passo(config, ref posicao, ref velocidade, ref parada, dt);
             Parada = parada;
+            if (posicao.y <= config.raioBola + 0.001f) QuicouDesdeLancamento = true;
             if (!Parada) ColidirComGarrafas(config.raioBola);
         }
 

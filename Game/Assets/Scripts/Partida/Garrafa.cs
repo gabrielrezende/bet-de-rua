@@ -91,6 +91,28 @@ namespace BetsDeRua
             balancoAtual = null;
         }
 
+        private MeshRenderer desenho;
+        private MaterialPropertyBlock propriedades;
+        private bool marcadaExposta;
+
+        /// <summary>
+        /// Pinta a garrafa (GDD: "a garrafa da casinha com o taco fora do círculo fica vermelha").
+        /// exposta = false volta à cor normal do material.
+        /// </summary>
+        public void MarcarExposta(bool exposta, Color corExposta)
+        {
+            if (exposta == marcadaExposta) return;
+            marcadaExposta = exposta;
+            if (desenho == null) desenho = GetComponentInChildren<MeshRenderer>();
+            if (propriedades == null) propriedades = new MaterialPropertyBlock();
+            if (exposta)
+            {
+                propriedades.SetColor("_BaseColor", corExposta);
+                desenho.SetPropertyBlock(propriedades);
+            }
+            else desenho.SetPropertyBlock(null);
+        }
+
         /// <summary>Coloca a garrafa de pé de novo na base.</summary>
         public void Reiniciar()
         {

@@ -25,6 +25,17 @@ namespace BetsDeRua
 
         private void Update()
         {
+            // F2 liga e desliga o modo assistir (todos os jogadores viram bots)
+            Keyboard teclado = Keyboard.current;
+            if (teclado != null && teclado.f2Key.wasPressedThisFrame) configPartida.soAssistir = !configPartida.soAssistir;
+            if (configPartida.soAssistir)
+            {
+                // Ninguém joga: solta todo mundo (os bots assumem) e não deixa ninguém entrar
+                foreach (ControleHumano humano in humanos) Soltar(humano);
+                humanos.Clear();
+                return;
+            }
+
             RemoverDesconectados();
             EntrarNovosControles();
             EntrarTeclado();
@@ -32,7 +43,9 @@ namespace BetsDeRua
             foreach (ControleHumano humano in humanos)
             {
                 if (humano.ApertouTrocarDupla) TrocarDupla(humano);
-                else if (humano.ApertouTrocarJogador) TrocarParceiro(humano);
+                // Na dupla do taco o L1 segura o taco no chão; só a defesa troca de jogador com ele
+                else if (humano.ApertouTrocarJogador && humano.Jogador != null && humano.Jogador.Dupla == Dupla.Bola)
+                    TrocarParceiro(humano);
 
                 if (humano.Jogador != null)
                     humano.Jogador.DefinirEntrada(humano.Movimento, humano.Sprint, humano.Devagar);
@@ -117,6 +130,30 @@ namespace BetsDeRua
             }
         }
 
+        /// <summary>
+        /// Troca de papel: quem estava no taco vai para a bola e vice-versa.
+        /// Cada pessoa pega o primeiro jogador livre da outra dupla.
+        /// </summary>
+        public void InverterDuplas()
+        {
+            var duplaAntes = new Dictionary<ControleHumano, Dupla>();
+            foreach (ControleHumano humano in humanos)
+            {
+                if (humano.Jogador == null) continue;
+                duplaAntes[humano] = humano.Jogador.Dupla;
+                Soltar(humano);
+            }
+            foreach (var par in duplaAntes) Assumir(par.Key, PrimeiroLivre(Outra(par.Value)));
+        }
+
+        /// <summary>True se alguma pessoa joga com esta dupla.</summary>
+        public bool TemHumanoNaDupla(Dupla dupla)
+        {
+            foreach (ControleHumano humano in humanos)
+                if (humano.Jogador != null && humano.Jogador.Dupla == dupla) return true;
+            return false;
+        }
+
         private Jogador PrimeiroLivre(Dupla dupla)
         {
             foreach (Jogador jogador in jogadores)
@@ -145,7 +182,13 @@ namespace BetsDeRua
             GUIStyle estilo = new GUIStyle(GUI.skin.label) { fontSize = 14, alignment = TextAnchor.UpperRight };
             estilo.normal.textColor = Color.white;
 
-            string texto = "JOGADORES (L1/LB ou Q: parceiro · Select ou Tab: trocar de dupla)\n";
+            if (configPartida.soAssistir)
+            {
+                GUI.Label(new Rect(Screen.width - 716, Screen.height - 130, 700, 90),
+                          "MODO ASSISTIR: todos são bots (F2 para voltar a jogar)", estilo);
+                return;
+            }
+            string texto = "JOGADORES (defesa: L1/Q troca de jogador · Select ou Tab: trocar de dupla · F2: só assistir)\n";
             if (humanos.Count == 0) texto += "Conecte um controle ou aperte WASD para entrar\n";
             foreach (ControleHumano humano in humanos)
             {
@@ -159,7 +202,10 @@ namespace BetsDeRua
                 texto += $"P{humano.Numero} ({humano.NomeDispositivo}): {dupla} · {humano.Jogador.Nome}" +
                          $" · {humano.Jogador.Velocidade.magnitude:0.0} m/s · sprint {estamina}%\n";
             }
-            GUI.Label(new Rect(Screen.width - 716, 8, 700, 200), texto, estilo);
+            // Canto de baixo à direita, acima do placar, para não encostar nas instruções do alto
+            const float altura = 90f;
+            estilo.alignment = TextAnchor.LowerRight;
+            GUI.Label(new Rect(Screen.width - 716, Screen.height - 40 - altura, 700, altura), texto, estilo);
         }
     }
 }

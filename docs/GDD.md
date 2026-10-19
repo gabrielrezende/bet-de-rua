@@ -217,7 +217,7 @@ O esquema segue três princípios do FIFA: **poucos botões**, **cada botão com
 
 **Com a bola na mão para arremessar, o esquema vira "twin-stick"** (decisão do protótipo, Etapa 3): o analógico esquerdo anda, o direito mira, e os gatilhos e botões de cima arremessam — **R2 (RT) forte, R1 (RB) quicado, L2 (LT) pingo**, sempre segurando para encher o arco de força e soltando na faixa verde. Como quem está com a bola não dá sprint (4 m/s), o R2 fica livre para arremessar. Os botões da frente (○, X, △, □) ficam livres nesse momento para efeitos e jogadas especiais (a definir).
 
-**Taco no chão automático.** Parado dentro do círculo, o taco do rebatedor fica encostado no chão sozinho e ele não pode ser queimado. Sair do círculo (R2 ou empurrar o analógico para fora) levanta o taco e deixa a casinha exposta. A tensão continua toda na decisão de quando sair, que é exatamente o que o guardião espera. Para quem quiser a experiência mais fiel à rua, existe o **modo clássico** nas opções: segurar L2 (LT) para manter o taco no chão.
+**Taco no chão: segurar L1 (LB).** (Decisão do protótipo, Etapa 5: substitui o "taco no chão automático".) Dentro do círculo, o rebatedor segura L1 (teclado: Q) para manter o taco encostado no chão; aí ele não pode ser queimado. Soltou o L1, rebateu ou saiu do círculo, o taco levanta, a garrafa dele fica vermelha e a casinha está exposta. Como os gatilhos rebatem, o L1 é o dedo livre; na defesa ele continua trocando de jogador. Os bots encostam o taco sozinhos quando estão parados no círculo. A tensão continua toda na decisão de quando soltar e sair, que é exatamente o que o guardião espera.
 
 **Atacando (rebatedor)**
 
@@ -238,10 +238,10 @@ O esquema segue três princípios do FIFA: **poucos botões**, **cada botão com
 
 | Ação | PlayStation (Xbox) | Como funciona |
 | --- | --- | --- |
-| Sair correndo | R2 (RT) | Levanta o taco e sai da base; no 1x1, manda a dupla junta |
+| Sair correndo | Analógico esquerdo (+ R2 sprint) | Sair do círculo levanta o taco; no 1x1 o parceiro bot corre em espelho, para os dois se cruzarem no meio |
 | Mover na corrida | Analógico esquerdo | Desviar do fielder e escolher a linha até a faixa do meio |
 | Cruzar | X (A) no anel | Dentro da faixa e a até 1,5 m do parceiro, aparece um anel; apertar quando fica verde bate os tacos |
-| Ficar na base | Parar dentro do círculo | Encosta o taco: valida o ponto e deixa protegido |
+| Ficar na base | Parar dentro do círculo segurando L1 (LB) | Encosta o taco: valida o ponto e deixa protegido |
 | Mais uma | R2 (RT) de novo | Sai da base para outra cruzada |
 
 **Arremessando**
@@ -282,15 +282,17 @@ Como o beisebol tem nome para cada arremesso, o bets ganha o seu repertório com
 
 **Defendendo em campo (fielder e guardião)**
 
+> Decisão do protótipo (Etapa 5): com a bola na mão, o defensor usa o mesmo esquema "twin-stick" do arremesso (esquerdo anda a 4 m/s, direito mira, gatilhos soltam a bola). □ continua sendo pegar. Queimada = a bola lançada pela defesa derruba a garrafa com o taco do dono fora do chão; encostar a bola no rebatedor não queima. Garrafa derrubada com o taco no chão: "não valeu", e o lance recomeça. Pegar a bola rebatida antes de quicar: troca de papel. O lance acaba quando a defesa está com a bola e os dois rebatedores estão seguros.
+
 | Ação | PlayStation (Xbox) | Como funciona |
 | --- | --- | --- |
 | Mover / correr | Analógico esquerdo + R2 (RT) | O círculo no chão marca onde a bola cai ou para |
 | Pegar a bola | □ (X) | Até 1 m da bola. No ar, um anel encolhendo marca o tempo; pegou antes de quicar, o ataque perde o taco |
-| Mergulho | □ (X) + direção | Alcança bola longe; errou, a bola escapa e dá tempo ao ataque |
+| Mergulho / carrinho | □ (X) com a bola a 1–3,5 m | Bote rápido na direção da bola (carrinho se ela estiver no chão); pegou se alcançar; errou, fica caído um tempinho |
 | Postura de goleiro | L2 (LT), segurar | O guardião anda de lado sempre de frente para a bola |
-| Chutar na garrafa | ○ (B), segurar e soltar | Mira automática na casinha exposta (fica vermelha); de longe a mira treme |
-| Passe | X (A) | Rasteiro, na direção do analógico; sem direção, vai direto no colega |
-| Lançamento | △ (Y) | Por cima, até o colega do outro lado |
+| Chutar na garrafa | R2 (RT), segurar e soltar | Mira automática na casinha exposta (fica vermelha), ajuste fino no analógico direito; arco de força com faixa verde, igual ao arremesso |
+| Passe | R1 (RB) | Num toque, baixo, direto no colega; ele pega sozinho quando a bola chega |
+| Lançamento | L2 (LT) | Num toque, por cima, até o colega do outro lado |
 | Trocar de defensor | L1 (LB) ou analógico direito | Normalmente automático: fica ativo quem está mais perto da bola |
 
 **Sempre disponíveis**
@@ -1428,7 +1430,7 @@ O MVP prova uma coisa só: que um lance 2x2 online é divertido com as 4 visões
 - Cruzada vale 1 ou 2 pontos no ranqueado?
 - Bola pega no ar tira o taco ou termina a partida?
 
-* Taco no chão automático ou modo clássico (segurar L2) como padrão? Decidir no protótipo.
+* ~~Taco no chão automático ou modo clássico como padrão?~~ Decidido no protótipo (Etapa 5): segurar L1 (LB). Reavaliar depois de jogar com a turma.
 * O 2x1 deve ter alguma vantagem compensatória para quem joga sozinho?
 * Quantas divisões e quantas partidas por temporada deixam a subida motivante sem cansar?
 

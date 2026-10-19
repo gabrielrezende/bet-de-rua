@@ -164,11 +164,23 @@ namespace BetsDeRua.Editor
             Ligar(arco, "materialFaixa", matArcoFaixa);
             Ligar(arco, "materialPreenchimento", matArcoPreenchimento);
 
-            Arremessador arremessadorComp = arremessador.gameObject.AddComponent<Arremessador>();
-            Ligar(arremessadorComp, "config", config);
-            Ligar(arremessadorComp, "configPartida", configPartida);
-            Ligar(arremessadorComp, "mira", mira);
-            Ligar(arremessadorComp, "arco", arco);
+            // Os dois defensores podem ficar com a bola (arremessar, chutar, passar) e pegar a bola
+            Arremessador arremessadorComp = null;
+            var listaDefensores = new System.Collections.Generic.List<Defensor>();
+            foreach (Jogador defensorJogador in new[] { arremessador, guardiao })
+            {
+                Arremessador comBola = defensorJogador.gameObject.AddComponent<Arremessador>();
+                Ligar(comBola, "config", config);
+                Ligar(comBola, "configPartida", configPartida);
+                Ligar(comBola, "mira", mira);
+                Ligar(comBola, "arco", arco);
+                if (defensorJogador == arremessador) arremessadorComp = comBola;
+
+                Defensor defensor = defensorJogador.gameObject.AddComponent<Defensor>();
+                Ligar(defensor, "config", config);
+                Ligar(defensor, "bola", bola);
+                listaDefensores.Add(defensor);
+            }
 
             // ---------- Batida: ajudas, sombra da bola, arco do rebatedor ----------
             GameObject objAjudas = new GameObject("AjudasBatida");
@@ -196,7 +208,7 @@ namespace BetsDeRua.Editor
             Ligar(arcoBatida, "materialFaixa", matArcoFaixa);
             Ligar(arcoBatida, "materialPreenchimento", matArcoPreenchimento);
 
-            Rebatedor rebatedorCompB = null;
+            var listaRebatedores = new System.Collections.Generic.List<Rebatedor>();
             foreach (Jogador rebatedorJogador in new[] { rebatedorA, rebatedorB })
             {
                 Rebatedor comp = rebatedorJogador.gameObject.AddComponent<Rebatedor>();
@@ -206,7 +218,7 @@ namespace BetsDeRua.Editor
                 Ligar(comp, "bola", bola);
                 Ligar(comp, "ajudas", ajudas);
                 Ligar(comp, "arco", arcoBatida);
-                if (rebatedorJogador == rebatedorB) rebatedorCompB = comp;
+                listaRebatedores.Add(comp);
             }
 
             // ---------- Lance (máquina de estados) ----------
@@ -217,11 +229,31 @@ namespace BetsDeRua.Editor
             Ligar(lance, "configHUD", configHUD);
             Ligar(lance, "bola", bola);
             Ligar(lance, "arremessador", arremessadorComp);
-            Ligar(lance, "garrafaAlvo", garrafaB);
-            Ligar(lance, "garrafaDoArremessador", garrafaA);
-            Ligar(lance, "rebatedor", rebatedorCompB);
+            LigarLista(lance, "defensores", listaDefensores.ToArray());
+            Ligar(lance, "garrafaA", garrafaA);
+            Ligar(lance, "garrafaB", garrafaB);
+            LigarLista(lance, "rebatedores", listaRebatedores.ToArray());
             Ligar(lance, "gerenciador", gerenciador);
-            LigarLista(lance, "todasGarrafas", todas);
+
+            // ---------- Corrida (cruzada e pontos) ----------
+            Corrida corrida = objLance.AddComponent<Corrida>();
+            Ligar(corrida, "configPartida", configPartida);
+            Ligar(corrida, "configFisica", config);
+            Ligar(corrida, "configHUD", configHUD);
+            Ligar(corrida, "rebatedorA", rebatedorA);
+            Ligar(corrida, "rebatedorB", rebatedorB);
+            Ligar(corrida, "materialAnel", matMira);
+            Ligar(lance, "corrida", corrida);
+
+            // ---------- Bots de campo ----------
+            CerebroBots bots = objLance.AddComponent<CerebroBots>();
+            Ligar(bots, "configPartida", configPartida);
+            Ligar(bots, "configFisica", config);
+            Ligar(bots, "lance", lance);
+            Ligar(bots, "corrida", corrida);
+            Ligar(bots, "bola", bola);
+            LigarLista(bots, "rebatedores", new Object[] { rebatedorA, rebatedorB });
+            LigarLista(bots, "defensores", listaDefensores.ToArray());
 
             // Salva e põe a cena como a primeira do build
             EditorSceneManager.SaveScene(cena, CaminhoCena);

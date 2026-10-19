@@ -101,7 +101,22 @@ namespace BetsDeRua
             return true;
         }
 
-        /// <summary>L1 (LB) ou Q: trocar para o parceiro da dupla.</summary>
+        /// <summary>L1 (LB) ou Q, segurando: rebatedor mantém o taco encostado no chão.</summary>
+        public bool SegurandoTacoNoChao => !Conectado ? default : Controle != null
+            ? Controle.leftShoulder.isPressed
+            : Teclado.qKey.isPressed;
+
+        /// <summary>□ (X do Xbox) ou R: pegar a bola; longe dela, mergulha / dá carrinho.</summary>
+        public bool ApertouPegar => !Conectado ? default : Controle != null
+            ? Controle.buttonWest.wasPressedThisFrame
+            : Teclado.rKey.wasPressedThisFrame;
+
+        /// <summary>X (A do Xbox) ou Espaço: cruzar os tacos no meio.</summary>
+        public bool ApertouCruzar => !Conectado ? default : Controle != null
+            ? Controle.buttonSouth.wasPressedThisFrame
+            : Teclado.spaceKey.wasPressedThisFrame;
+
+        /// <summary>L1 (LB) ou Q: trocar para o parceiro da dupla (na defesa).</summary>
         public bool ApertouTrocarJogador => !Conectado ? default : Controle != null
             ? Controle.leftShoulder.wasPressedThisFrame
             : Teclado.qKey.wasPressedThisFrame;

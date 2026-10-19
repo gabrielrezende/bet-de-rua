@@ -72,6 +72,10 @@ namespace BetsDeRua
         [Tooltip("Espessura do anel de tempo (m).")]
         public float espessuraAnelTempo = 0.06f;
 
+        [Header("Garrafa exposta")]
+        [Tooltip("Cor da garrafa quando o taco do dono está fora do chão (pode ser queimada).")]
+        public Color corGarrafaExposta = new Color(0.95f, 0.2f, 0.15f);
+
         [Header("Mensagens")]
         [Tooltip("Quanto tempo a mensagem do lance fica na tela (s).")]
         public float duracaoMensagem = 2f;

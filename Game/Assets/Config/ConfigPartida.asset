@@ -17,4 +17,21 @@ MonoBehaviour:
   distanciaGuardiao: 4
   corDuplaTaco: {r: 0.2, g: 0.45, b: 0.95, a: 1}
   corDuplaBola: {r: 1, g: 0.55, b: 0.1, a: 1}
+  tempoBolaMorta: 1.5
+  tempoMaximoBolaViva: 40
+  distanciaCruzada: 1.5
+  afastamentoParceiroEspelho: 0.8
+  tempoSeguroParaEncerrar: 1.5
+  tempoTrocaDePapel: 2.5
+  soAssistir: 1
+  arremessadorAutomatico: 1
+  esperaArremessoAutomatico: 2
+  desvioMiraAutomatico: 0.8
+  rebatedorAutomatico: 1
+  erroTempoRebatedorAutomaticoMs: 110
+  defesaAutomatica: 1
+  corridaAutomatica: 1
+  folgaParaBotCorrer: 7
+  distanciaChuteBot: 9
+  reacaoBot: 0.25
   maximoJogadoresHumanos: 4

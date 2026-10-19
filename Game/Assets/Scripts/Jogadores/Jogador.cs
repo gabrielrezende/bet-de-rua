@@ -10,9 +10,10 @@ namespace BetsDeRua
 
     /// <summary>
     /// Um jogador (cápsula). Recebe a intenção de movimento de quem o controla
-    /// (pessoa ou, no futuro, IA) e anda com aceleração e freada, para o
-    /// movimento ter peso. Os muros e os outros jogadores seguram ele
-    /// (CharacterController). Sem ninguém controlando, ele freia e fica parado.
+    /// (pessoa ou bot) e anda com aceleração e freada, para o movimento ter peso.
+    /// Os muros e os outros jogadores seguram ele (CharacterController).
+    /// Sem ninguém e sem bot mandando, ele freia e fica parado. Também sabe mergulhar
+    /// (bote rápido para a bola, depois um tempinho caído).
     /// </summary>
     [RequireComponent(typeof(CharacterController))]
     public class Jogador : MonoBehaviour
@@ -28,6 +29,14 @@ namespace BetsDeRua
         private Vector2 entradaMovimento;
         private bool entradaSprint;
         private bool entradaDevagar;
+        private bool entradaDoBotNesteFrame;
+
+        // Mergulho / carrinho
+        private float tempoMergulho = float.MaxValue;
+        private Vector3 direcaoMergulho;
+        private Transform[] partesDoCorpo;      // corpo e rosto, que deitam no mergulho
+        private Vector3[] posicoesOriginais;
+        private Quaternion[] rotacoesOriginais;
 
         public Dupla Dupla => dupla;
         public Papel Papel => papel;
@@ -56,12 +65,57 @@ namespace BetsDeRua
         private Vector3 pontoLimite;
         private Vector3 direcaoLimite;
 
+        /// <summary>True durante o bote do mergulho (é quando ele alcança a bola).</summary>
+        public bool NoBoteDoMergulho => tempoMergulho < config.duracaoBoteMergulho;
+        /// <summary>True durante o mergulho inteiro (bote + caído): não anda nem pega.</summary>
+        public bool Mergulhando => tempoMergulho < config.duracaoBoteMergulho + config.duracaoCaidoMergulho;
+
         private void Awake()
         {
             corpo = GetComponent<CharacterController>();
             // Sem isso, com muitos quadros por segundo cada passo fica menor que o mínimo
             // e o CharacterController não move nada (o jogador só vira, não anda)
             corpo.minMoveDistance = 0f;
+
+            var partes = new System.Collections.Generic.List<Transform>();
+            foreach (string nomeParte in new[] { "Corpo", "Rosto" })
+            {
+                Transform parte = transform.Find(nomeParte);
+                if (parte != null) partes.Add(parte);
+            }
+            partesDoCorpo = partes.ToArray();
+            posicoesOriginais = System.Array.ConvertAll(partesDoCorpo, t => t.localPosition);
+            rotacoesOriginais = System.Array.ConvertAll(partesDoCorpo, t => t.localRotation);
+        }
+
+        /// <summary>Entrada vinda de um bot (CPU). Vale só para este frame.</summary>
+        public void DefinirEntradaBot(Vector2 movimento, bool sprint)
+        {
+            DefinirEntrada(movimento, sprint, false);
+            entradaDoBotNesteFrame = true;
+        }
+
+        /// <summary>Mergulho (ou carrinho, com a bola no chão) na direção dada.</summary>
+        public void Mergulhar(Vector3 direcao)
+        {
+            if (Mergulhando) return;
+            direcao.y = 0f;
+            if (direcao.sqrMagnitude < 0.0001f) direcao = transform.forward;
+            direcaoMergulho = direcao.normalized;
+            OlharPara(direcaoMergulho);
+            tempoMergulho = 0f;
+        }
+
+        /// <summary>Põe o jogador direto numa posição, parado (arrumar o campo entre lances).</summary>
+        public void Teleportar(Vector3 posicao, Vector3 olhandoPara)
+        {
+            corpo.enabled = false;
+            transform.position = posicao;
+            corpo.enabled = true;
+            OlharPara(olhandoPara);
+            velocidade = Vector3.zero;
+            tempoMergulho = float.MaxValue;
+            DeitarCorpo(0f);
         }
 
         /// <summary>
@@ -77,7 +131,9 @@ namespace BetsDeRua
 
         private void Update()
         {
-            if (Controlador == null) DefinirEntrada(Vector2.zero, false, false);
+            if (Controlador == null && !entradaDoBotNesteFrame) DefinirEntrada(Vector2.zero, false, false);
+            entradaDoBotNesteFrame = false;
+            if (AtualizarMergulho()) return;
             if (ComBolaNaMao || GatilhosOcupados)
             {
                 // Com a bola ou esperando a batida: sem sprint e sem "andar devagar"
@@ -124,6 +180,35 @@ namespace BetsDeRua
             {
                 Quaternion alvo = Quaternion.LookRotation(direcao, Vector3.up);
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, alvo, config.velocidadeVirar * dt);
+            }
+        }
+
+        /// <summary>Cuida do mergulho. Retorna true se o jogador está mergulhando (não anda normal).</summary>
+        private bool AtualizarMergulho()
+        {
+            if (!Mergulhando)
+            {
+                if (tempoMergulho != float.MaxValue) { tempoMergulho = float.MaxValue; DeitarCorpo(0f); }
+                return false;
+            }
+            float dt = Time.deltaTime;
+            tempoMergulho += dt;
+            // Bote: sai rápido na direção da bola; depois fica caído, parado
+            velocidade = NoBoteDoMergulho ? direcaoMergulho * config.velocidadeMergulho : Vector3.zero;
+            corpo.Move((velocidade + Vector3.down) * dt);
+            float deitado = Mathf.Clamp01(tempoMergulho / Mathf.Max(0.01f, config.duracaoBoteMergulho * 0.5f));
+            DeitarCorpo(deitado * config.anguloMergulho);
+            return true;
+        }
+
+        /// <summary>Inclina o corpo para a frente, girando a partir dos pés.</summary>
+        private void DeitarCorpo(float graus)
+        {
+            Quaternion giro = Quaternion.Euler(graus, 0f, 0f);
+            for (int i = 0; i < partesDoCorpo.Length; i++)
+            {
+                partesDoCorpo[i].localPosition = giro * posicoesOriginais[i];
+                partesDoCorpo[i].localRotation = giro * rotacoesOriginais[i];
             }
         }
 
@@ -181,6 +266,13 @@ namespace BetsDeRua
         {
             direcao.y = 0f;
             if (direcao.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(direcao, Vector3.up);
+        }
+
+        /// <summary>True se o jogador está dentro do círculo da base com centro em 'centroBase'.</summary>
+        public bool DentroDoCirculoDe(Vector3 centroBase)
+        {
+            Vector3 p = transform.position;
+            return new Vector2(p.x - centroBase.x, p.z - centroBase.z).magnitude <= config.diametroBase * 0.5f;
         }
 
         /// <summary>True se o jogador está dentro do círculo de alguma base.</summary>
