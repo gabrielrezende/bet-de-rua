@@ -33,13 +33,16 @@ Leia o `CLAUDE.md` e as seções "Controles", "Dinâmica do lance: campo, físic
 - Andar 2 m/s, correr 5 m/s, sprint 7 m/s com R2 (RT). Marcador colorido em cima do jogador controlado.
 
 **Etapa 3 — Arremesso**
-- Mira com o analógico esquerdo, linha de trajetória no chão até a garrafa.
+- Leia antes as seções 1 e 9 do `docs/REFERENCIAS_FIFA.md`. A câmera continua a de transmissão lateral; no arremesso ela só aproxima um pouco do lado da casinha alvo.
+- Mira com o analógico esquerdo: círculo amarelo em volta da garrafa e linha pontilhada no chão, visível só enquanto mira.
+- Força num arco que enche segurando o botão, com faixa verde; passar da faixa erra o alvo.
 - ○ (B) forte, segurar e soltar (55 a 90 km/h); X (A) quicado; △ (Y) pingo.
 - Física própria da bola: gravidade 8,5 m/s², quique de 70% no asfalto, atrito ao rolar.
 - Tudo no ScriptableObject `ConfigFisica`.
 
 **Etapa 4 — Batida**
-- Rebatedor parado no círculo = taco no chão automático, seguro.
+- Rebatedor parado no círculo = taco no chão automático, seguro. Ele pode andar ou correr para fora do círculo para alcançar bola torta; fora do círculo o taco sai do chão e a casinha fica exposta (o guardião pode queimar).
+- Ajudas de tempo na vista lateral: sombra da bola sempre visível, marca de giz no chão onde a bola vai passar, raio de alcance do taco (~1,5 m) em volta do rebatedor e anel que encolhe na bola quando ela entra no raio.
 - ○ (B) batida forte (segurar e soltar), X (A) toque, △ (Y) cavadinha; direção pelo analógico esquerdo.
 - Janela de tempo: perfeito ±50 ms, bom ±120 ms. Mostrar na tela o atraso em ms após cada batida.
 

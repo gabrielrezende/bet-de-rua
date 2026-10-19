@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fd4ccec9df3b45e49d2522df36b43d8, type: 3}
+  m_Name: ConfigFisica
+  m_EditorClassIdentifier: Assembly-CSharp::BetsDeRua.ConfigFisica
+  comprimentoCampo: 50
+  larguraCampo: 14
+  distanciaBases: 20
+  diametroBase: 1.2
+  larguraFaixaMeio: 3
+  espessuraLinhaGiz: 0.08
+  alturaMuro: 0.6
+  espessuraMuro: 0.3
+  gravidade: 8.5
+  raioBola: 0.029
+  massaBola: 0.057
+  escalaVisualBola: 5
+  arrastoAr: 0.015
+  quiqueAsfalto: 0.7
+  atritoQuique: 0.9
+  quiqueMuro: 0.55
+  velocidadeMinimaQuique: 0.6
+  atritoRolar: 1.2
+  velocidadeParada: 0.05
+  passoSimulacao: 0.004
+  alturaGarrafa: 0.3
+  diametroGarrafa: 0.1
+  massaGarrafa: 0.3
+  velocidadeDerrubaKmh: 15
+  forcaDerrubada: 1
+  quiqueGarrafa: 0.4
+  anguloBalanco: 10
+  duracaoBalanco: 0.7
+  velocidadeTesteForteKmh: 70
+  velocidadeTesteFracoKmh: 7
+  alturaSaidaTeste: 1.2
+  distanciaTesteFraco: 1
