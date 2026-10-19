@@ -26,9 +26,9 @@ namespace BetsDeRua
         [Tooltip("O talento de cada nível: Fácil, Médio e Difícil, nessa ordem.")]
         public NivelBot[] niveisBots =
         {
-            new NivelBot("Fácil", erroBatidaMs: 320f, desvioArremesso: 1.2f, desvioChute: 0.6f, reacao: 0.45f, margemRiscoCorrida: -1.1f, acertoAlturaBatida: 0.6f),
-            new NivelBot("Médio", erroBatidaMs: 230f, desvioArremesso: 0.8f, desvioChute: 0.35f, reacao: 0.25f, margemRiscoCorrida: -0.5f, acertoAlturaBatida: 0.8f),
-            new NivelBot("Difícil", erroBatidaMs: 150f, desvioArremesso: 0.35f, desvioChute: 0.18f, reacao: 0.12f, margemRiscoCorrida: -0.1f, acertoAlturaBatida: 0.93f),
+            new NivelBot("Fácil", erroBatidaMs: 270f, desvioArremesso: 1.1f, desvioChute: 0.5f, reacao: 0.4f, margemRiscoCorrida: -0.75f, acertoAlturaBatida: 0.7f) { variarLugarArremesso = 0.3f },
+            new NivelBot("Médio", erroBatidaMs: 230f, desvioArremesso: 0.8f, desvioChute: 0.35f, reacao: 0.25f, margemRiscoCorrida: -0.5f, acertoAlturaBatida: 0.8f) { variarLugarArremesso = 1.2f },
+            new NivelBot("Difícil", erroBatidaMs: 150f, desvioArremesso: 0.35f, desvioChute: 0.18f, reacao: 0.12f, margemRiscoCorrida: -0.1f, acertoAlturaBatida: 0.93f) { variarLugarArremesso = 2.5f },
         };
 
         [Header("Simulação (bots contra bots, sem ninguém jogando)")]
@@ -57,6 +57,11 @@ namespace BetsDeRua
         [Tooltip("Com a lancha ligada: a bola no corpo do rebatedor DA VEZ (o que ia rebater) também conta. " +
                  "Desligado: só conta no parceiro parado na outra base.")]
         public bool lanchaNoRebatedorDaVez = false;
+        [Tooltip("Corpo na frente: o arremesso bate no corpo de um rebatedor E ia acertar a garrafa = ele protegeu a garrafa " +
+                 "com o corpo (só vale o taco). Conta uma falta para o time do taco.")]
+        public bool faltaCorpoNaFrente = true;
+        [Tooltip("Com este tanto de faltas de corpo na frente, o time do taco perde os tacos (troca de papel).")]
+        public int faltasCorpoParaPerderTaco = 3;
         [Tooltip("Queimou errado: a defesa derrubou a garrafa com o taco do dono já no chão. " +
                  "O ataque ganha este tanto de pontos (0 = só não vale).")]
         public int pontosQueimaErrada = 1;

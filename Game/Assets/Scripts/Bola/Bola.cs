@@ -22,6 +22,9 @@ namespace BetsDeRua
         public bool CorposAtivos { get; set; }
         /// <summary>A bola tocou no corpo de um jogador (e desviou). Usado para a lancha.</summary>
         public event System.Action<Jogador> TocouNoCorpo;
+        /// <summary>Posição e velocidade da bola logo antes de bater no corpo (para saber se ia na garrafa).</summary>
+        public Vector3 PosicaoAntesDoCorpo { get; private set; }
+        public Vector3 VelocidadeAntesDoCorpo { get; private set; }
 
         // Curva do arremesso (analógico direito depois de soltar): empurra a bola de lado
         private Vector3 eixoCurva;
@@ -152,6 +155,8 @@ namespace BetsDeRua
                     : -new Vector3(velocidade.x, 0f, velocidade.z).normalized;
                 if (Vector3.Dot(velocidade, normal) >= 0f) continue;
 
+                PosicaoAntesDoCorpo = posicao;
+                VelocidadeAntesDoCorpo = velocidade;
                 // Desvia no corpo, perdendo força, e segue em jogo
                 velocidade = Vector3.Reflect(velocidade, normal) * config.quiqueCorpo;
                 posicao = new Vector3(pe.x, posicao.y, pe.z) + normal * distanciaMinima;

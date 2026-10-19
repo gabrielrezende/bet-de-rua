@@ -199,6 +199,9 @@ namespace BetsDeRua
         [Tooltip("Volta a mira fina no analógico direito (esquerda/direita da garrafa). Desligado no padrão: a bola vai " +
                  "no rumo da garrafa e a habilidade é a força e o tipo.")]
         public bool miraFinaNoAnalogico = false;
+        [Tooltip("Arremessar andando tira a precisão: erro de direção (graus) para cada m/s de velocidade ao soltar. " +
+                 "Parado = preciso; andando = arriscado, mas dá para buscar outro ângulo.")]
+        public float erroArremessoPorVelocidade = 0.6f;
         [Tooltip("Bate-pronto (□ depois de soltar o arremesso): a bola guarda esta parte da velocidade e desce...")]
         [Range(0.2f, 1f)] public float velocidadeBatePronto = 0.7f;
         [Tooltip("...com esta velocidade para baixo (m/s): quica no meio do caminho e chega mais baixa.")]

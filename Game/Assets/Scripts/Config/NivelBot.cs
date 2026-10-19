@@ -24,6 +24,8 @@ namespace BetsDeRua
         [Tooltip("Corrida: só sai se a defesa demorar este tanto (s) a mais para queimar do que eles para chegar. " +
                  "Negativo = arrisca; positivo = cauteloso.")]
         public float margemRiscoCorrida = -0.5f;
+        [Tooltip("Arremesso: até quanto (m) o bot sai para o lado (longe do parceiro) para arremessar de outro ângulo.")]
+        public float variarLugarArremesso = 1f;
         [Tooltip("Batida: chance (0 a 1) de ler certo a altura da bola (taco alto ou baixo).")]
         [Range(0f, 1f)] public float acertoAlturaBatida = 0.8f;
 

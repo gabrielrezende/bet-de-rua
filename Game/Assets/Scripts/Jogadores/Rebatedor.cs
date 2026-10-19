@@ -139,7 +139,11 @@ namespace BetsDeRua
             else
             {
                 arco.Esconder();
-                if (ControladoPelaCpu) JogarComoCpu();
+                if (ControladoPelaCpu)
+                {
+                    AjustarPosicaoCpu();
+                    JogarComoCpu();
+                }
             }
 
             // Batida adiantada (dentro da janela): acontece quando a bola chega na linha
@@ -281,6 +285,26 @@ namespace BetsDeRua
             float abertura = UnityEngine.Random.Range(configPartida.aberturaMinimaBatidaBot, configPartida.aberturaMaximaBatidaBot)
                              * (UnityEngine.Random.value < 0.5f ? -1f : 1f);
             direcaoCpu = Quaternion.AngleAxis(abertura, Vector3.up) * -DirecaoChegada;
+        }
+
+        /// <summary>
+        /// A bola vem de lado e vai cruzar longe: o bot dá uns passos (sem sair da zona) para ela
+        /// ficar ao alcance do taco. Perto o bastante, fica parado.
+        /// </summary>
+        private void AjustarPosicaoCpu()
+        {
+            if (!BolaEmJogo || cruzou || !temCruzamento) { jogador.DefinirEntradaBot(Vector2.zero, false); return; }
+            Vector3 linha = PontoDaLinhaDeContato;
+            Vector3 lateral = pontoCruzamento - linha;
+            lateral.y = 0f;
+            float folga = config.alcanceTaco * 0.6f;
+            if (lateral.magnitude <= folga) { jogador.DefinirEntradaBot(Vector2.zero, false); return; }
+            Vector3 alvo = transform.position + lateral.normalized * (lateral.magnitude - folga);
+            if (!ZonaDoTaco.NaZonaSeguraDeAlguma(alvo, config)) { jogador.DefinirEntradaBot(Vector2.zero, false); return; }
+            Vector3 rumo = alvo - transform.position;
+            rumo.y = 0f;
+            Vector2 entrada = new Vector2(rumo.x, rumo.z).normalized * Mathf.Clamp01(rumo.magnitude * 2f);
+            jogador.DefinirEntradaBot(entrada, false);
         }
 
         private void JogarComoCpu()

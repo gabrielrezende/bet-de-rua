@@ -13,6 +13,37 @@ MonoBehaviour:
   m_Name: ConfigPartida
   m_EditorClassIdentifier: Assembly-CSharp::BetsDeRua.ConfigPartida
   metaPontos: 10
+  aberturaMinimaBatidaBot: 8
+  aberturaMaximaBatidaBot: 32
+  nivelLado1: 1
+  nivelLado2: 1
+  niveisBots:
+  - nome: "F\xE1cil"
+    erroBatidaMs: 270
+    desvioArremesso: 1.1
+    desvioChute: 0.5
+    reacao: 0.4
+    margemRiscoCorrida: -0.75
+    variarLugarArremesso: 0.3
+    acertoAlturaBatida: 0.7
+  - nome: "M\xE9dio"
+    erroBatidaMs: 230
+    desvioArremesso: 0.8
+    desvioChute: 0.35
+    reacao: 0.25
+    margemRiscoCorrida: -0.5
+    variarLugarArremesso: 1.2
+    acertoAlturaBatida: 0.8
+  - nome: "Dif\xEDcil"
+    erroBatidaMs: 150
+    desvioArremesso: 0.35
+    desvioChute: 0.18
+    reacao: 0.12
+    margemRiscoCorrida: -0.1
+    variarLugarArremesso: 2.5
+    acertoAlturaBatida: 0.93
+  reiniciarSozinhoNoFim: 0
+  alternarQuemComecaNoTaco: 1
   gravarLog: 1
   intervaloFotoLog: 0.5
   pontosPorCruzada: 1
@@ -20,11 +51,13 @@ MonoBehaviour:
   lanchasParaPerderTaco: 3
   contarLancha: 0
   lanchaNoRebatedorDaVez: 0
+  faltaCorpoNaFrente: 1
+  faltasCorpoParaPerderTaco: 3
   pontosQueimaErrada: 1
   imunidadeGarrafaDePe: 0.6
   caiMetadeAoPerderTacoNoMatchPoint: 1
   pegarNoArPerdeTaco: 0
-  afastamentoRebatedor: 1.1
+  afastamentoRebatedor: 0.85
   afastamentoArremessador: 1.2
   distanciaGuardiao: 4
   corDuplaTaco: {r: 0.2, g: 0.45, b: 0.95, a: 1}
@@ -38,19 +71,15 @@ MonoBehaviour:
   soAssistir: 0
   arremessadorAutomatico: 1
   esperaArremessoAutomatico: 2
-  desvioMiraAutomatico: 0.8
   rebatedorAutomatico: 1
-  erroTempoRebatedorAutomaticoMs: 230
   defesaAutomatica: 1
   corridaAutomatica: 1
   folgaParaBotCorrer: 7
-  margemRiscoCorrida: -0.5
   intervaloReavaliarCorrida: 1
   tempoDefesaPegarEJogar: 1.1
   tempoArrancadaCorrida: 0.5
   distanciaChuteBot: 9
   folgaParaChutarBot: 0.15
-  desvioChuteBot: 0.35
   reacaoChuteBot: 0.15
   folgaLugarArremessoCpu: 0.5
   reacaoRebatedor: 0.3
@@ -60,6 +89,5 @@ MonoBehaviour:
   intervaloDecisaoParceiro: 0.6
   distanciaParaApoio: 14
   fracaoApoio: 0.45
-  reacaoBot: 0.25
   trocaAutomaticaNaDefesa: 0
   maximoJogadoresHumanos: 4

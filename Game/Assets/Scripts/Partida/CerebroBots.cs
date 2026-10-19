@@ -241,7 +241,7 @@ namespace BetsDeRua
                 foreach (Jogador rebatedor in rebatedores)
                 {
                     if (rebatedor.Controlador != null || (lance.RebatedorDaVez != null && lance.RebatedorDaVez.Jogador == rebatedor
-                                                          && lance.Estado == EstadoLance.Arremesso)) continue;
+                                                          && (lance.Estado == EstadoLance.Arremesso || lance.RebatedorDaVez.Ativo))) continue;
                     if (!rebatedor.DentroDoCirculo()) IrPara(rebatedor, PontoNaBase(rebatedor.transform.position));
                 }
                 return;

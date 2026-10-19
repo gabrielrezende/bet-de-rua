@@ -409,6 +409,9 @@ namespace BetsDeRua
                 float falta = 1f - cargaFinal / Mathf.Max(0.01f, config.inicioFaixaVerde);
                 erroGraus = UnityEngine.Random.Range(-1f, 1f) * config.erroMaximoAntesDaFaixa * falta;
             }
+            // Arremessar andando tira a precisão: quanto mais rápido, mais torta a bola sai
+            if (comErro && !passeParaColega)
+                erroGraus += UnityEngine.Random.Range(-1f, 1f) * config.erroArremessoPorVelocidade * jogador.Velocidade.magnitude;
             direcao = Quaternion.AngleAxis(erroGraus, Vector3.up) * direcao;
 
             // Teto na subida: com força demais a bola isola, mas não vai para o espaço

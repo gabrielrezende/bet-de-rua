@@ -61,13 +61,15 @@ namespace BetsDeRua
         private bool arremessoDeAParaB = true;  // de que casinha sai o arremesso neste lance
         private bool primeiroLance = true;
         private int lanchas;                    // lanchas da dupla que está no taco agora
+        private int faltasCorpo;                // vezes que a dupla do taco protegeu a garrafa com o corpo
         private int numeroDaPartida;
         private float inicioDaPartida;
         private int trocasNaPartida;
         private int ladoQueComecou;
         private float tempoSemBolaNoArremesso;
         private bool bolaDoArremesso;
-        private bool batePronto;                // o bate-pronto deste arremesso já foi usado           // a bola no ar é a do arremesso (ninguém rebateu nem pegou ainda)
+        private bool batePronto;
+        private float ladoDoArremessoBot;       // quanto o arremessador bot sai para o lado neste lance (m)                // o bate-pronto deste arremesso já foi usado           // a bola no ar é a do arremesso (ninguém rebateu nem pegou ainda)
 
         public EstadoLance Estado { get; private set; }
         public bool Rebatida => rebatida;
@@ -166,6 +168,7 @@ namespace BetsDeRua
                         gerenciador.InverterDuplas();
                         ladoNoTaco = 1 - ladoNoTaco;
                         lanchas = 0;
+                        faltasCorpo = 0;
                         trocasNaPartida++;
                         PintarTimes();
                         ProximoLance();
@@ -311,6 +314,9 @@ namespace BetsDeRua
         private void EntrarArremesso()
         {
             MudarPara(EstadoLance.Arremesso);
+            // O bot que vai arremessar escolhe de onde (o nível diz quanto ele varia o ângulo)
+            ladoDoArremessoBot = arremessadorDaVez != null
+                ? Random.Range(0f, NiveisBots.De(configPartida, arremessadorDaVez.Jogador).variarLugarArremesso) : 0f;
             rebatida = false;
             resumoBatida = "";
 
@@ -390,6 +396,7 @@ namespace BetsDeRua
             inicioDaPartida = Time.time;
             trocasNaPartida = 0;
             lanchas = 0;
+            faltasCorpo = 0;
             PintarTimes();
             primeiroLance = true;
             Mostrar("Partida nova!");
@@ -642,7 +649,20 @@ namespace BetsDeRua
             rebatedorDaVez.Encerrar(); // a bola desviada não pode mais ser rebatida
             if (!configPartida.contarLancha)
             {
-                // Padrão: bola no corpo não é falta; ela desvia e o jogo segue
+                // Padrão: bola no corpo só é falta se ele usou o corpo para proteger a garrafa
+                // (a bola ia acertar a garrafa e o corpo dele estava na frente)
+                if (configPartida.faltaCorpoNaFrente && IaAcertarAGarrafa())
+                {
+                    faltasCorpo++;
+                    if (faltasCorpo >= configPartida.faltasCorpoParaPerderTaco)
+                    {
+                        EntrarTrocaDePapel($"CORPO NA FRENTE {faltasCorpo}x!");
+                        return;
+                    }
+                    Mostrar($"CORPO NA FRENTE! {rebatedor.Nome} protegeu a garrafa com o corpo  " +
+                            $"({faltasCorpo} de {configPartida.faltasCorpoParaPerderTaco})");
+                    return;
+                }
                 Mostrar($"Bola no corpo do {rebatedor.Nome}: segue o jogo");
                 return;
             }
@@ -660,6 +680,28 @@ namespace BetsDeRua
             }
             Mostrar($"LANCHA! Bola no corpo do {rebatedor.Nome}  ({lanchas} de {configPartida.lanchasParaPerderTaco})");
         }
+
+        /// <summary>
+        /// Sem o corpo no caminho, a bola ia acertar a garrafa alvo? Refaz o voo a partir de logo antes
+        /// do toque, com a mesma física, e vê se ela passa pela garrafa.
+        /// </summary>
+        private bool IaAcertarAGarrafa()
+        {
+            Vector3 p = bola.PosicaoAntesDoCorpo, v = bola.VelocidadeAntesDoCorpo;
+            Vector3 garrafa = GarrafaAlvo.transform.position;
+            float alcance = garrafaAlvoRaio + configFisica.raioBola * configFisica.escalaVisualBola;
+            bool parada = false;
+            for (float t = 0f; t < 2f && !parada; t += configFisica.passoSimulacao)
+            {
+                FisicaBola.Passo(configFisica, ref p, ref v, ref parada, configFisica.passoSimulacao);
+                Vector3 d = p - garrafa;
+                d.y = 0f;
+                if (d.magnitude <= alcance && p.y <= garrafa.y + configFisica.alturaGarrafa + configFisica.raioBola) return true;
+            }
+            return false;
+        }
+
+        private float garrafaAlvoRaio => configFisica.diametroGarrafa * 0.5f;
 
         private void AoCruzar(int pendentes)
         {
@@ -728,8 +770,9 @@ namespace BetsDeRua
             bool ehQuemArremessa = arremessadorDaVez != null && defensor == arremessadorDaVez.Jogador;
             Vector3 origem = new Vector3(GarrafaDeOrigem.transform.position.x, 0f, 0f);
             Vector3 alvo = new Vector3(GarrafaAlvo.transform.position.x, 0f, 0f);
+            // Quem arremessa pode sair para o lado (longe do parceiro, -Z), para a bola chegar em diagonal
             return ehQuemArremessa
-                ? origem - RumoAoAlvo * configPartida.afastamentoArremessador
+                ? origem - RumoAoAlvo * configPartida.afastamentoArremessador + Vector3.back * ladoDoArremessoBot
                 : alvo + RumoAoAlvo * configPartida.distanciaGuardiao;
         }
 
@@ -820,6 +863,7 @@ namespace BetsDeRua
             string casinhas = arremessoDeAParaB ? "A → B" : "B → A";
             string pendente = corrida.PontosPendentes > 0 ? $" · +{corrida.PontosPendentes} pendente" : "";
             string textoLanchas = lanchas > 0 ? $" · lanchas {lanchas}/{configPartida.lanchasParaPerderTaco}" : "";
+            if (faltasCorpo > 0) textoLanchas += $" · corpo na frente {faltasCorpo}/{configPartida.faltasCorpoParaPerderTaco}";
             string linha = $"meta {configPartida.metaPontos} + cruzada final · arremesso {casinhas}{pendente}{textoLanchas}";
             bool piscando = Mathf.Repeat(Time.unscaledTime * velocidadePiscar, 1f) < 0.6f;
             if (EmMatchPoint(ladoNoTaco) && vencedor < 0 && piscando) linha += $"   MATCH POINT do Lado {ladoNoTaco + 1}!";
