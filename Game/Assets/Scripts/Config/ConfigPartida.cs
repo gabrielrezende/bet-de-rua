@@ -13,6 +13,30 @@ namespace BetsDeRua
         [Tooltip("Meta de pontos. Chegando nela, a dupla entra em match point e precisa fechar.")]
         public int metaPontos = 10;
 
+        [Tooltip("Rebatedor bot: abre a batida para os lados entre estes ângulos (graus), contando da rua. " +
+                 "Ângulos grandes mandam a bola nas fachadas e ela volta rápido para a defesa.")]
+        public float aberturaMinimaBatidaBot = 8f;
+        public float aberturaMaximaBatidaBot = 32f;
+
+        [Header("Níveis dos bots (cada time tem o seu)")]
+        [Tooltip("Nível dos bots do Lado 1 (começa no taco).")]
+        public NivelDificuldade nivelLado1 = NivelDificuldade.Medio;
+        [Tooltip("Nível dos bots do Lado 2.")]
+        public NivelDificuldade nivelLado2 = NivelDificuldade.Medio;
+        [Tooltip("O talento de cada nível: Fácil, Médio e Difícil, nessa ordem.")]
+        public NivelBot[] niveisBots =
+        {
+            new NivelBot("Fácil", erroBatidaMs: 320f, desvioArremesso: 1.2f, desvioChute: 0.6f, reacao: 0.45f, margemRiscoCorrida: -1.1f, acertoAlturaBatida: 0.6f),
+            new NivelBot("Médio", erroBatidaMs: 230f, desvioArremesso: 0.8f, desvioChute: 0.35f, reacao: 0.25f, margemRiscoCorrida: -0.5f, acertoAlturaBatida: 0.8f),
+            new NivelBot("Difícil", erroBatidaMs: 150f, desvioArremesso: 0.35f, desvioChute: 0.18f, reacao: 0.12f, margemRiscoCorrida: -0.1f, acertoAlturaBatida: 0.93f),
+        };
+
+        [Header("Simulação (bots contra bots, sem ninguém jogando)")]
+        [Tooltip("No fim da partida, começa outra sozinha (para simular várias partidas seguidas e ver o log).")]
+        public bool reiniciarSozinhoNoFim = false;
+        [Tooltip("Na simulação, alterna quem começa no taco a cada partida (para ser justo).")]
+        public bool alternarQuemComecaNoTaco = true;
+
         [Header("Log da partida (Game/Logs/Partida.log)")]
         [Tooltip("Grava tudo o que acontece na partida, em ordem de tempo, para entender depois.")]
         public bool gravarLog = true;
@@ -80,21 +104,14 @@ namespace BetsDeRua
         public bool arremessadorAutomatico = true;
         [Tooltip("Quanto tempo a CPU espera com a bola antes de arremessar (s).")]
         public float esperaArremessoAutomatico = 2f;
-        [Tooltip("A CPU mira até este tanto (m) para o lado da garrafa, ao acaso.")]
-        public float desvioMiraAutomatico = 0.8f;
         [Tooltip("Se ninguém controla o rebatedor que recebe a bola, a CPU tenta rebater.")]
         public bool rebatedorAutomatico = true;
-        [Tooltip("Erro de tempo da CPU na batida, para mais ou para menos (ms). 60 = acerta perfeito ~quase metade.")]
-        public float erroTempoRebatedorAutomaticoMs = 110f;
         [Tooltip("Se ninguém controla um defensor, a CPU corre na bola, pega e chuta na garrafa exposta.")]
         public bool defesaAutomatica = true;
         [Tooltip("Se ninguém controla um rebatedor, a CPU corre e cruza (em espelho com você, ou sozinha).")]
         public bool corridaAutomatica = true;
         [Tooltip("Rebatedores bot só saem correndo se o defensor mais perto estiver a mais que isso da bola (m).")]
         public float folgaParaBotCorrer = 7f;
-        [Tooltip("Rebatedores bot só correm se a defesa demora pelo menos este tanto (s) a mais para queimar do que " +
-                 "eles para chegar na outra base. Maior = bots mais cautelosos (nível difícil); menor = arriscam mais.")]
-        public float margemRiscoCorrida = 0.4f;
         [Tooltip("Rebatedores bot que decidiram ficar olham de novo a cada este tanto de segundos, enquanto a bola está solta.")]
         public float intervaloReavaliarCorrida = 1f;
         [Tooltip("Tempo (s) que a defesa leva, depois de chegar na bola, para pegar e o chute voar até a garrafa.")]
@@ -106,9 +123,6 @@ namespace BetsDeRua
         [Tooltip("Defensor bot só chuta se a bola chegar na garrafa este tanto (s) antes do dono voltar para a base. " +
                  "Senão anda com a bola para perto da garrafa (errar daria tempo para o ataque cruzar).")]
         public float folgaParaChutarBot = 0.15f;
-        [Tooltip("Defensor bot mira na garrafa com um desvio de lado ao acaso de até este tanto (m). " +
-                 "A bola acerta com uns 0,23 m de folga para cada lado, então 0,35 = acerta mais ou menos 2 em 3.")]
-        public float desvioChuteBot = 0.35f;
         [Tooltip("Tempo de reação (s) do defensor bot antes de soltar o chute (ele não enche o arco como a pessoa).")]
         public float reacaoChuteBot = 0.15f;
         [Tooltip("O arremessador bot só arremessa quando está a até esta distância (m) do lugar dele, atrás da garrafa " +
@@ -132,8 +146,6 @@ namespace BetsDeRua
         public float distanciaParaApoio = 8f;
         [Tooltip("Apoio: onde ele fica, entre a casinha que guarda (0) e a bola (1).")]
         [Range(0f, 1f)] public float fracaoApoio = 0.45f;
-        [Tooltip("Tempo de reação do defensor bot antes de pegar ou chutar (s).")]
-        public float reacaoBot = 0.25f;
 
         [Header("Controles")]
         [Tooltip("Na defesa, trocar sozinho você para quem chega antes na bola (e para quem pegou a bola). " +

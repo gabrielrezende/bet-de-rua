@@ -5,7 +5,11 @@ using UnityEngine;
 namespace BetsDeRua
 {
     /// <summary>Os três jeitos de rebater.</summary>
-    public enum TipoBatida { Forte, Toque, Cavadinha }
+    /// <summary>
+    /// Forte = taco alto (bola no ar); Varrida = taco baixo (bola rasteira/baixa);
+    /// Cavadinha = por cima (R1 + R2); Toque = curto (só a CPU usa).
+    /// </summary>
+    public enum TipoBatida { Forte, Toque, Cavadinha, Varrida }
 
     /// <summary>
     /// A batida do rebatedor que recebe o arremesso.
@@ -29,6 +33,8 @@ namespace BetsDeRua
         public event Action<TipoBatida, float, float, bool> Rebateu;
         /// <summary>Avisa que o taco passou no vazio (motivo, erro em ms; NaN = fora do alcance).</summary>
         public event Action<string, float> Errou;
+        /// <summary>Acertou a bola com o taco na altura errada: espirrou (motivo).</summary>
+        public event Action<string> Espirrou;
 
         private Jogador jogador;
         private Camera cameraPrincipal;
@@ -54,13 +60,14 @@ namespace BetsDeRua
         // Controles
         private float carga;
         private bool segurandoForte;
-        private bool curtoAntes, porCimaAntes;
 
         // CPU
         private float erroCpuMs;
         private TipoBatida tipoCpu;
         private float cargaCpu;
         private Vector3 direcaoCpu;
+        private bool tipoCpuDefinido;
+        private TipoBatida tipoSegurado = TipoBatida.Forte;
 
         /// <summary>True enquanto este rebatedor pode rebater (é ele quem recebe o arremesso).</summary>
         public bool Ativo { get; set; }
@@ -190,6 +197,19 @@ namespace BetsDeRua
             }
         }
 
+        /// <summary>Leitura da bola: "BAIXA" ou "NO AR" em cima do X de onde ela vai passar (só para quem joga).</summary>
+        private void OnGUI()
+        {
+            if (!Ativo || !BolaEmJogo || cruzou || !temCruzamento || jogador.Controlador == null || cameraPrincipal == null) return;
+            Vector3 tela = cameraPrincipal.WorldToScreenPoint(new Vector3(pontoCruzamento.x, 0f, pontoCruzamento.z));
+            if (tela.z <= 0f) return;
+            bool baixa = ChegaBaixa(pontoCruzamento.y);
+            GUIStyle estilo = new GUIStyle(GUI.skin.label) { fontSize = 20, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
+            estilo.normal.textColor = baixa ? new Color(0.4f, 0.8f, 1f) : new Color(1f, 0.85f, 0.1f);
+            string texto = baixa ? "BAIXA (L2)" : "NO AR (R2)";
+            GUI.Label(new Rect(tela.x - 80f, Screen.height - tela.y + 8f, 160f, 30f), texto, estilo);
+        }
+
         private void AtualizarAjudasDaBola()
         {
             if (!BolaEmJogo || cruzou || !temCruzamento)
@@ -203,11 +223,18 @@ namespace BetsDeRua
             else ajudas.EsconderAnel();
         }
 
+        /// <summary>
+        /// Leitura da bola (pesquisa: beisebol e críquete): além do tempo, quem rebate escolhe a altura do taco.
+        /// R2 = taco alto (bola no ar), L2 = taco baixo (bola rasteira/baixa); segurar enche a força, soltar bate.
+        /// Segurando R1 ao soltar o R2 = cavadinha (por cima do defensor).
+        /// </summary>
         private void LerControles(ControleHumano humano)
         {
-            // R2: segura enche a força, solta bate
-            if (humano.SegurandoGatilhoForte && !jaGirou)
+            bool alto = humano.SegurandoGatilhoForte;
+            bool baixo = humano.SegurandoGatilhoPorCima;
+            if ((alto || baixo) && !jaGirou)
             {
+                if (!segurandoForte) tipoSegurado = alto ? TipoBatida.Forte : TipoBatida.Varrida;
                 segurandoForte = true;
                 carga = Mathf.Min(1f, carga + Time.deltaTime / Mathf.Max(0.05f, config.tempoEncherBatida));
                 arco.Mostrar(transform.position, carga, false);
@@ -218,30 +245,41 @@ namespace BetsDeRua
                 if (segurandoForte)
                 {
                     segurandoForte = false;
+                    TipoBatida tipo = tipoSegurado;
+                    if (tipo == TipoBatida.Forte && humano.SegurandoGatilhoCurto) tipo = TipoBatida.Cavadinha;
                     // Soltou antes do arremesso sair: não conta, só zera a força
-                    if (BolaEmJogo) Girar(TipoBatida.Forte, carga);
+                    if (BolaEmJogo) Girar(tipo, carga);
                     carga = 0f;
                 }
             }
+        }
 
-            // R1 e L2: batem na hora em que aperta
-            bool curto = humano.SegurandoGatilhoCurto;
-            bool porCima = humano.SegurandoGatilhoPorCima;
-            if (BolaEmJogo && curto && !curtoAntes) Girar(TipoBatida.Toque, 0f);
-            else if (BolaEmJogo && porCima && !porCimaAntes) Girar(TipoBatida.Cavadinha, 0f);
-            curtoAntes = curto;
-            porCimaAntes = porCima;
+        /// <summary>A bola chega baixa (rasteira) neste ponto? Baixa pede taco baixo; no ar, taco alto.</summary>
+        private bool ChegaBaixa(float altura) => altura <= config.alturaLimiteTacoBaixo;
+
+        /// <summary>Este tipo de batida serve para a bola nesta altura? Perto do limite, os dois servem.</summary>
+        private bool AlturaCerta(TipoBatida tipo, float altura)
+        {
+            float limite = config.alturaLimiteTacoBaixo, folga = config.toleranciaAlturaTaco;
+            switch (tipo)
+            {
+                case TipoBatida.Varrida: return altura <= limite + folga;
+                case TipoBatida.Toque: return true;
+                default: return altura >= limite - folga;
+            }
         }
 
         private void SortearJogadaDaCpu()
         {
-            float e = configPartida.erroTempoRebatedorAutomaticoMs;
+            float e = NiveisBots.De(configPartida, jogador).erroBatidaMs;
             erroCpuMs = UnityEngine.Random.Range(-e, e);
-            float sorteio = UnityEngine.Random.value;
-            tipoCpu = sorteio < 0.6f ? TipoBatida.Forte : sorteio < 0.8f ? TipoBatida.Toque : TipoBatida.Cavadinha;
+            // O tipo (altura do taco) é escolhido quando a bola está chegando (ver JogarComoCpu)
+            tipoCpuDefinido = false;
             cargaCpu = UnityEngine.Random.Range(0.5f, 1f);
-            // Rebate para a frente, mas para os lados (de 25° a 70°), longe de quem arremessou
-            float abertura = UnityEngine.Random.Range(25f, 70f) * (UnityEngine.Random.value < 0.5f ? -1f : 1f);
+            // Rebate para a frente, ao longo da rua, abrindo um pouco para os lados (longe de quem arremessou,
+            // sem mandar direto nas fachadas)
+            float abertura = UnityEngine.Random.Range(configPartida.aberturaMinimaBatidaBot, configPartida.aberturaMaximaBatidaBot)
+                             * (UnityEngine.Random.value < 0.5f ? -1f : 1f);
             direcaoCpu = Quaternion.AngleAxis(abertura, Vector3.up) * -DirecaoChegada;
         }
 
@@ -249,6 +287,15 @@ namespace BetsDeRua
         {
             if (!BolaEmJogo || jaGirou || !temCruzamento && !cruzou) return;
             if (!alcancavel) return; // a CPU não tenta bola fora do alcance
+            if (!tipoCpuDefinido && temCruzamento)
+            {
+                // Lê a altura em que a bola vai chegar; acerta a leitura conforme o nível
+                bool leuCerto = UnityEngine.Random.value < NiveisBots.De(configPartida, jogador).acertoAlturaBatida;
+                bool baixa = ChegaBaixa(pontoCruzamento.y);
+                if (!leuCerto) baixa = !baixa;
+                tipoCpu = baixa ? TipoBatida.Varrida : UnityEngine.Random.value < 0.25f ? TipoBatida.Cavadinha : TipoBatida.Forte;
+                tipoCpuDefinido = true;
+            }
             if (Time.time >= momentoIdeal + erroCpuMs / 1000f) Girar(tipoCpu, cargaCpu);
         }
 
@@ -298,9 +345,20 @@ namespace BetsDeRua
                 : UnityEngine.Random.Range(-1f, 1f) * config.erroDirecaoBatidaBoa
                   * Mathf.InverseLerp(config.janelaPerfeitaMs, config.janelaBoaMs, Mathf.Abs(erroMs));
 
+            // Taco na altura errada: a bola espirra (vai fraca para trás ou para o lado), como na rua
+            float alturaContato = bola.Posicao.y;
+            if (!AlturaCerta(tipo, alturaContato))
+            {
+                Espirrar(tipo, alturaContato, erroMs);
+                return;
+            }
+
             float kmh, angulo;
             switch (tipo)
             {
+                case TipoBatida.Varrida:
+                    kmh = Mathf.Lerp(config.batidaVarridaMinimaKmh, config.batidaVarridaMaximaKmh, cargaBatida);
+                    angulo = config.anguloBatidaVarrida; break;
                 case TipoBatida.Toque:
                     kmh = config.batidaToqueKmh; angulo = config.anguloBatidaToque; break;
                 case TipoBatida.Cavadinha:
@@ -324,6 +382,25 @@ namespace BetsDeRua
             ajudas.EsconderMarca();
             ajudas.EsconderAnel();
             Rebateu?.Invoke(tipo, kmh, erroMs, perfeita);
+        }
+
+        /// <summary>Taco na altura errada: a bola espirra fraca para trás ou para o lado.</summary>
+        private void Espirrar(TipoBatida tipo, float altura, float erroMs)
+        {
+            float abertura = UnityEngine.Random.Range(-config.aberturaEspirrada, config.aberturaEspirrada);
+            Vector3 direcao = Quaternion.AngleAxis(abertura, Vector3.up) * DirecaoChegada; // segue para trás
+            float rapidez = UnityEngine.Random.Range(config.espirradaMinimaKmh, config.espirradaMaximaKmh) / 3.6f;
+            Vector3 velocidade = direcao * rapidez + Vector3.up * config.subidaEspirrada;
+            Vector3 saida = bola.Posicao;
+            saida.y = Mathf.Max(saida.y, config.raioBola * 2f);
+            bola.Lancar(saida, velocidade, jogador);
+
+            BolaEmJogo = false;
+            ajudas.EsconderMarca();
+            ajudas.EsconderAnel();
+            Rebateu?.Invoke(tipo, rapidez * 3.6f, erroMs, false);
+            string qual = tipo == TipoBatida.Varrida ? "taco baixo numa bola alta" : "taco alto numa bola baixa";
+            Espirrou?.Invoke($"Espirrou! ({qual})");
         }
 
         /// <summary>

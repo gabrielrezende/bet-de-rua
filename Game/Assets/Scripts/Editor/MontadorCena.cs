@@ -105,9 +105,11 @@ namespace BetsDeRua.Editor
             var montagem = new MontagemJogador(config, configHUD, matRosto, matTaco, matMarcadorGiz, matZonaSegura, matZonaPerigo);
             float lado = configPartida.afastamentoRebatedor;
             Jogador rebatedorB = montagem.Criar("RebatedorB", "Rebatedor B", Dupla.Taco, Papel.Rebatedor,
-                new Vector3(meioBases, 0f, lado), Vector3.left, matDuplaTaco, matMarcadorTaco, raizJogadores.transform);
+                ZonaDoTaco.LugarDoRebatedor(new Vector3(meioBases, 0f, 0f), config, lado), Vector3.back,
+                matDuplaTaco, matMarcadorTaco, raizJogadores.transform);
             Jogador rebatedorA = montagem.Criar("RebatedorA", "Rebatedor A", Dupla.Taco, Papel.Rebatedor,
-                new Vector3(-meioBases, 0f, lado), Vector3.right, matDuplaTaco, matMarcadorTaco, raizJogadores.transform);
+                ZonaDoTaco.LugarDoRebatedor(new Vector3(-meioBases, 0f, 0f), config, lado), Vector3.back,
+                matDuplaTaco, matMarcadorTaco, raizJogadores.transform);
             Jogador arremessador = montagem.Criar("Arremessador", "Arremessador", Dupla.Bola, Papel.Arremessador,
                 new Vector3(-meioBases - configPartida.afastamentoArremessador, 0f, 0f), Vector3.right,
                 matDuplaBola, matMarcadorBola, raizJogadores.transform);

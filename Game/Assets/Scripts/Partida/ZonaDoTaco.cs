@@ -40,6 +40,16 @@ namespace BetsDeRua
                 && Mathf.Abs(ponto.z - posicaoGarrafa.z) <= meiaLargura;
         }
 
+        /// <summary>
+        /// Onde o rebatedor fica parado na base: ao lado do meio do retângulo da área do taco (do lado +Z),
+        /// a 'afastamento' metros do eixo da garrafa, para a ponta do taco cair dentro do retângulo.
+        /// </summary>
+        public static Vector3 LugarDoRebatedor(Vector3 posicaoGarrafa, ConfigFisica config, float afastamento)
+        {
+            Vector3 centro = CentroDaArea(posicaoGarrafa, config);
+            return new Vector3(centro.x, 0f, posicaoGarrafa.z + afastamento);
+        }
+
         /// <summary>Posição (no chão) da garrafa da base mais perto de 'ponto'.</summary>
         public static Vector3 GarrafaMaisPerto(Vector3 ponto, ConfigFisica config)
         {

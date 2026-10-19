@@ -196,6 +196,13 @@ namespace BetsDeRua
         [Tooltip("Curva do analógico na mira: 1 = linear; maior = mais fino perto do centro (2 = metade do curso " +
                  "move só 1/4 do raioMira).")]
         public float curvaMiraAnalogico = 2.2f;
+        [Tooltip("Volta a mira fina no analógico direito (esquerda/direita da garrafa). Desligado no padrão: a bola vai " +
+                 "no rumo da garrafa e a habilidade é a força e o tipo.")]
+        public bool miraFinaNoAnalogico = false;
+        [Tooltip("Bate-pronto (□ depois de soltar o arremesso): a bola guarda esta parte da velocidade e desce...")]
+        [Range(0.2f, 1f)] public float velocidadeBatePronto = 0.7f;
+        [Tooltip("...com esta velocidade para baixo (m/s): quica no meio do caminho e chega mais baixa.")]
+        public float descidaBatePronto = 6f;
         [Tooltip("Força = distância. Soltando com o arco vazio, a bola vai só esta fração da distância até o alvo (cai curta).")]
         public float fatorDistanciaSemForca = 0.45f;
         [Tooltip("Força = distância. Com o arco cheio (passou do verde), a bola vai esta vezes a distância até o alvo (isola).")]
@@ -249,6 +256,19 @@ namespace BetsDeRua
         public float batidaForteMaximaKmh = 110f;
         [Tooltip("R1 toque: velocidade (km/h). GDD: 30-45, rasteira e curta.")]
         public float batidaToqueKmh = 38f;
+        [Tooltip("Taco baixo (L2, varrida): velocidade mínima e máxima (km/h) e ângulo (graus): rasteira forte.")]
+        public float batidaVarridaMinimaKmh = 45f;
+        public float batidaVarridaMaximaKmh = 85f;
+        public float anguloBatidaVarrida = 2f;
+        [Tooltip("Bola passando até esta altura (m) na linha da batida é 'baixa' (pede taco baixo, L2); acima, 'no ar' (taco alto, R2).")]
+        public float alturaLimiteTacoBaixo = 0.13f;
+        [Tooltip("Perto do limite (± este tanto, m), os dois tacos servem.")]
+        public float toleranciaAlturaTaco = 0.05f;
+        [Tooltip("Espirrada (taco na altura errada): velocidade (km/h), abertura para os lados (graus) e subida (m/s).")]
+        public float espirradaMinimaKmh = 10f;
+        public float espirradaMaximaKmh = 25f;
+        public float aberturaEspirrada = 60f;
+        public float subidaEspirrada = 1.5f;
         [Tooltip("L2 cavadinha: velocidade (km/h). Vai longe e alto, mas arrisca ser pega no ar.")]
         public float batidaCavadinhaKmh = 55f;
         [Tooltip("Ângulo de subida de cada batida (graus). GDD: cavadinha 35-50.")]

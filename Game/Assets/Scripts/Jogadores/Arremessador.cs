@@ -187,12 +187,13 @@ namespace BetsDeRua
             }
             else
             {
-                // Ponto de vista de quem arremessa: esquerda/direita do analógico = lados da garrafa
-                // (a distância vem da força; o "para baixo" fica para a rasteira).
-                // Curva: perto do centro a mira anda devagar (ajuste fino); no fim do curso chega ao raioMira
-                float x = Mathf.Clamp(humano.MiraAnalogica.x, -1f, 1f);
-                float quanto = Mathf.Sign(x) * Mathf.Pow(Mathf.Abs(x), Mathf.Max(1f, config.curvaMiraAnalogico));
-                pontoMira = centro + DireitaDeQuemArremessa(centro) * (quanto * config.raioMira);
+                // Sem mira fina (pesquisa: a habilidade fica na força e no tipo, não em acertar o analógico):
+                // a bola vai no rumo da garrafa. O analógico direito fica para a curva depois de soltar
+                // e para a rasteira (R2 + para baixo).
+                pontoMira = config.miraFinaNoAnalogico
+                    ? centro + DireitaDeQuemArremessa(centro) * (Mathf.Sign(humano.MiraAnalogica.x)
+                        * Mathf.Pow(Mathf.Abs(Mathf.Clamp(humano.MiraAnalogica.x, -1f, 1f)), Mathf.Max(1f, config.curvaMiraAnalogico)) * config.raioMira)
+                    : centro;
             }
             pontoMira.y = 0f;
         }
@@ -281,9 +282,12 @@ namespace BetsDeRua
             if (esperaCpu < configPartida.esperaArremessoAutomatico) return;
             esperaCpu = 0f;
 
-            float desvio = UnityEngine.Random.Range(-configPartida.desvioMiraAutomatico, configPartida.desvioMiraAutomatico);
+            float maximo = NiveisBots.De(configPartida, jogador).desvioArremesso;
+            float desvio = UnityEngine.Random.Range(-maximo, maximo);
             float sorteio = UnityEngine.Random.value;
-            TipoArremesso tipo = sorteio < 0.5f ? TipoArremesso.Forte : sorteio < 0.75f ? TipoArremesso.Quicado : TipoArremesso.Pingo;
+            // Variar a altura de chegada é o que engana quem rebate: reto, quicado, pingo e rasteira
+            TipoArremesso tipo = sorteio < 0.35f ? TipoArremesso.Forte : sorteio < 0.6f ? TipoArremesso.Quicado
+                               : sorteio < 0.8f ? TipoArremesso.Rasteira : TipoArremesso.Pingo;
             ExecutarPeloBot(tipo, UnityEngine.Random.Range(config.inicioFaixaVerde, config.fimFaixaVerde),
                             Alvo.transform.position + Vector3.forward * desvio);
         }

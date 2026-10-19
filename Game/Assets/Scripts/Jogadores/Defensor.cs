@@ -41,6 +41,8 @@ namespace BetsDeRua
 
         /// <summary>O ControladorLance diz se a bola está solta no campo (dá para pegar).</summary>
         public bool BolaLivre { get; set; }
+        /// <summary>Enquanto o arremesso está no ar, o □ de quem arremessou é o bate-pronto, não o carrinho.</summary>
+        public bool BloquearDeslize { get; set; }
         public Jogador Jogador => jogador;
         public Arremessador ComBola => comBola;
 
@@ -124,7 +126,7 @@ namespace BetsDeRua
         /// <summary>□ da pessoa: carrinho (bola rasteira) ou peixinho (bola quicando) para onde a bola vai estar. Não pega sozinho.</summary>
         private void Deslizar()
         {
-            if (!BolaLivre || jogador.Mergulhando) return;
+            if (!BolaLivre || BloquearDeslize || jogador.Mergulhando) return;
             Vector3 ponto = PontoDoBote();
             jogador.Mergulhar(ponto - transform.position, ponto.y <= config.alturaMaximaCarrinho);
         }

@@ -61,8 +61,13 @@ namespace BetsDeRua
         private bool arremessoDeAParaB = true;  // de que casinha sai o arremesso neste lance
         private bool primeiroLance = true;
         private int lanchas;                    // lanchas da dupla que está no taco agora
+        private int numeroDaPartida;
+        private float inicioDaPartida;
+        private int trocasNaPartida;
+        private int ladoQueComecou;
         private float tempoSemBolaNoArremesso;
-        private bool bolaDoArremesso;           // a bola no ar é a do arremesso (ninguém rebateu nem pegou ainda)
+        private bool bolaDoArremesso;
+        private bool batePronto;                // o bate-pronto deste arremesso já foi usado           // a bola no ar é a do arremesso (ninguém rebateu nem pegou ainda)
 
         public EstadoLance Estado { get; private set; }
         public bool Rebatida => rebatida;
@@ -89,11 +94,13 @@ namespace BetsDeRua
             foreach (Rebatedor rebatedor in rebatedores)
             {
                 rebatedor.Rebateu += AoRebater;
+                rebatedor.Espirrou += Mostrar;
                 rebatedor.Errou += AoErrarBatida;
             }
             corrida.Cruzou += AoCruzar;
             corrida.PontosValidados += AoValidarPontos;
             bola.TocouNoCorpo += AoLancha;
+            NiveisBots.Lance = this;
             GuardarCoresDosTimes();
             ProximoLance();
         }
@@ -159,6 +166,7 @@ namespace BetsDeRua
                         gerenciador.InverterDuplas();
                         ladoNoTaco = 1 - ladoNoTaco;
                         lanchas = 0;
+                        trocasNaPartida++;
                         PintarTimes();
                         ProximoLance();
                     }
@@ -166,6 +174,8 @@ namespace BetsDeRua
 
                 case EstadoLance.FimDePartida:
                     // Fica parado mostrando o vencedor até alguém apertar Start / Enter
+                    // (na simulação, recomeça sozinho)
+                    if (configPartida.reiniciarSozinhoNoFim && tempoNoEstado > configPartida.tempoTrocaDePapel) ReiniciarPartida();
                     break;
             }
             PintarGarrafas();
@@ -211,6 +221,14 @@ namespace BetsDeRua
             Vector3 eixoLateral = Vector3.Cross(Vector3.up, rumo);
             // Ponto de vista de quem arremessou: analógico para a direita = a bola curva para a direita dela
             bola.DefinirCurva(eixoLateral, humano.MiraAnalogica.x);
+
+            // □ uma vez, com a bola ainda no ar: bate-pronto (ela "morre" e quica no meio do caminho)
+            if (!batePronto && bolaDoArremesso && humano.ApertouPegar && bola.Posicao.y > configFisica.raioBola * 3f)
+            {
+                batePronto = true;
+                bola.BatePronto(configFisica.velocidadeBatePronto, configFisica.descidaBatePronto);
+                Mostrar("Bate-pronto!");
+            }
         }
 
         /// <summary>
@@ -342,6 +360,10 @@ namespace BetsDeRua
             portador = null;
             // A bola segue rolando com a física dela (não congela no ar)
             Mostrar($"LADO {lado + 1} FECHOU O JOGO!");
+            numeroDaPartida++;
+            RegistroPartida.Evento($"FIM DA PARTIDA {numeroDaPartida}: venceu Lado {lado + 1} ({NomeNivel(lado)}) | " +
+                                   $"placar {pontos[0]} x {pontos[1]} | Lado 1 {NomeNivel(0)} x Lado 2 {NomeNivel(1)} | " +
+                                   $"duração {Time.time - inicioDaPartida:0}s | trocas de papel {trocasNaPartida} | começou no taco: Lado {ladoQueComecou + 1}");
         }
 
         /// <summary>Start (qualquer controle) ou Enter (teclado).</summary>
@@ -361,6 +383,12 @@ namespace BetsDeRua
             // Quem joga volta para o lado em que começou (Lado 1 no taco)
             if (ladoNoTaco != 0) gerenciador.InverterDuplas();
             ladoNoTaco = 0;
+            // Simulação: alterna quem começa no taco, para ser justo
+            if (configPartida.reiniciarSozinhoNoFim && configPartida.alternarQuemComecaNoTaco && numeroDaPartida % 2 == 1)
+                ladoNoTaco = 1;
+            ladoQueComecou = ladoNoTaco;
+            inicioDaPartida = Time.time;
+            trocasNaPartida = 0;
             lanchas = 0;
             PintarTimes();
             primeiroLance = true;
@@ -382,6 +410,9 @@ namespace BetsDeRua
         // A cor acompanha o time, não o boneco: na troca de papel, os bonecos trocam de cor.
         private readonly Material[] corCorpoDoLado = new Material[2];
         private readonly Material[] corMarcadorDoLado = new Material[2];
+
+        /// <summary>De que lado (0 = Lado 1, 1 = Lado 2) é este jogador agora (o time troca de dupla na troca de papel).</summary>
+        public int LadoDe(Jogador jogador) => jogador.Dupla == Dupla.Taco ? ladoNoTaco : 1 - ladoNoTaco;
 
         /// <summary>No começo o Lado 1 está no taco: guarda as cores que os bonecos têm agora.</summary>
         private void GuardarCoresDosTimes()
@@ -513,7 +544,11 @@ namespace BetsDeRua
 
         private void LiberarDefensores(bool bolaLivre)
         {
-            foreach (Defensor defensor in defensores) defensor.BolaLivre = bolaLivre && Estado == EstadoLance.BolaViva;
+            foreach (Defensor defensor in defensores)
+            {
+                defensor.BolaLivre = bolaLivre && Estado == EstadoLance.BolaViva;
+                defensor.BloquearDeslize = bolaDoArremesso && arremessadorDaVez != null && defensor.Jogador == arremessadorDaVez.Jogador;
+            }
         }
 
         // ------------------------------------------------------------------ eventos
@@ -526,6 +561,7 @@ namespace BetsDeRua
                 bola.Lancar(saida, velocidade, origem.Jogador);
                 bola.CorposAtivos = true; // lancha: o arremesso pode bater no corpo de um rebatedor
                 bolaDoArremesso = true;
+                batePronto = false;
                 rebatedorDaVez.ArremessoSaiu(velocidade);
                 resumoArremesso = $"{NomeDoTipo(tipo)} · {kmh:0} km/h";
                 Mostrar(resumoArremesso);
@@ -662,8 +698,9 @@ namespace BetsDeRua
             float jeitoTrocado = Distancia(r0, baseB) + Distancia(r1, baseA);
             Jogador naA = jeitoAtual <= jeitoTrocado ? r0 : r1;
             Jogador naB = naA == r0 ? r1 : r0;
-            naA.Teleportar(baseA + lado, Vector3.right);
-            naB.Teleportar(baseB + lado, Vector3.left);
+            // Ao lado do meio do retângulo do taco, virados para ele (a ponta do taco cai dentro)
+            naA.Teleportar(ZonaDoTaco.LugarDoRebatedor(baseA, configFisica, lado.z), Vector3.back);
+            naB.Teleportar(ZonaDoTaco.LugarDoRebatedor(baseB, configFisica, lado.z), Vector3.back);
 
             // Quem arremessa fica atrás da casinha de origem; o guardião atrás da casinha alvo
             Jogador guardiao = OutroDefensor(arremessadorDaVez.Jogador);
@@ -745,6 +782,7 @@ namespace BetsDeRua
             switch (tipo)
             {
                 case TipoBatida.Toque: return "Toque";
+                case TipoBatida.Varrida: return "Varrida";
                 case TipoBatida.Cavadinha: return "Cavadinha";
                 default: return "Forte";
             }
@@ -803,6 +841,11 @@ namespace BetsDeRua
             GUI.Label(new Rect(0, meio + 30, Screen.width, 30), $"cada time continua com a sua cor  ·  {falta:0} s", menor);
         }
 
+        private string NomeNivel(int lado) =>
+            configPartida.niveisBots.Length > 0
+                ? configPartida.niveisBots[Mathf.Clamp((int)(lado == 0 ? configPartida.nivelLado1 : configPartida.nivelLado2), 0, configPartida.niveisBots.Length - 1)].nome
+                : "-";
+
         private void DesenharVencedor()
         {
             GUIStyle grande = new GUIStyle(GUI.skin.label)
@@ -830,17 +873,17 @@ namespace BetsDeRua
             if (Estado == EstadoLance.Arremesso)
             {
                 instrucoes += bolaHumano
-                    ? "ARREMESSO: R2 reto (+ analógico dir. para baixo = rasteira) · L2 quicado · R1 pingo\n" +
-                      "   força: antes do verde cai curta, no verde chega na garrafa, depois isola · depois de soltar, analógico dir. curva\n"
+                    ? "ARREMESSO: R2 reto (+ analógico dir. para baixo = rasteira) · L2 quicado · R1 pingo · varie a altura!\n" +
+                      "   força: antes do verde cai curta, no verde chega, depois isola · depois de soltar: analógico dir. curva, □ bate-pronto\n"
                     : "ARREMESSO: a CPU arremessa (Select / Tab troca de dupla)\n";
                 if (tacoHumano)
                     instrucoes += "REBATEDOR: perto da base o taco fica no chão sozinho (seta verde = seguro, vermelha piscando = pode ser queimado)\n" +
-                                  "   batida: R2 forte · R1 toque · L2 cavadinha · direção: analógico direito / mouse\n";
+                                  "   batida: bola NO AR = R2 (taco alto) · BAIXA = L2 (taco baixo) · R1+R2 cavadinha · direção: analógico direito\n";
             }
             else if (Estado == EstadoLance.BolaViva)
             {
                 if (rebatedorDaVez != null && rebatedorDaVez.Ativo && tacoHumano)
-                    instrucoes += "BATIDA: R2 forte · R1 toque · L2 cavadinha — bata quando o anel fechar\n";
+                    instrucoes += "BATIDA: bola NO AR = R2 (taco alto) · bola BAIXA = L2 (taco baixo) · R1+R2 cavadinha — bata quando o anel fechar\n";
                 if (tacoHumano && rebatida)
                     instrucoes += "CORRIDA: R1 / Shift sprint · passe perto do parceiro no meio para cruzar · chegue na outra base · □ desliza · L1 troca\n";
                 if (bolaHumano)

@@ -196,7 +196,8 @@ namespace BetsDeRua
                 Vector3 rumo = alvo.transform.position - jogador.transform.position;
                 rumo.y = 0f;
                 Vector3 lado = Vector3.Cross(Vector3.up, rumo.sqrMagnitude > 0.0001f ? rumo.normalized : Vector3.forward);
-                Vector3 mira = alvo.transform.position + lado * Random.Range(-configPartida.desvioChuteBot, configPartida.desvioChuteBot);
+                float desvioChute = NiveisBots.De(configPartida, jogador).desvioChute;
+                Vector3 mira = alvo.transform.position + lado * Random.Range(-desvioChute, desvioChute);
                 portador.ExecutarPeloBot(TipoArremesso.Forte, carga, mira);
             }
         }
@@ -277,9 +278,10 @@ namespace BetsDeRua
                 float tempoDefesa = TempoDaDefesaQueimar();
                 float tempoViagem = TempoDaViagem();
                 // Com a bola já na mão da defesa, ninguém sai da base
-                vaoCorrer = lance.Portador == null && tempoDefesa > tempoViagem + configPartida.margemRiscoCorrida;
+                float margemRisco = NiveisBots.De(configPartida, rebatedores[0]).margemRiscoCorrida;
+                vaoCorrer = lance.Portador == null && tempoDefesa > tempoViagem + margemRisco;
                 RegistroPartida.Evento($"bots do taco {(vaoCorrer ? "VÃO CORRER" : "ficam na base")} " +
-                                       $"(defesa queima em {tempoDefesa:0.0}s, viagem leva {tempoViagem:0.0}s, folga pedida {configPartida.margemRiscoCorrida:0.0}s)");
+                                       $"(defesa queima em {tempoDefesa:0.0}s, viagem leva {tempoViagem:0.0}s, folga pedida {margemRisco:0.0}s)");
                 destinoDaViagem.Clear();
                 origemDaViagem.Clear();
                 if (vaoCorrer)
@@ -294,7 +296,8 @@ namespace BetsDeRua
                         // um pouco mais para dentro e outro mais para fora, para passarem lado a lado no meio
                         // Termina DENTRO da zona segura, no lugar do rebatedor (a faixa de cada um
                         // para passarem lado a lado no meio fica só no caminho: ver NoCaminho)
-                        destinoDaViagem[rebatedor] = new Vector3(estaNaA ? meio : -meio, 0f, configPartida.afastamentoRebatedor);
+                        destinoDaViagem[rebatedor] = ZonaDoTaco.LugarDoRebatedor(new Vector3(estaNaA ? meio : -meio, 0f, 0f),
+                                                                                configFisica, configPartida.afastamentoRebatedor);
                         origemDaViagem[rebatedor] = rebatedor.transform.position;
                     }
                 }
@@ -375,7 +378,8 @@ namespace BetsDeRua
             }
 
             Vector3 destino = parceiroViajando
-                ? NoCaminho(parceiro, new Vector3(-baseDoParceiro * meio, 0f, configPartida.afastamentoRebatedor))
+                ? NoCaminho(parceiro, ZonaDoTaco.LugarDoRebatedor(new Vector3(-baseDoParceiro * meio, 0f, 0f),
+                                                                  configFisica, configPartida.afastamentoRebatedor))
                 : PontoNaBase(parceiro.transform.position);
             IrPara(parceiro, destino);
         }
@@ -395,7 +399,7 @@ namespace BetsDeRua
         private Vector3 PontoNaBase(Vector3 de)
         {
             float meio = configFisica.distanciaBases * 0.5f;
-            return new Vector3(de.x < 0f ? -meio : meio, 0f, configPartida.afastamentoRebatedor);
+            return ZonaDoTaco.LugarDoRebatedor(new Vector3(de.x < 0f ? -meio : meio, 0f, 0f), configFisica, configPartida.afastamentoRebatedor);
         }
 
         /// <summary>
@@ -470,7 +474,7 @@ namespace BetsDeRua
         {
             if (!reacao.TryGetValue(jogador, out float tempo)) tempo = 0f;
             tempo += Time.deltaTime;
-            if (tempo >= configPartida.reacaoBot)
+            if (tempo >= NiveisBots.De(configPartida, jogador).reacao)
             {
                 reacao.Remove(jogador);
                 return true;

@@ -63,6 +63,16 @@ namespace BetsDeRua
         }
 
         /// <summary>
+        /// Bate-pronto: a bola "morre" no meio do caminho: perde velocidade e desce para quicar antes,
+        /// chegando mais baixa (engana quem esperava a bola no ar).
+        /// </summary>
+        public void BatePronto(float fatorVelocidade, float descida)
+        {
+            Vector3 horizontal = new Vector3(velocidade.x, 0f, velocidade.z) * fatorVelocidade;
+            velocidade = horizontal + Vector3.down * descida;
+        }
+
+        /// <summary>
         /// Curva: empurra a bola de lado, no eixo 'eixoLateral' (no chão), com 'intensidade'
         /// de -1 a 1. Há um limite de quanto ela pode desviar no total (ConfigFisica).
         /// </summary>
