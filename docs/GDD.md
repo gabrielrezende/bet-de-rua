@@ -223,13 +223,16 @@ O esquema segue três princípios do FIFA: **poucos botões**, **cada botão com
 
 | Ação | PlayStation (Xbox) | Como funciona |
 | --- | --- | --- |
-| Mirar a batida | Analógico esquerdo, parado no círculo | A linha no chão mostra para onde a bola vai |
-| Batida forte | ○ (B), segurar e soltar | Segura enquanto a bola vem; solta no tempo certo. Bola longe, mais tempo para cruzar |
-| Batida de toque | X (A) | Rasteira e curta: quase nunca é pega no ar, mas dá pouco tempo |
-| Cavadinha | △ (Y) | Passa por cima do fielder; vai longe, mas arrisca ser pega no ar |
-| Batida colocada | R1 + ○ (RB + B) | Menos força, mais precisão: manda a bola no canto vazio |
+| Andar / sair do círculo | Analógico esquerdo | Para alcançar bola torta. Fora do círculo o taco levanta e a casinha fica exposta |
+| Mirar a batida | Analógico direito | Para onde a bola vai; solto = de volta pela rua |
+| Batida forte | R2 (RT), segurar e soltar | Segura enquanto a bola vem (enche a força); solta no tempo certo. Bola longe, mais tempo para cruzar |
+| Batida de toque | R1 (RB) | Rasteira e curta: quase nunca é pega no ar, mas dá pouco tempo |
+| Cavadinha | L2 (LT) | Passa por cima do fielder; vai longe, mas arrisca ser pega no ar |
+| Batida colocada | A definir (botão da frente) | Menos força, mais precisão: manda a bola no canto vazio |
 | Não rebater | Não apertar nada | O taco no chão protege a garrafa; sem chance de ponto |
 | Trocar de rebatedor (1x1) | L1 (LB) | Normalmente automático: fica ativo quem vai receber o arremesso |
+
+> Decisão do protótipo (Etapa 4): a batida segue o mesmo esquema "twin-stick" do arremesso. Com a bola vindo, os gatilhos rebatem (R2 forte, R1 toque, L2 cavadinha) e o R2 só volta a ser sprint depois. Tempo: perfeita a ±50 ms do momento certo, boa a ±120 ms; o atraso em ms aparece na tela. No teclado: WASD anda, mouse dá a direção, clique esquerdo forte, clique direito toque, E cavadinha.
 
 **Correndo e cruzando**
 

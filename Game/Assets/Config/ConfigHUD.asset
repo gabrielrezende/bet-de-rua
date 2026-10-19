@@ -24,6 +24,7 @@ MonoBehaviour:
   comprimentoTraco: 0.4
   espacoTraco: 0.3
   larguraTraco: 0.07
+  comprimentoMaximoLinha: 5
   raioArco: 0.8
   espessuraArco: 0.18
   aberturaArco: 240
@@ -32,4 +33,12 @@ MonoBehaviour:
   corArcoNormal: {r: 1, g: 1, b: 1, a: 1}
   corArcoNaFaixa: {r: 0.3, g: 1, b: 0.3, a: 1}
   corArcoPassou: {r: 1, g: 0.25, b: 0.2, a: 1}
+  escalaSombraBola: 2
+  alturaSombraMinima: 6
+  tamanhoMarcaPassagem: 0.8
+  espessuraMarcaPassagem: 0.1
+  espessuraRaioAlcance: 0.04
+  duracaoAnelTempo: 0.5
+  raioMaximoAnelTempo: 1.2
+  espessuraAnelTempo: 0.06
   duracaoMensagem: 2

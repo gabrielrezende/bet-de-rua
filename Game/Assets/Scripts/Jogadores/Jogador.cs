@@ -45,6 +45,12 @@ namespace BetsDeRua
         /// </summary>
         public bool ComBolaNaMao { get; set; }
 
+        /// <summary>
+        /// Quando true, R2/L2 servem para outra coisa (ex.: rebatedor com a bola vindo):
+        /// sem sprint e sem "andar devagar".
+        /// </summary>
+        public bool GatilhosOcupados { get; set; }
+
         // Limite opcional: o jogador não passa da linha 'pontoLimite' no sentido 'direcaoLimite'
         private bool temLimiteFrente;
         private Vector3 pontoLimite;
@@ -72,9 +78,10 @@ namespace BetsDeRua
         private void Update()
         {
             if (Controlador == null) DefinirEntrada(Vector2.zero, false, false);
-            if (ComBolaNaMao)
+            if (ComBolaNaMao || GatilhosOcupados)
             {
-                // Com a bola: sem sprint e sem "andar devagar" (os gatilhos viram arremesso)
+                // Com a bola ou esperando a batida: sem sprint e sem "andar devagar"
+                // (os gatilhos viram arremesso / batida)
                 entradaSprint = false;
                 entradaDevagar = false;
             }

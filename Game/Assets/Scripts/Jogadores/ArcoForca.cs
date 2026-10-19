@@ -48,10 +48,14 @@ namespace BetsDeRua
             return filho.AddComponent<MeshFilter>();
         }
 
-        /// <summary>Mostra o arco ao lado de quem está nos 'pes', cheio até 'carga' (0 a 1).</summary>
-        public void Mostrar(Vector3 pes, float carga)
+        /// <summary>
+        /// Mostra o arco ao lado de quem está nos 'pes', cheio até 'carga' (0 a 1).
+        /// comFaixa = false (batida forte): sem faixa verde, só enche; fica verde quando cheio.
+        /// </summary>
+        public void Mostrar(Vector3 pes, float carga, bool comFaixa = true)
         {
             gameObject.SetActive(true);
+            faixa.gameObject.SetActive(comFaixa);
             Camera cameraPrincipal = Camera.main;
             if (cameraPrincipal != null)
             {
@@ -74,9 +78,11 @@ namespace BetsDeRua
                                                                Angulo(0f), Angulo(Mathf.Max(0.001f, carga)), malhaPreenchimento);
             preenchimento.sharedMesh = malhaPreenchimento;
 
-            Color cor = carga > fim ? configHUD.corArcoPassou
-                      : carga >= inicio ? configHUD.corArcoNaFaixa
-                      : configHUD.corArcoNormal;
+            Color cor;
+            if (!comFaixa) cor = carga >= 1f ? configHUD.corArcoNaFaixa : configHUD.corArcoNormal;
+            else cor = carga > fim ? configHUD.corArcoPassou
+                     : carga >= inicio ? configHUD.corArcoNaFaixa
+                     : configHUD.corArcoNormal;
             // Recria se o Unity recarregou os scripts com o jogo rodando (variáveis internas zeram)
             if (propriedades == null) propriedades = new MaterialPropertyBlock();
             if (desenhoPreenchimento == null) desenhoPreenchimento = preenchimento.GetComponent<MeshRenderer>();

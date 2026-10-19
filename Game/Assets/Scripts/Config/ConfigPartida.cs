@@ -27,6 +27,18 @@ namespace BetsDeRua
         [Tooltip("Se a bola não parar sozinha, o lance acaba depois deste tempo (s).")]
         public float tempoMaximoBolaViva = 12f;
 
+        [Header("Bots (CPU) — jogam a dupla sem ninguém")]
+        [Tooltip("Se ninguém controla o arremessador, a CPU arremessa sozinha.")]
+        public bool arremessadorAutomatico = true;
+        [Tooltip("Quanto tempo a CPU espera com a bola antes de arremessar (s).")]
+        public float esperaArremessoAutomatico = 2f;
+        [Tooltip("A CPU mira até este tanto (m) para o lado da garrafa, ao acaso.")]
+        public float desvioMiraAutomatico = 0.8f;
+        [Tooltip("Se ninguém controla o rebatedor que recebe a bola, a CPU tenta rebater.")]
+        public bool rebatedorAutomatico = true;
+        [Tooltip("Erro de tempo da CPU na batida, para mais ou para menos (ms). 60 = acerta perfeito ~quase metade.")]
+        public float erroTempoRebatedorAutomaticoMs = 110f;
+
         [Header("Controles")]
         [Tooltip("Máximo de pessoas jogando ao mesmo tempo (controles + teclado).")]
         public int maximoJogadoresHumanos = 4;

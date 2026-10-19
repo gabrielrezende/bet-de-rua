@@ -17,6 +17,7 @@ namespace BetsDeRua
     public class Arremessador : MonoBehaviour
     {
         [SerializeField] private ConfigFisica config;
+        [SerializeField] private ConfigPartida configPartida;
         [SerializeField] private MiraNoChao mira;
         [SerializeField] private ArcoForca arco;
 
@@ -26,6 +27,7 @@ namespace BetsDeRua
         private bool carregando;
         private TipoArremesso tipoCarregando;
         private Vector3 pontoMira;
+        private float esperaCpu;
 
         /// <summary>Avisa (posição de saída, velocidade da bola, tipo, km/h na horizontal).</summary>
         public event Action<Vector3, Vector3, TipoArremesso, float> Arremessou;
@@ -63,8 +65,11 @@ namespace BetsDeRua
                 carga = 0f;
                 mira.Esconder();
                 arco.Esconder();
+                if (ComBola && Alvo != null && humano == null) JogarComoCpu();
+                else esperaCpu = 0f;
                 return;
             }
+            esperaCpu = 0f;
 
             AtualizarMira(humano);
             AtualizarCarga(humano);
@@ -147,11 +152,31 @@ namespace BetsDeRua
             Arremessar(tipoCarregando, carga);
         }
 
+        /// <summary>
+        /// Ninguém no arremessador: a CPU espera um pouco, mira perto da garrafa (com um
+        /// desvio ao acaso) e arremessa um tipo sorteado, soltando dentro da faixa verde.
+        /// </summary>
+        private void JogarComoCpu()
+        {
+            if (!configPartida.arremessadorAutomatico) return;
+            jogador.OlharPara(Alvo.transform.position - transform.position);
+            esperaCpu += Time.deltaTime;
+            if (esperaCpu < configPartida.esperaArremessoAutomatico) return;
+            esperaCpu = 0f;
+
+            float desvio = UnityEngine.Random.Range(-configPartida.desvioMiraAutomatico, configPartida.desvioMiraAutomatico);
+            pontoMira = Alvo.transform.position + Vector3.forward * desvio;
+            pontoMira.y = 0f;
+            float sorteio = UnityEngine.Random.value;
+            TipoArremesso tipo = sorteio < 0.5f ? TipoArremesso.Forte : sorteio < 0.75f ? TipoArremesso.Quicado : TipoArremesso.Pingo;
+            Arremessar(tipo, UnityEngine.Random.Range(config.inicioFaixaVerde, config.fimFaixaVerde));
+        }
+
         private static bool BotaoSegurado(ControleHumano humano, out TipoArremesso tipo)
         {
-            if (humano.SegurandoArremessoForte) { tipo = TipoArremesso.Forte; return true; }
-            if (humano.SegurandoArremessoQuicado) { tipo = TipoArremesso.Quicado; return true; }
-            if (humano.SegurandoArremessoPingo) { tipo = TipoArremesso.Pingo; return true; }
+            if (humano.SegurandoGatilhoForte) { tipo = TipoArremesso.Forte; return true; }
+            if (humano.SegurandoGatilhoCurto) { tipo = TipoArremesso.Quicado; return true; }
+            if (humano.SegurandoGatilhoPorCima) { tipo = TipoArremesso.Pingo; return true; }
             tipo = TipoArremesso.Forte;
             return false;
         }
@@ -160,9 +185,9 @@ namespace BetsDeRua
         {
             switch (tipo)
             {
-                case TipoArremesso.Quicado: return humano.SegurandoArremessoQuicado;
-                case TipoArremesso.Pingo: return humano.SegurandoArremessoPingo;
-                default: return humano.SegurandoArremessoForte;
+                case TipoArremesso.Quicado: return humano.SegurandoGatilhoCurto;
+                case TipoArremesso.Pingo: return humano.SegurandoGatilhoPorCima;
+                default: return humano.SegurandoGatilhoForte;
             }
         }
 

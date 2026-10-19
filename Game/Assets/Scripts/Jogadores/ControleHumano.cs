@@ -71,35 +71,24 @@ namespace BetsDeRua
             ? Controle.leftTrigger.isPressed
             : Teclado.leftAltKey.isPressed || Teclado.rightAltKey.isPressed;
 
-        /// <summary>○ (B) ou clique esquerdo, segurando: ação forte.</summary>
-        public bool SegurandoForte => !Conectado ? default : Controle != null
-            ? Controle.buttonEast.isPressed
-            : Mouse.current != null && Mouse.current.leftButton.isPressed;
-
-        /// <summary>X (A) ou Espaço, segurando: ação curta (quicado, toque, passe).</summary>
-        public bool SegurandoCurta => !Conectado ? default : Controle != null ? Controle.buttonSouth.isPressed : Teclado.spaceKey.isPressed;
-
-        /// <summary>△ (Y) ou E, segurando: por cima (pingo, cavadinha, lançamento).</summary>
-        public bool SegurandoPorCima => !Conectado ? default : Controle != null ? Controle.buttonNorth.isPressed : Teclado.eKey.isPressed;
-
-        /// <summary>Analógico direito: mira (comprimento de 0 a 1). No teclado a mira é o mouse.</summary>
+        /// <summary>Analógico direito: mira / direção (comprimento de 0 a 1). No teclado é o mouse.</summary>
         public Vector2 MiraAnalogica => !Conectado ? default : Controle != null ? Controle.rightStick.ReadValue() : Vector2.zero;
 
         /// <summary>True se a mira vem do mouse (teclado).</summary>
         public bool MiraPeloMouse => Controle == null;
 
-        /// <summary>R2 (RT) ou clique esquerdo, segurando: arremesso forte.</summary>
-        public bool SegurandoArremessoForte => !Conectado ? default : Controle != null
+        /// <summary>R2 (RT) ou clique esquerdo, segurando: forte (arremesso forte, batida forte).</summary>
+        public bool SegurandoGatilhoForte => !Conectado ? default : Controle != null
             ? Controle.rightTrigger.isPressed
             : Mouse.current != null && Mouse.current.leftButton.isPressed;
 
-        /// <summary>R1 (RB) ou clique direito, segurando: arremesso quicado.</summary>
-        public bool SegurandoArremessoQuicado => !Conectado ? default : Controle != null
+        /// <summary>R1 (RB) ou clique direito, segurando: curto (arremesso quicado, batida de toque).</summary>
+        public bool SegurandoGatilhoCurto => !Conectado ? default : Controle != null
             ? Controle.rightShoulder.isPressed
             : Mouse.current != null && Mouse.current.rightButton.isPressed;
 
-        /// <summary>L2 (LT) ou E, segurando: arremesso pingo.</summary>
-        public bool SegurandoArremessoPingo => !Conectado ? default : Controle != null ? Controle.leftTrigger.isPressed : Teclado.eKey.isPressed;
+        /// <summary>L2 (LT) ou E, segurando: por cima (arremesso pingo, cavadinha).</summary>
+        public bool SegurandoGatilhoPorCima => !Conectado ? default : Controle != null ? Controle.leftTrigger.isPressed : Teclado.eKey.isPressed;
 
         /// <summary>Onde o mouse aponta no chão (y = 0). False se apontar para o céu.</summary>
         public bool PontoDoMouseNoChao(UnityEngine.Camera camera, out Vector3 ponto)

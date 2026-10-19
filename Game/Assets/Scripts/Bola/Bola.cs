@@ -3,8 +3,8 @@ using UnityEngine;
 namespace BetsDeRua
 {
     /// <summary>
-    /// Física própria e simples da bola (sem Rigidbody): gravidade, resistência do ar,
-    /// quique no chão, rolar com atrito, bater nos muros e nas garrafas.
+    /// Física própria e simples da bola (sem Rigidbody). O passo de gravidade, ar, quique,
+    /// rolar e muros fica em FisicaBola (também usado na previsão); aqui ficam as garrafas.
     /// A simulação roda em passos pequenos para a bola rápida não atravessar a garrafa.
     /// </summary>
     public class Bola : MonoBehaviour
@@ -67,76 +67,30 @@ namespace BetsDeRua
 
         private void Simular(float dt)
         {
-            float raio = config.raioBola;
-            bool noChao = posicao.y <= raio + 0.0001f && velocidade.y <= 0f;
-
-            // Gravidade (só no ar) e resistência do ar
-            if (!noChao) velocidade.y -= config.gravidade * dt;
-            float rapidez = velocidade.magnitude;
-            velocidade -= velocidade * (config.arrastoAr * rapidez * dt);
-
-            // Rolando: atrito do chão freia a bola
-            if (noChao)
-            {
-                velocidade.y = 0f;
-                Vector3 horizontal = new Vector3(velocidade.x, 0f, velocidade.z);
-                float rapidezH = horizontal.magnitude;
-                float novaRapidez = rapidezH - config.atritoRolar * dt;
-                if (novaRapidez <= config.velocidadeParada)
-                {
-                    velocidade = Vector3.zero;
-                    posicao.y = raio;
-                    Parada = true;
-                    return;
-                }
-                velocidade = horizontal * (novaRapidez / rapidezH);
-            }
-
-            posicao += velocidade * dt;
-
-            ColidirComChao(raio);
-            ColidirComMuros(raio);
-            ColidirComGarrafas(raio);
+            bool parada = Parada;
+            FisicaBola.Passo(config, ref posicao, ref velocidade, ref parada, dt);
+            Parada = parada;
+            if (!Parada) ColidirComGarrafas(config.raioBola);
         }
 
-        private void ColidirComChao(float raio)
+        /// <summary>
+        /// Prevê por onde a bola vai passar (sem contar as garrafas), a partir de agora.
+        /// Preenche 'pontos' com uma posição a cada 'passo' segundos, por até 'duracao' segundos.
+        /// </summary>
+        public void PreverTrajetoria(float duracao, float passo, System.Collections.Generic.List<Vector3> pontos)
         {
-            if (posicao.y >= raio) return;
-            posicao.y = raio;
-            if (velocidade.y >= 0f) return;
-
-            if (-velocidade.y > config.velocidadeMinimaQuique)
+            pontos.Clear();
+            Vector3 p = posicao, v = velocidade;
+            bool parada = Parada;
+            pontos.Add(p);
+            int passos = Mathf.CeilToInt(duracao / Mathf.Max(0.001f, passo));
+            float subPasso = Mathf.Max(0.0005f, config.passoSimulacao);
+            for (int i = 0; i < passos && !parada; i++)
             {
-                // Quique: perde parte da velocidade vertical e um pouco da horizontal
-                velocidade.y = -velocidade.y * config.quiqueAsfalto;
-                velocidade.x *= config.atritoQuique;
-                velocidade.z *= config.atritoQuique;
-            }
-            else
-            {
-                // Quique fraco demais: começa a rolar
-                velocidade.y = 0f;
-            }
-        }
-
-        private void ColidirComMuros(float raio)
-        {
-            // Por enquanto a bola sempre volta no limite do campo.
-            // ("Bola no mato", por cima do muro, fica para depois.)
-            float limiteX = config.comprimentoCampo * 0.5f - raio;
-            float limiteZ = config.larguraCampo * 0.5f - raio;
-
-            if (Mathf.Abs(posicao.x) > limiteX && posicao.x * velocidade.x > 0f)
-            {
-                posicao.x = Mathf.Sign(posicao.x) * limiteX;
-                velocidade.x = -velocidade.x;
-                velocidade *= config.quiqueMuro;
-            }
-            if (Mathf.Abs(posicao.z) > limiteZ && posicao.z * velocidade.z > 0f)
-            {
-                posicao.z = Mathf.Sign(posicao.z) * limiteZ;
-                velocidade.z = -velocidade.z;
-                velocidade *= config.quiqueMuro;
+                // Mesmos passos pequenos da bola de verdade, para a previsão bater com o real
+                for (float t = 0f; t < passo && !parada; t += subPasso)
+                    FisicaBola.Passo(config, ref p, ref v, ref parada, Mathf.Min(subPasso, passo - t));
+                pontos.Add(p);
             }
         }
 

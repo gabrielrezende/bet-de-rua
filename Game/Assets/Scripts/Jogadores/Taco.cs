@@ -15,8 +15,14 @@ namespace BetsDeRua
         // Ângulos do pivô em torno do eixo X (para a frente é negativo)
         private const float AnguloOmbro = 150f; // para cima e para trás
 
+        // Giro da batida: o taco deitado varre da direita (atrás) para a esquerda (frente)
+        private const float AnguloDeitado = -90f;
+        private const float GiroInicio = 110f;
+        private const float GiroFim = -80f;
+
         private float anguloAtual;
         private float velocidadeAngulo;
+        private float tempoGiro = float.MaxValue;
 
         /// <summary>True quando o taco está encostado no chão dentro do círculo.</summary>
         public bool NoChao { get; private set; }
@@ -28,8 +34,24 @@ namespace BetsDeRua
             Aplicar();
         }
 
+        /// <summary>Faz o taco girar uma vez (a batida, acertando ou não).</summary>
+        public void Girar()
+        {
+            tempoGiro = 0f;
+        }
+
         private void Update()
         {
+            if (tempoGiro < config.duracaoGiroTaco)
+            {
+                tempoGiro += Time.deltaTime;
+                float t = Mathf.Clamp01(tempoGiro / Mathf.Max(0.01f, config.duracaoGiroTaco));
+                transform.localRotation = Quaternion.Euler(AnguloDeitado, Mathf.Lerp(GiroInicio, GiroFim, t), 0f);
+                anguloAtual = AnguloOmbro; // depois do giro, volta pelo ombro
+                NoChao = false;
+                return;
+            }
+
             bool deveFicarNoChao = DeveFicarNoChao();
             float alvo = deveFicarNoChao ? AnguloNoChao() : AnguloOmbro;
             anguloAtual = Mathf.SmoothDamp(anguloAtual, alvo, ref velocidadeAngulo, config.tempoMovimentoTaco);

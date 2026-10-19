@@ -160,5 +160,43 @@ namespace BetsDeRua
         public float erroDesgovernadaMaximo = 7f;
         [Tooltip("Quanto a bola desgovernada sobe a mais (0,3 = 30% mais subida).")]
         public float subidaExtraDesgovernada = 0.3f;
+
+        [Header("Batida: alcance e tempo")]
+        [Tooltip("Até quantos metros do rebatedor, para o lado, o taco alcança a bola.")]
+        public float alcanceTaco = 1.5f;
+        [Tooltip("Quanto à frente do rebatedor (rumo ao arremesso) fica o ponto de contato (m). " +
+                 "A bola é rebatida aí, antes de chegar na garrafa.")]
+        public float avancoContatoBatida = 0.6f;
+        [Tooltip("Bola mais alta que isso (m) passa por cima do alcance do taco.")]
+        public float alturaMaximaAlcance = 1.6f;
+        [Tooltip("Janela da batida perfeita: até quantos ms antes ou depois do momento certo.")]
+        public float janelaPerfeitaMs = 50f;
+        [Tooltip("Janela da batida boa (ms). Fora dela, o taco passa no vazio.")]
+        public float janelaBoaMs = 120f;
+        [Tooltip("Por quantos segundos à frente a trajetória da bola é prevista.")]
+        public float tempoPrevisao = 3f;
+        [Tooltip("De quanto em quanto tempo (s) a previsão guarda um ponto.")]
+        public float passoPrevisao = 0.01f;
+
+        [Header("Batida: força e direção")]
+        [Tooltip("Segundos segurando R2 para a batida forte encher toda a força.")]
+        public float tempoEncherBatida = 0.7f;
+        [Tooltip("R2 forte: velocidade com a força vazia e cheia (km/h). GDD: perfeita sai a 80-110.")]
+        public float batidaForteMinimaKmh = 70f;
+        public float batidaForteMaximaKmh = 110f;
+        [Tooltip("R1 toque: velocidade (km/h). GDD: 30-45, rasteira e curta.")]
+        public float batidaToqueKmh = 38f;
+        [Tooltip("L2 cavadinha: velocidade (km/h). Vai longe e alto, mas arrisca ser pega no ar.")]
+        public float batidaCavadinhaKmh = 55f;
+        [Tooltip("Ângulo de subida de cada batida (graus). GDD: cavadinha 35-50.")]
+        public float anguloBatidaForte = 18f;
+        public float anguloBatidaToque = 3f;
+        public float anguloBatidaCavadinha = 42f;
+        [Tooltip("Batida boa (fora da perfeita) sai com esta fração da velocidade.")]
+        [Range(0f, 1f)] public float fatorBatidaBoa = 0.8f;
+        [Tooltip("Batida boa sai torta até este tanto (graus), quanto mais longe do perfeito.")]
+        public float erroDirecaoBatidaBoa = 12f;
+        [Tooltip("Duração do giro do taco na batida (s).")]
+        public float duracaoGiroTaco = 0.18f;
     }
 }

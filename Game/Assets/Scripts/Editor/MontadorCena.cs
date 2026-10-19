@@ -56,6 +56,7 @@ namespace BetsDeRua.Editor
             Material matArcoFundo = CriarMaterial("ArcoFundo", new Color(0.12f, 0.12f, 0.12f), true);
             Material matArcoFaixa = CriarMaterial("ArcoFaixaVerde", new Color(0.2f, 0.9f, 0.3f), true);
             Material matArcoPreenchimento = CriarMaterial("ArcoPreenchimento", Color.white, true);
+            Material matSombra = CriarMaterial("SombraBola", new Color(0.06f, 0.06f, 0.06f), true);
 
             float comprimento = config.comprimentoCampo;
             float largura = config.larguraCampo;
@@ -165,8 +166,48 @@ namespace BetsDeRua.Editor
 
             Arremessador arremessadorComp = arremessador.gameObject.AddComponent<Arremessador>();
             Ligar(arremessadorComp, "config", config);
+            Ligar(arremessadorComp, "configPartida", configPartida);
             Ligar(arremessadorComp, "mira", mira);
             Ligar(arremessadorComp, "arco", arco);
+
+            // ---------- Batida: ajudas, sombra da bola, arco do rebatedor ----------
+            GameObject objAjudas = new GameObject("AjudasBatida");
+            AjudasBatida ajudas = objAjudas.AddComponent<AjudasBatida>();
+            Ligar(ajudas, "configHUD", configHUD);
+            Ligar(ajudas, "configFisica", config);
+            Ligar(ajudas, "materialGiz", matMarcadorGiz);
+            Ligar(ajudas, "materialAnel", matMira);
+
+            GameObject objSombra = new GameObject("SombraBola");
+            objSombra.AddComponent<MeshFilter>();
+            MeshRenderer desenhoSombra = objSombra.AddComponent<MeshRenderer>();
+            desenhoSombra.sharedMaterial = matSombra;
+            desenhoSombra.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            SombraBola sombra = objSombra.AddComponent<SombraBola>();
+            Ligar(sombra, "configFisica", config);
+            Ligar(sombra, "configHUD", configHUD);
+            Ligar(sombra, "bola", bola);
+
+            GameObject objArcoBatida = new GameObject("ArcoForcaRebatedor");
+            ArcoForca arcoBatida = objArcoBatida.AddComponent<ArcoForca>();
+            Ligar(arcoBatida, "configHUD", configHUD);
+            Ligar(arcoBatida, "configFisica", config);
+            Ligar(arcoBatida, "materialFundo", matArcoFundo);
+            Ligar(arcoBatida, "materialFaixa", matArcoFaixa);
+            Ligar(arcoBatida, "materialPreenchimento", matArcoPreenchimento);
+
+            Rebatedor rebatedorCompB = null;
+            foreach (Jogador rebatedorJogador in new[] { rebatedorA, rebatedorB })
+            {
+                Rebatedor comp = rebatedorJogador.gameObject.AddComponent<Rebatedor>();
+                Ligar(comp, "config", config);
+                Ligar(comp, "configPartida", configPartida);
+                Ligar(comp, "taco", rebatedorJogador.GetComponentInChildren<Taco>());
+                Ligar(comp, "bola", bola);
+                Ligar(comp, "ajudas", ajudas);
+                Ligar(comp, "arco", arcoBatida);
+                if (rebatedorJogador == rebatedorB) rebatedorCompB = comp;
+            }
 
             // ---------- Lance (máquina de estados) ----------
             GameObject objLance = new GameObject("ControladorLance");
@@ -178,6 +219,8 @@ namespace BetsDeRua.Editor
             Ligar(lance, "arremessador", arremessadorComp);
             Ligar(lance, "garrafaAlvo", garrafaB);
             Ligar(lance, "garrafaDoArremessador", garrafaA);
+            Ligar(lance, "rebatedor", rebatedorCompB);
+            Ligar(lance, "gerenciador", gerenciador);
             LigarLista(lance, "todasGarrafas", todas);
 
             // Salva e põe a cena como a primeira do build

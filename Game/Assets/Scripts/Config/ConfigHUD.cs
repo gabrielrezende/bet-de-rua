@@ -54,6 +54,24 @@ namespace BetsDeRua
         public Color corArcoNaFaixa = new Color(0.3f, 1f, 0.3f);
         public Color corArcoPassou = new Color(1f, 0.25f, 0.2f);
 
+        [Header("Ajudas da batida (REFERENCIAS_FIFA 9.1)")]
+        [Tooltip("A sombra da bola no chão fica deste tamanho em relação à bola (visual).")]
+        public float escalaSombraBola = 2f;
+        [Tooltip("Acima desta altura (m) a sombra fica no tamanho mínimo.")]
+        public float alturaSombraMinima = 6f;
+        [Tooltip("Tamanho do 'X' amarelo onde a bola vai passar (m).")]
+        public float tamanhoMarcaPassagem = 0.8f;
+        [Tooltip("Espessura das linhas do 'X' (m).")]
+        public float espessuraMarcaPassagem = 0.1f;
+        [Tooltip("Espessura da linha do raio de alcance do taco (m).")]
+        public float espessuraRaioAlcance = 0.04f;
+        [Tooltip("Quanto tempo antes do momento certo o anel de tempo aparece na bola (s).")]
+        public float duracaoAnelTempo = 0.5f;
+        [Tooltip("Raio do anel de tempo quando aparece (m); ele encolhe até o tamanho da bola.")]
+        public float raioMaximoAnelTempo = 1.2f;
+        [Tooltip("Espessura do anel de tempo (m).")]
+        public float espessuraAnelTempo = 0.06f;
+
         [Header("Mensagens")]
         [Tooltip("Quanto tempo a mensagem do lance fica na tela (s).")]
         public float duracaoMensagem = 2f;

@@ -100,6 +100,23 @@ namespace BetsDeRua
             if (livre != null) Assumir(humano, livre);
         }
 
+        /// <summary>
+        /// Passa a pessoa que está jogando com a dupla de 'alvo' para ele (se ele estiver livre).
+        /// Ex.: no começo do lance, quem joga com a dupla do taco vai para o rebatedor que recebe.
+        /// </summary>
+        public void Ativar(Jogador alvo)
+        {
+            if (alvo == null || alvo.Controlador != null) return;
+            foreach (ControleHumano humano in humanos)
+            {
+                if (humano.Jogador != null && humano.Jogador.Dupla == alvo.Dupla)
+                {
+                    Assumir(humano, alvo);
+                    return;
+                }
+            }
+        }
+
         private Jogador PrimeiroLivre(Dupla dupla)
         {
             foreach (Jogador jogador in jogadores)
