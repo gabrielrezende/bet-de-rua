@@ -1,0 +1,61 @@
+# ===== Unity (projeto em Game/) =====
+# Pastas geradas pelo editor: recriadas ao abrir o projeto
+/Game/[Ll]ibrary/
+/Game/[Tt]emp/
+/Game/[Oo]bj/
+/Game/[Bb]uild/
+/Game/[Bb]uilds/
+/Game/[Ll]ogs/
+/Game/[Uu]ser[Ss]ettings/
+/Game/[Mm]emoryCaptures/
+/Game/[Rr]ecordings/
+
+# Asset Store tools
+/Game/[Aa]ssets/AssetStoreTools*
+
+# Arquivos de IDE gerados pelo Unity (Visual Studio / Rider / VS Code)
+.vs/
+.idea/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+ExportedObj/
+.consulo/
+
+# Metadados de debug e crash
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+sysinfo.txt
+crashlytics-build.properties
+
+# Builds
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Gerados pelo Burst / Addressables
+/Game/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+/Game/[Aa]ssets/[Ss]treamingAssets/aa.meta
+/Game/[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# ===== Sistema =====
+.DS_Store
+Thumbs.db
+
+# Configurações locais do Claude Code (as skills em .claude/skills vão para o Git)
+.claude/settings.local.json
