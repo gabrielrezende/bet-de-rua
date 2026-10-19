@@ -55,7 +55,7 @@ namespace BetsDeRua
             posicao = posicaoInicial;
             velocidade = velocidadeInicial;
             Parada = false;
-            QuicouDesdeLancamento = posicao.y <= config.raioBola + 0.001f;
+            QuicouDesdeLancamento = posicao.y <= FisicaBola.AlturaDoChao(config, posicao.z) + config.raioBola + 0.001f;
             UltimoLancador = lancador;
             intensidadeCurva = 0f;
             lateralAcumulada = 0f;
@@ -105,7 +105,7 @@ namespace BetsDeRua
             AplicarCurva(dt);
             FisicaBola.Passo(config, ref posicao, ref velocidade, ref parada, dt);
             Parada = parada;
-            if (posicao.y <= config.raioBola + 0.001f) QuicouDesdeLancamento = true;
+            if (posicao.y <= FisicaBola.AlturaDoChao(config, posicao.z) + config.raioBola + 0.001f) QuicouDesdeLancamento = true;
             // A garrafa usa o tamanho que se VÊ da bola (ela aparece maior que a real, para ler de longe):
             // encostou na tela, derrubou
             if (!Parada) ColidirComGarrafas(config.raioBola * config.escalaVisualBola);

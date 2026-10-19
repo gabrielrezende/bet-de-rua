@@ -43,7 +43,8 @@ namespace BetsDeRua
         private TipoArremesso tipoCarregando;
         private Vector3 pontoMira;
         private float esperaCpu;
-        private bool mostrandoVisuais;  // para esconder a mira e o arco só uma vez, ao soltar a bola
+        private bool mostrandoVisuais;
+        private bool esperandoSoltarGatilhos;  // acabou de pegar com o gatilho: só carrega depois de soltar  // para esconder a mira e o arco só uma vez, ao soltar a bola
 
         /// <summary>Avisa (quem, posição de saída, velocidade da bola, tipo, km/h na horizontal).</summary>
         public event Action<Arremessador, Vector3, Vector3, TipoArremesso, float> Arremessou;
@@ -76,6 +77,7 @@ namespace BetsDeRua
         public void ReceberBola(ModoComBola modo)
         {
             ComBola = true;
+            esperandoSoltarGatilhos = true;
             Modo = modo;
             carregando = false;
             carga = 0f;
@@ -215,6 +217,12 @@ namespace BetsDeRua
 
         private void AtualizarCarga(ControleHumano humano)
         {
+            // Pegou a bola apertando o gatilho: o mesmo aperto não pode virar arremesso
+            if (esperandoSoltarGatilhos)
+            {
+                if (humano.SegurandoAlgumGatilho) return;
+                esperandoSoltarGatilhos = false;
+            }
             bool segurando = BotaoSegurado(humano, out TipoArremesso tipoSegurado);
 
             if (!carregando && segurando)

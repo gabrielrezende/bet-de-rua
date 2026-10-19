@@ -83,7 +83,13 @@ namespace BetsDeRua
             if (!BolaLivre) { procurandoNoBote = false; return; }
 
             ControleHumano humano = jogador.Controlador;
-            if (humano != null && humano.Conectado && humano.ApertouPegar) TentarPegar();
+            if (humano != null && humano.Conectado)
+            {
+                // Pessoa: gatilho (R2/L2) pega; □ desliza (carrinho/peixinho) para parar a bola, sem pegar.
+                // Deslizou e a bola ficou ao alcance: o gatilho pega ali mesmo, no chão.
+                if (humano.ApertouPegarBola) PegarComGatilho();
+                if (humano.ApertouPegar) Deslizar();
+            }
 
             // □ apertado com a bola vindo na direção dele: pega sozinho quando ela entrar no alcance
             if (tempoEsperandoChegar < config.tempoEsperarBolaChegar)
@@ -106,8 +112,25 @@ namespace BetsDeRua
                 Pegar();
         }
 
+        /// <summary>Gatilho da pessoa: pega se estiver ao alcance (maior se estiver deslizando); a bola vindo, pega quando chegar.</summary>
+        private void PegarComGatilho()
+        {
+            if (!BolaLivre) return;
+            float raio = jogador.Mergulhando ? config.raioPegarNoMergulho : config.raioPegar;
+            if (AoAlcance(raio)) { Pegar(); return; }
+            if (!jogador.Mergulhando && VaiChegarPerto()) tempoEsperandoChegar = 0f;
+        }
+
+        /// <summary>□ da pessoa: carrinho (bola rasteira) ou peixinho (bola quicando) para onde a bola vai estar. Não pega sozinho.</summary>
+        private void Deslizar()
+        {
+            if (!BolaLivre || jogador.Mergulhando) return;
+            Vector3 ponto = PontoDoBote();
+            jogador.Mergulhar(ponto - transform.position, ponto.y <= config.alturaMaximaCarrinho);
+        }
+
         /// <summary>
-        /// Tenta pegar (é o que o □ faz; os bots também usam). Perto: pega.
+        /// Tenta pegar (os bots usam: pega perto, espera a bola chegar ou mergulha e pega no bote). Perto: pega.
         /// Um pouco longe: mergulha (carrinho ou peixinho) para ONDE A BOLA VAI ESTAR,
         /// não para onde ela está agora. Longe demais: nada.
         /// </summary>

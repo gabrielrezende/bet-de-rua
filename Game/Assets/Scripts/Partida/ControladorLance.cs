@@ -847,7 +847,7 @@ namespace BetsDeRua
                     instrucoes += portador != null && portador.Jogador.Controlador != null
                         ? "COM A BOLA: R2 chuta na garrafa · R1 passe · L2 lançamento · mira: analógico direito\n" +
                           "   volte para trás de uma casinha: com os rebatedores seguros, você arremessa dali\n"
-                        : "DEFESA: □ (X) / R pega a bola · longe dela, mergulha / carrinho · L1 / Q troca de jogador\n";
+                        : "DEFESA: R2 / L2 pega a bola · □ carrinho ou peixinho (para a bola; depois o gatilho pega) · L1 troca de jogador\n";
             }
             else if (Estado == EstadoLance.BolaMorta) instrucoes += "Bola morta: novo arremesso";
             else if (Estado == EstadoLance.TrocaDePapel) instrucoes += "Troca de papel: quem defendia vai para o taco";

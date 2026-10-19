@@ -104,10 +104,25 @@ namespace BetsDeRua
             return true;
         }
 
-        /// <summary>□ (X do Xbox) ou R: pegar a bola; longe dela, mergulha / dá carrinho.</summary>
+        /// <summary>
+        /// R2 ou L2 (RT/LT) ou R: pegar a bola na defesa. É o mesmo gatilho que arremessa: com a bola
+        /// na mão os gatilhos lançam, sem ela os gatilhos pegam.
+        /// </summary>
+        public bool ApertouPegarBola => !Conectado ? default : Controle != null
+            ? Controle.rightTrigger.wasPressedThisFrame || Controle.leftTrigger.wasPressedThisFrame
+            : Teclado.rKey.wasPressedThisFrame;
+
+        /// <summary>True enquanto algum gatilho (ou o clique) está apertado: depois de pegar, espera soltar antes de carregar o lance.</summary>
+        public bool SegurandoAlgumGatilho => !Conectado ? default : Controle != null
+            ? Controle.rightTrigger.isPressed || Controle.leftTrigger.isPressed || Controle.rightShoulder.isPressed
+            : Teclado.rKey.isPressed || Teclado.eKey.isPressed
+              || (Mouse.current != null && (Mouse.current.leftButton.isPressed || Mouse.current.rightButton.isPressed));
+
+        /// <summary>□ (X do Xbox) ou F: deslizar. Na defesa, carrinho/peixinho para parar a bola (não pega);
+        /// no ataque, o rebatedor se joga para alcançar a base.</summary>
         public bool ApertouPegar => !Conectado ? default : Controle != null
             ? Controle.buttonWest.wasPressedThisFrame
-            : Teclado.rKey.wasPressedThisFrame;
+            : Teclado.fKey.wasPressedThisFrame;
 
         /// <summary>X (A do Xbox) ou Espaço: cruzar os tacos no meio.</summary>
         public bool ApertouCruzar => !Conectado ? default : Controle != null

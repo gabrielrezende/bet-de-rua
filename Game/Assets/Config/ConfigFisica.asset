@@ -12,8 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6fd4ccec9df3b45e49d2522df36b43d8, type: 3}
   m_Name: ConfigFisica
   m_EditorClassIdentifier: Assembly-CSharp::BetsDeRua.ConfigFisica
-  comprimentoCampo: 50
+  comprimentoCampo: 70
   larguraCampo: 14
+  larguraRua: 9
+  alturaCalcada: 0.15
+  quiqueMeioFio: 0.5
+  alturaFachada: 3
+  alturaMuroPerto: 0.8
   distanciaBases: 20
   larguraAreaTaco: 1.4
   profundidadeAreaTaco: 0.6
@@ -69,6 +74,9 @@ MonoBehaviour:
   velocidadeParadoJogador: 0.2
   tempoMovimentoTaco: 0.12
   anguloTacoLevantado: 25
+  duracaoBaterTacos: 0.35
+  alcanceTacoNoMergulho: 1.4
+  alturaBaterTacos: 1.2
   alturaSoltura: 1.4
   avancoSoltura: 0.35
   ladoSoltura: 0.25
@@ -84,6 +92,14 @@ MonoBehaviour:
   distanciaQuique: 1.5
   alturaChegadaPingo: 0.25
   raioMira: 2
+  curvaMiraAnalogico: 2.2
+  fatorDistanciaSemForca: 0.45
+  fatorDistanciaForcaMaxima: 1.9
+  rasteiraMinimaKmh: 35
+  rasteiraMaximaKmh: 70
+  subidaMaximaArremesso: 9
+  limiteAnalogicoRasteira: 0.5
+  erroAleatorioForaDaFaixa: 0
   erroMaximoAntesDaFaixa: 0.5
   erroDesgovernadaMinimo: 3
   erroDesgovernadaMaximo: 7
@@ -114,6 +130,7 @@ MonoBehaviour:
   duracaoBoteMergulho: 0.35
   duracaoCaidoMergulho: 0.6
   raioPegarNoMergulho: 1.3
+  tempoEsperarBolaChegar: 0.6
   anguloMergulho: 75
   alturaMaximaCarrinho: 0.35
   freioDeslizada: 16

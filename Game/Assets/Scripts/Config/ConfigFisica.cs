@@ -12,10 +12,20 @@ namespace BetsDeRua
     public class ConfigFisica : ScriptableObject
     {
         [Header("Campo (usado pelo menu Bets > Montar cena Prototipo)")]
-        [Tooltip("Comprimento do campo jogável, de muro a muro (m). Eixo X.")]
-        public float comprimentoCampo = 50f;
-        [Tooltip("Largura do campo jogável (m). Eixo Z.")]
+        [Tooltip("Comprimento da rua jogável, de ponta a ponta (m). Eixo X.")]
+        public float comprimentoCampo = 70f;
+        [Tooltip("Largura total, de fachada a fachada (rua + as duas calçadas) (m). Eixo Z.")]
         public float larguraCampo = 14f;
+        [Tooltip("Largura só do asfalto, entre os dois meios-fios (m). O resto até as fachadas é calçada.")]
+        public float larguraRua = 9f;
+        [Tooltip("Altura da calçada (o degrau do meio-fio) (m). A bola rolando bate no meio-fio; na altura da quina, pula.")]
+        public float alturaCalcada = 0.15f;
+        [Tooltip("Quanto da velocidade a bola guarda ao bater no meio-fio (0 a 1).")]
+        [Range(0f, 1f)] public float quiqueMeioFio = 0.5f;
+        [Tooltip("Altura das fachadas (casas, muros e portões) do lado do fundo da tela (m). Só visual: a bola sempre volta.")]
+        public float alturaFachada = 3f;
+        [Tooltip("Altura do muro do lado perto da câmera (m): baixo, para não tampar o campo. Só visual.")]
+        public float alturaMuroPerto = 0.8f;
         [Tooltip("Distância entre o centro das duas bases (m).")]
         public float distanciaBases = 20f;
         [Tooltip("Área do taco (retângulo de giz na frente da garrafa, atravessando a rua): largura (m), " +

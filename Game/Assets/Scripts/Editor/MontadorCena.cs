@@ -40,8 +40,6 @@ namespace BetsDeRua.Editor
             ConfigHUD configHUD = CarregarOuCriarConfig<ConfigHUD>(CaminhoConfigHUD);
 
             Material matChao = CriarMaterial("Chao", new Color(0.22f, 0.22f, 0.23f));
-            Material matMuro = CriarMaterial("Muro", new Color(0.5f, 0.5f, 0.5f));
-            Material matFaixa = CriarMaterial("FaixaMeio", new Color(0.3f, 0.3f, 0.31f));
             Material matGiz = CriarMaterial("Giz", new Color(0.95f, 0.95f, 0.95f));
             // Garrafa escura, verde de PET, para contrastar com o giz e o asfalto
             Material matGarrafa = CriarMaterial("Garrafa", new Color(0.12f, 0.42f, 0.22f));
@@ -70,30 +68,8 @@ namespace BetsDeRua.Editor
             Cubo("Chao", campo.transform, new Vector3(0f, -EspessuraChao * 0.5f, 0f),
                  new Vector3(comprimento, EspessuraChao, largura), matChao, true);
 
-            // Muros baixos por fora do retângulo jogável
-            GameObject muros = new GameObject("Muros");
-            muros.transform.SetParent(campo.transform);
-            float e = config.espessuraMuro;
-            float h = config.alturaMuro;
-            Cubo("MuroFundoA", muros.transform, new Vector3(-(comprimento + e) * 0.5f, h * 0.5f, 0f),
-                 new Vector3(e, h, largura + 2f * e), matMuro, true);
-            Cubo("MuroFundoB", muros.transform, new Vector3((comprimento + e) * 0.5f, h * 0.5f, 0f),
-                 new Vector3(e, h, largura + 2f * e), matMuro, true);
-            Cubo("MuroFrente", muros.transform, new Vector3(0f, h * 0.5f, -(largura + e) * 0.5f),
-                 new Vector3(comprimento, h, e), matMuro, true);
-            Cubo("MuroTras", muros.transform, new Vector3(0f, h * 0.5f, (largura + e) * 0.5f),
-                 new Vector3(comprimento, h, e), matMuro, true);
-
-            // Faixa do meio (onde a cruzada vale), com linhas de giz nas bordas
-            GameObject faixa = new GameObject("FaixaMeio");
-            faixa.transform.SetParent(campo.transform);
-            float larguraFaixa = config.larguraFaixaMeio;
-            Cubo("Area", faixa.transform, new Vector3(0f, AlturaFaixa, 0f),
-                 new Vector3(larguraFaixa, EspessuraMarca, largura), matFaixa, false);
-            Cubo("LinhaA", faixa.transform, new Vector3(-larguraFaixa * 0.5f, AlturaGiz, 0f),
-                 new Vector3(config.espessuraLinhaGiz, EspessuraMarca, largura), matGiz, false);
-            Cubo("LinhaB", faixa.transform, new Vector3(larguraFaixa * 0.5f, AlturaGiz, 0f),
-                 new Vector3(config.espessuraLinhaGiz, EspessuraMarca, largura), matGiz, false);
+            // ---------- Rua: asfalto com faixa amarela, meio-fio, calçadas e fachadas ----------
+            MontarRua(campo.transform, config);
 
             // Bases riscadas de giz: casinha da garrafa + área do taco na frente (a zona segura em volta é invisível)
             GameObject bases = new GameObject("Bases");
@@ -336,6 +312,104 @@ namespace BetsDeRua.Editor
             cubo.GetComponent<MeshRenderer>().sharedMaterial = material;
             if (!comColisao) Object.DestroyImmediate(cubo.GetComponent<Collider>());
             return cubo;
+        }
+
+        /// <summary>
+        /// A rua, de lado na câmera: asfalto no meio com faixa amarela tracejada, meio-fio e
+        /// calçada dos dois lados, e atrás delas as fachadas (casas, muros, portões). Do lado
+        /// do fundo da tela a fachada é alta; do lado da câmera é um muro baixo, para não tampar
+        /// o campo. A física da bola (FisicaBola) usa as mesmas medidas do ConfigFisica.
+        /// </summary>
+        private static void MontarRua(Transform pai, ConfigFisica config)
+        {
+            Material matCalcada = CriarMaterial("Calcada", new Color(0.55f, 0.54f, 0.52f));
+            Material matMeioFio = CriarMaterial("MeioFio", new Color(0.72f, 0.71f, 0.68f));
+            Material matFaixaAmarela = CriarMaterial("FaixaAmarela", new Color(0.95f, 0.78f, 0.15f), true);
+            Material matPortao = CriarMaterial("Portao", new Color(0.25f, 0.27f, 0.3f));
+            Material matPorta = CriarMaterial("Porta", new Color(0.42f, 0.27f, 0.16f));
+            Material matJanela = CriarMaterial("Janela", new Color(0.2f, 0.28f, 0.38f));
+            Color[] coresCasas =
+            {
+                new Color(0.86f, 0.78f, 0.6f), new Color(0.65f, 0.75f, 0.68f), new Color(0.82f, 0.6f, 0.52f),
+                new Color(0.7f, 0.72f, 0.82f), new Color(0.9f, 0.86f, 0.75f), new Color(0.75f, 0.66f, 0.55f),
+            };
+            Material[] matCasas = new Material[coresCasas.Length];
+            for (int i = 0; i < coresCasas.Length; i++) matCasas[i] = CriarMaterial($"Casa{i + 1}", coresCasas[i]);
+
+            float comprimento = config.comprimentoCampo;
+            float largura = config.larguraCampo;
+            float meiaRua = config.larguraRua * 0.5f;
+            float larguraCalcada = largura * 0.5f - meiaRua;
+            float alturaCalcada = config.alturaCalcada;
+
+            GameObject rua = new GameObject("Rua");
+            rua.transform.SetParent(pai);
+
+            // Faixa amarela tracejada no meio da rua
+            GameObject faixa = new GameObject("FaixaAmarela");
+            faixa.transform.SetParent(rua.transform);
+            const float traco = 3f, espaco = 2f, larguraFaixa = 0.12f;
+            int n = 0;
+            for (float x = -comprimento * 0.5f + espaco; x + traco <= comprimento * 0.5f; x += traco + espaco)
+                Cubo($"Traco{++n}", faixa.transform, new Vector3(x + traco * 0.5f, AlturaFaixa, 0f),
+                     new Vector3(traco, EspessuraMarca, larguraFaixa), matFaixaAmarela, false);
+
+            // Calçadas (degrau com colisão: os jogadores sobem) e meio-fio
+            foreach (float lado in new[] { -1f, 1f })
+            {
+                string nome = lado < 0f ? "Perto" : "Fundo";
+                float zCalcada = lado * (meiaRua + larguraCalcada * 0.5f);
+                Cubo($"Calcada{nome}", rua.transform, new Vector3(0f, alturaCalcada * 0.5f, zCalcada),
+                     new Vector3(comprimento, alturaCalcada, larguraCalcada), matCalcada, true);
+                Cubo($"MeioFio{nome}", rua.transform, new Vector3(0f, alturaCalcada * 0.5f + 0.002f, lado * (meiaRua + 0.06f)),
+                     new Vector3(comprimento, alturaCalcada + 0.004f, 0.12f), matMeioFio, false);
+            }
+
+            // Fachadas: casas, muros e portões em blocos de largura e cor variadas
+            float[] larguras = { 7f, 5f, 9f, 6f, 8f, 5.5f, 7.5f, 6.5f };
+            foreach (float lado in new[] { -1f, 1f })
+            {
+                bool fundo = lado > 0f;
+                string nome = fundo ? "Fundo" : "Perto";
+                GameObject fachadas = new GameObject($"Fachadas{nome}");
+                fachadas.transform.SetParent(rua.transform);
+                float altura = fundo ? config.alturaFachada : config.alturaMuroPerto;
+                float espessura = config.espessuraMuro;
+                float zParede = lado * (largura * 0.5f + espessura * 0.5f);
+                float x0 = -comprimento * 0.5f;
+                int i = fundo ? 0 : 3;
+                while (x0 < comprimento * 0.5f)
+                {
+                    float w = Mathf.Min(larguras[i % larguras.Length], comprimento * 0.5f - x0);
+                    float xc = x0 + w * 0.5f;
+                    float alturaCasa = fundo ? altura * (0.85f + 0.15f * ((i * 7) % 3)) : altura;
+                    Cubo($"Casa{i + 1}", fachadas.transform, new Vector3(xc, alturaCalcada + alturaCasa * 0.5f, zParede),
+                         new Vector3(w, alturaCasa, espessura), matCasas[i % matCasas.Length], true);
+                    // Porta ou portão (um pouco para fora da parede, para aparecer)
+                    bool portao = i % 2 == 0;
+                    float alturaVao = Mathf.Min(alturaCasa - 0.1f, portao ? 2.2f : 2.0f);
+                    float larguraVao = portao ? Mathf.Min(3f, w * 0.45f) : 1f;
+                    float zVao = zParede - lado * (espessura * 0.5f + 0.02f);
+                    Cubo(portao ? $"Portao{i + 1}" : $"Porta{i + 1}", fachadas.transform,
+                         new Vector3(xc - w * 0.2f, alturaCalcada + alturaVao * 0.5f, zVao),
+                         new Vector3(larguraVao, alturaVao, 0.05f), portao ? matPortao : matPorta, false);
+                    // Janela (só nas casas altas do fundo)
+                    if (fundo && !portao && alturaCasa > 2.4f)
+                        Cubo($"Janela{i + 1}", fachadas.transform, new Vector3(xc + w * 0.22f, alturaCalcada + 1.5f, zVao),
+                             new Vector3(1.2f, 0.9f, 0.05f), matJanela, false);
+                    x0 += w;
+                    i++;
+                }
+            }
+
+            // Fim da rua nas duas pontas: muro baixo (a bola volta)
+            float hFim = config.alturaMuro;
+            float eFim = config.espessuraMuro;
+            Material matMuro = CriarMaterial("Muro", new Color(0.5f, 0.5f, 0.5f));
+            Cubo("MuroFimA", rua.transform, new Vector3(-(comprimento + eFim) * 0.5f, hFim * 0.5f, 0f),
+                 new Vector3(eFim, hFim, largura + 2f * eFim), matMuro, true);
+            Cubo("MuroFimB", rua.transform, new Vector3((comprimento + eFim) * 0.5f, hFim * 0.5f, 0f),
+                 new Vector3(eFim, hFim, largura + 2f * eFim), matMuro, true);
         }
 
         /// <summary>

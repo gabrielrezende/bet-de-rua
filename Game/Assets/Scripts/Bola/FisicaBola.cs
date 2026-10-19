@@ -4,7 +4,7 @@ namespace BetsDeRua
 {
     /// <summary>
     /// Um passo da física própria da bola: gravidade, resistência do ar, rolar com atrito,
-    /// quique no chão e nos muros. Usada pela Bola de verdade e pela previsão de trajetória
+    /// quique no chão (asfalto e calçada), no meio-fio e nas fachadas. Usada pela Bola de verdade e pela previsão de trajetória
     /// (para o rebatedor saber quando e onde a bola vai passar). As garrafas ficam de fora:
     /// quem cuida delas é a Bola.
     /// </summary>
@@ -15,7 +15,8 @@ namespace BetsDeRua
         {
             if (parada) return;
             float raio = config.raioBola;
-            bool noChao = posicao.y <= raio + 0.0001f && velocidade.y <= 0f;
+            float chao = AlturaDoChao(config, posicao.z);
+            bool noChao = posicao.y <= chao + raio + 0.0001f && velocidade.y <= 0f;
 
             // Gravidade (só no ar) e resistência do ar
             if (!noChao) velocidade.y -= config.gravidade * dt;
@@ -32,7 +33,7 @@ namespace BetsDeRua
                 if (novaRapidez <= config.velocidadeParada)
                 {
                     velocidade = Vector3.zero;
-                    posicao.y = raio;
+                    posicao.y = chao + raio;
                     parada = true;
                     return;
                 }
@@ -40,15 +41,51 @@ namespace BetsDeRua
             }
 
             posicao += velocidade * dt;
+            ColidirComMeioFio(config, ref posicao, ref velocidade);
             ColidirComChao(config, ref posicao, ref velocidade);
             ColidirComMuros(config, ref posicao, ref velocidade);
+        }
+
+        /// <summary>Altura do chão (m) nesta posição: 0 no asfalto, a altura da calçada fora da rua.</summary>
+        public static float AlturaDoChao(ConfigFisica config, float z)
+        {
+            return Mathf.Abs(z) > config.larguraRua * 0.5f ? config.alturaCalcada : 0f;
+        }
+
+        /// <summary>
+        /// Meio-fio: a bola indo da rua para a calçada abaixo da altura dela bate e volta; na altura
+        /// da quina, pula para cima (sobe e perde força).
+        /// </summary>
+        private static void ColidirComMeioFio(ConfigFisica config, ref Vector3 posicao, ref Vector3 velocidade)
+        {
+            float raio = config.raioBola;
+            float meiaRua = config.larguraRua * 0.5f;
+            float topo = config.alturaCalcada;
+            if (Mathf.Abs(posicao.z) + raio <= meiaRua || posicao.z * velocidade.z <= 0f) return;
+            if (Mathf.Abs(posicao.z) > meiaRua + raio) return;       // já está em cima da calçada
+            if (posicao.y - raio >= topo) return;                    // passa por cima
+            if (posicao.y < topo - raio * 0.5f)
+            {
+                // Bate na face do meio-fio e volta para a rua
+                posicao.z = Mathf.Sign(posicao.z) * (meiaRua - raio);
+                velocidade.z = -velocidade.z * config.quiqueMeioFio;
+                velocidade.x *= config.quiqueMeioFio + (1f - config.quiqueMeioFio) * 0.5f;
+            }
+            else
+            {
+                // Pega na quina: pula para cima da calçada, perdendo força para o lado
+                velocidade.y = Mathf.Max(velocidade.y, Mathf.Abs(velocidade.z) * 0.6f);
+                velocidade.z *= config.quiqueMeioFio;
+                posicao.y = topo + raio;
+            }
         }
 
         private static void ColidirComChao(ConfigFisica config, ref Vector3 posicao, ref Vector3 velocidade)
         {
             float raio = config.raioBola;
-            if (posicao.y >= raio) return;
-            posicao.y = raio;
+            float chao = AlturaDoChao(config, posicao.z);
+            if (posicao.y >= chao + raio) return;
+            posicao.y = chao + raio;
             if (velocidade.y >= 0f) return;
 
             if (-velocidade.y > config.velocidadeMinimaQuique)

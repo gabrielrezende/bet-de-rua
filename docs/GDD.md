@@ -138,6 +138,8 @@ O modo padrão usa a regra que você lembra: 2x2, cada cruzada no meio vale 1 po
 - **Defesa pelo campo inteiro:** os dois da bola andam pelo campo todo, o tempo todo. Quem está mais perto vai na bola; o outro, com a bola longe, sai para o meio do caminho para receber o passe (e não deixar o ataque cruzar à vontade). A única restrição: para arremessar, quem lança não pode estar à frente da linha da garrafa do lado dele.
 - **Cruzada de ida e volta:** cruzou no meio, cada um tem que chegar na base do outro lado e encostar o taco; aí vale 1 ponto e pode voltar para cruzar de novo, quantas vezes quiser enquanto a defesa não volta com a bola. Arriscar mais uma é decisão do jogador. Com uma pessoa e um bot na dupla do taco, o bot corre em espelho: você sai, ele sai; você volta, ele volta.
 - **Cruzada automática com "TEC!":** os dois passando perto no meio (dentro da faixa e a até 1,5 m um do outro) já cruzam, sem botão; os tacos sobem e batem em X no alto, e aparece um "TEC!" no ponto do encontro. Correr cada um para um canto não cruza. (Opção `cruzadaAutomatica`; desligada, volta o X no anel.)
+- **Defesa: o gatilho pega, o □ desliza.** Sem a bola, R2 ou L2 pegam a bola ao alcance (o mesmo gatilho que arremessa com ela na mão). O □ é o carrinho (bola rasteira) ou o peixinho (bola quicando) para parar a bola, sem pegar: deslizou e a bola ficou ao alcance, o gatilho pega ali mesmo, no chão; depois levanta e já mira. Como no FIFA. No ataque o □ também é deslizar (o rebatedor se joga na base). (Decisão do protótipo.)
+- **A rua do protótipo:** asfalto com faixa amarela tracejada no meio, meio-fio e calçada de 15 cm dos dois lados, e atrás as fachadas (casas, muros, portões e portas). A bola rolando bate no meio-fio e volta; na altura da quina, pula para a calçada; no ar, passa por cima da calçada e bate nas fachadas. Do lado da câmera o muro é baixo, para não tampar o campo. A rua tem 70 m de ponta a ponta (as garrafas continuam a 20 m) e a câmera tira o zoom quando a bola vai longe. A faixa do meio (onde a cruzada vale) não é mais desenhada; a regra continua.
 - **Rebatedor se jogando na base:** correndo com o taco, □ faz o rebatedor se jogar para a frente e deslizar, como no beisebol; se a ponta do taco esticado alcança a zona segura, ele já está salvo.
 - **Pegar sem se jogar:** □ com a bola vindo para perto faz o jogador esperar e pegar quando ela chega; o mergulho é só para a bola que vai passar longe.
 - **Garrafa:** encostou, caiu (qualquer velocidade). O balanço fica só para a bola que passa raspando sem encostar.
@@ -763,6 +765,8 @@ Cada ambiente tem um jeito próprio de quicar a bola e um detalhe de infância; 
 | --- | --- | --- | --- |
 | Rua de asfalto | Quique alto e rápido | Carro estacionado, bueiro, vizinha na janela | Inicial |
 | Rua de terra | Quique baixo e irregular | Poeira na corrida, poste de madeira | Inicial |
+| Rua de paralelepípedo | Quique torto: a bola desvia ao bater nas pedras | Calçada alta, bueiro, sobrado antigo | Ideia |
+| Rua de terra com mato e cerca | Quique baixo; a bola atravessa a cerca e alguém tem que pular para buscar | Cerca de arame, mato alto, cachorro latindo | Ideia |
 | Pracinha | Grama: bola morre rápido | Banco, pipoqueiro, pombos | Nível 5 |
 | Quadra da escola | Cimento liso, quique perfeito | Tabela de basquete, sinal do recreio | Nível 10 |
 | Beco entre prédios | Campo estreito, bola bate na parede | Varal de roupa, gato no muro | Nível 15 |
