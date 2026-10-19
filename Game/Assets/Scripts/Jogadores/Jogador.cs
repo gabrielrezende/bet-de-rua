@@ -79,17 +79,22 @@ namespace BetsDeRua
             // Sem isso, com muitos quadros por segundo cada passo fica menor que o mínimo
             // e o CharacterController não move nada (o jogador só vira, não anda)
             corpo.minMoveDistance = 0f;
-
-            var partes = new System.Collections.Generic.List<Transform>();
-            foreach (string nomeParte in new[] { "Corpo", "Rosto" })
-            {
-                Transform parte = transform.Find(nomeParte);
-                if (parte != null) partes.Add(parte);
-            }
-            partesDoCorpo = partes.ToArray();
-            posicoesOriginais = System.Array.ConvertAll(partesDoCorpo, t => t.localPosition);
-            rotacoesOriginais = System.Array.ConvertAll(partesDoCorpo, t => t.localRotation);
+            ReconhecerCorpo();
         }
+
+        /// <summary>Guarda as partes do corpo que deitam no mergulho (de novo, se o boneco foi remontado).</summary>
+        public void ReconhecerCorpo()
+        {
+            var partes = new System.Collections.Generic.List<Transform>();
+            Transform parte = transform.Find("Corpo");
+            if (parte != null) partes.Add(parte);
+            partesDoCorpo = partes.ToArray();
+            posicoesOriginais = System.Array.ConvertAll(partesDoCorpo, t => Vector3.zero);
+            rotacoesOriginais = System.Array.ConvertAll(partesDoCorpo, t => Quaternion.identity);
+        }
+
+        /// <summary>Troca a ficha do personagem (o boneco é remontado pela AparenciaBoneco).</summary>
+        public void DefinirPerfil(PerfilPersonagem novo) => perfil = novo;
 
         /// <summary>Entrada vinda de um bot (CPU). Vale só para este frame.</summary>
         public void DefinirEntradaBot(Vector2 movimento, bool sprint)
@@ -269,7 +274,7 @@ namespace BetsDeRua
         private void AtualizarEstamina(bool sprintando, float dt)
         {
             if (sprintando)
-                Estamina = Mathf.Max(0f, Estamina - dt / Mathf.Max(0.01f, config.duracaoSprint));
+                Estamina = Mathf.Max(0f, Estamina - dt / Mathf.Max(0.01f, config.duracaoSprint * FatorFolego));
             else
                 Estamina = Mathf.Min(1f, Estamina + dt / Mathf.Max(0.01f, config.recargaSprint));
         }
@@ -308,6 +313,8 @@ namespace BetsDeRua
         public float FatorVelocidade => perfil != null ? perfil.FatorVelocidade : 1f;
         public float FatorForca => perfil != null ? perfil.FatorForca : 1f;
         public float FatorAlcance => perfil != null ? perfil.FatorAlcance : 1f;
+        public float FatorPrecisao => perfil != null ? perfil.FatorPrecisao : 1f;
+        public float FatorFolego => perfil != null ? perfil.FatorFolego : 1f;
 
         /// <summary>Material da cor do time (camiseta e boné: as peças "Time_...").</summary>
         public Material MaterialCorpo

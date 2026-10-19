@@ -580,8 +580,6 @@ namespace BetsDeRua.Editor
                 controlador.skinWidth = 0.02f;
                 controlador.minMoveDistance = 0f; // senão, com FPS alto, passos pequenos são ignorados
 
-                // Boneco de peças simples, montado a partir da ficha do personagem (altura, corpo, pele)
-                MontarBoneco(raiz.transform, perfil, altura, matCorpo);
 
                 Jogador jogador = raiz.AddComponent<Jogador>();
                 SerializedObject dados = new SerializedObject(jogador);
@@ -591,6 +589,12 @@ namespace BetsDeRua.Editor
                 dados.FindProperty("papel").enumValueIndex = (int)papel;
                 dados.FindProperty("nome").stringValue = nome;
                 dados.ApplyModifiedPropertiesWithoutUndo();
+
+                // O boneco (corpo arredondado, rosto, cabelo, roupa) é montado no Play pela AparenciaBoneco,
+                // a partir da ficha do personagem (assim cada pessoa joga com o seu)
+                AparenciaBoneco aparencia = raiz.AddComponent<AparenciaBoneco>();
+                Ligar(aparencia, "config", config);
+                Ligar(aparencia, "materialTime", matCorpo);
 
                 if (papel == Papel.Rebatedor)
                 {
@@ -618,82 +622,6 @@ namespace BetsDeRua.Editor
                 Ligar(marcador, "materialSeguro", matZonaSegura);
                 Ligar(marcador, "materialPerigo", matZonaPerigo);
                 return jogador;
-            }
-
-            /// <summary>
-            /// Esqueleto simples: Corpo (pivô nos pés, é o que deita no mergulho) > Quadril > Cintura
-            /// (tronco, cabeça com boné, ombros > cotovelos) e Quadril > coxas > joelhos. Camiseta e boné
-            /// na cor do time (peças "Time_..."), calção e tênis escuros, braços e pernas na cor da pele.
-            /// </summary>
-            private void MontarBoneco(Transform raiz, PerfilPersonagem perfil, float altura, Material matTime)
-            {
-                float s = altura / PerfilPersonagem.AlturaReferencia;
-                float w = perfil != null ? perfil.FatorLargura : 1f;
-                bool crianca = perfil != null && perfil.faixaEtaria == FaixaEtaria.Crianca;
-                Material matPele = CriarMaterial($"Pele_{(perfil != null ? perfil.name : "Padrao")}",
-                                                 perfil != null ? perfil.corPele : new Color(0.78f, 0.6f, 0.45f));
-                Material matCalcao = CriarMaterial("Calcao", new Color(0.18f, 0.2f, 0.25f));
-                Material matTenis = CriarMaterial("Tenis", new Color(0.92f, 0.92f, 0.9f));
-
-                Transform corpo = Pivo("Corpo", raiz, Vector3.zero);
-                Transform quadril = Pivo("Quadril", corpo, new Vector3(0f, 0.92f * s, 0f));
-                Transform cintura = Pivo("Cintura", quadril, Vector3.zero);
-
-                // Tronco (camiseta do time) e quadril (calção)
-                Peca("Time_Tronco", cintura, new Vector3(0f, 0.27f * s, 0f), new Vector3(0.36f * s * w, 0.27f * s, 0.22f * s * w),
-                     PrimitiveType.Capsule, matTime);
-                Peca("Calcao", quadril, new Vector3(0f, -0.04f * s, 0f), new Vector3(0.34f * s * w, 0.1f * s, 0.21f * s * w),
-                     PrimitiveType.Capsule, matCalcao);
-
-                // Cabeça (maior, proporcionalmente, na criança) e boné do time com aba (mostra para onde olha)
-                float cabeca = 0.23f * s * (crianca ? 1.15f : 1f);
-                Peca("Cabeca", cintura, new Vector3(0f, 0.64f * s, 0f), Vector3.one * cabeca, PrimitiveType.Sphere, matPele);
-                Peca("Time_Bone", cintura, new Vector3(0f, 0.64f * s + cabeca * 0.32f, 0f),
-                     new Vector3(cabeca * 1.02f, cabeca * 0.2f, cabeca * 1.02f), PrimitiveType.Sphere, matTime);
-                Peca("Time_Aba", cintura, new Vector3(0f, 0.64f * s + cabeca * 0.28f, cabeca * 0.55f),
-                     new Vector3(cabeca * 0.7f, cabeca * 0.06f, cabeca * 0.5f), PrimitiveType.Cube, matTime);
-
-                // Braços: ombro > braço (manga do time) > cotovelo > antebraço e mão (pele)
-                foreach (float lado in new[] { -1f, 1f })
-                {
-                    string sufixo = lado < 0f ? "E" : "D";
-                    Transform ombro = Pivo($"Ombro{sufixo}", cintura, new Vector3(lado * 0.21f * s * w, 0.48f * s, 0f));
-                    Peca($"Time_Braco{sufixo}", ombro, new Vector3(0f, -0.14f * s, 0f), new Vector3(0.11f * s * w, 0.15f * s, 0.11f * s * w),
-                         PrimitiveType.Capsule, matTime);
-                    Transform cotovelo = Pivo($"Cotovelo{sufixo}", ombro, new Vector3(0f, -0.29f * s, 0f));
-                    Peca($"Antebraco{sufixo}", cotovelo, new Vector3(0f, -0.13f * s, 0f), new Vector3(0.09f * s * w, 0.14f * s, 0.09f * s * w),
-                         PrimitiveType.Capsule, matPele);
-                    Peca($"Mao{sufixo}", cotovelo, new Vector3(0f, -0.29f * s, 0f), Vector3.one * 0.085f * s, PrimitiveType.Sphere, matPele);
-
-                    // Pernas: coxa (calção) > joelho > canela (pele) e tênis
-                    Transform coxa = Pivo($"Coxa{sufixo}", quadril, new Vector3(lado * 0.1f * s * w, 0f, 0f));
-                    Peca($"CoxaMalha{sufixo}", coxa, new Vector3(0f, -0.21f * s, 0f), new Vector3(0.15f * s * w, 0.22f * s, 0.15f * s * w),
-                         PrimitiveType.Capsule, lado < 0f ? matCalcao : matCalcao);
-                    Transform joelho = Pivo($"Joelho{sufixo}", coxa, new Vector3(0f, -0.44f * s, 0f));
-                    Peca($"Canela{sufixo}", joelho, new Vector3(0f, -0.21f * s, 0f), new Vector3(0.11f * s * w, 0.21f * s, 0.11f * s * w),
-                         PrimitiveType.Capsule, matPele);
-                    Peca($"Tenis{sufixo}", joelho, new Vector3(0f, -0.44f * s, 0.05f * s), new Vector3(0.11f * s, 0.07f * s, 0.24f * s),
-                         PrimitiveType.Cube, matTenis);
-                }
-            }
-
-            private static Transform Pivo(string nome, Transform pai, Vector3 posicao)
-            {
-                Transform pivo = new GameObject(nome).transform;
-                pivo.SetParent(pai, false);
-                pivo.localPosition = posicao;
-                return pivo;
-            }
-
-            private static void Peca(string nome, Transform pai, Vector3 posicao, Vector3 escala, PrimitiveType forma, Material material)
-            {
-                GameObject peca = GameObject.CreatePrimitive(forma);
-                peca.name = nome;
-                Object.DestroyImmediate(peca.GetComponent<Collider>());
-                peca.transform.SetParent(pai, false);
-                peca.transform.localPosition = posicao;
-                peca.transform.localScale = escala;
-                peca.GetComponent<MeshRenderer>().sharedMaterial = material;
             }
 
             private void CriarTaco(Transform dono, Jogador jogador)

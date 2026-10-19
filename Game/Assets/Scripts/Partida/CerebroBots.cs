@@ -196,7 +196,7 @@ namespace BetsDeRua
                 Vector3 rumo = alvo.transform.position - jogador.transform.position;
                 rumo.y = 0f;
                 Vector3 lado = Vector3.Cross(Vector3.up, rumo.sqrMagnitude > 0.0001f ? rumo.normalized : Vector3.forward);
-                float desvioChute = NiveisBots.De(configPartida, jogador).desvioChute;
+                float desvioChute = NiveisBots.De(configPartida, jogador).desvioChute / jogador.FatorPrecisao;
                 Vector3 mira = alvo.transform.position + lado * Random.Range(-desvioChute, desvioChute);
                 portador.ExecutarPeloBot(TipoArremesso.Forte, carga, mira);
             }

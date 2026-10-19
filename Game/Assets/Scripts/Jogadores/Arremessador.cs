@@ -287,7 +287,7 @@ namespace BetsDeRua
             if (esperaCpu < configPartida.esperaArremessoAutomatico) return;
             esperaCpu = 0f;
 
-            float maximo = NiveisBots.De(configPartida, jogador).desvioArremesso;
+            float maximo = NiveisBots.De(configPartida, jogador).desvioArremesso / jogador.FatorPrecisao;
             float desvio = UnityEngine.Random.Range(-maximo, maximo);
             float sorteio = UnityEngine.Random.value;
             // Variar a altura de chegada é o que engana quem rebate: reto, quicado, pingo e rasteira
@@ -417,7 +417,7 @@ namespace BetsDeRua
             }
             // Arremessar andando tira a precisão: quanto mais rápido, mais torta a bola sai
             if (comErro && !passeParaColega)
-                erroGraus += UnityEngine.Random.Range(-1f, 1f) * config.erroArremessoPorVelocidade * jogador.Velocidade.magnitude;
+                erroGraus += UnityEngine.Random.Range(-1f, 1f) * config.erroArremessoPorVelocidade * jogador.Velocidade.magnitude / jogador.FatorPrecisao;
             direcao = Quaternion.AngleAxis(erroGraus, Vector3.up) * direcao;
 
             // Teto na subida: com força demais a bola isola, mas não vai para o espaço
