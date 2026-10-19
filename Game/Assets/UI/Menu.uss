@@ -550,3 +550,56 @@
     color: rgb(190, 195, 205);
     font-size: 22px;
 }
+
+/* ---------- cartão de entrada (MLB) e narração ---------- */
+
+.cartao-entrada {
+    position: absolute;
+    left: 36px;
+    bottom: 110px;
+    width: 640px;
+}
+
+.cartao-linha {
+    flex-direction: row;
+    align-items: center;
+    height: 54px;
+    margin-bottom: 4px;
+    background-color: rgba(10, 12, 18, 0.9);
+}
+
+.cartao-cor {
+    width: 10px;
+    height: 100%;
+}
+
+.cartao-papel {
+    width: 120px;
+    margin-left: 12px;
+    font-size: 20px;
+    color: rgb(255, 214, 32);
+    -unity-font: url("Fontes/BarlowCondensed-Bold.ttf");
+}
+
+.cartao-nome-grande {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 32px;
+    margin-right: 14px;
+}
+
+.cartao-info {
+    font-size: 22px;
+    color: rgb(200, 205, 215);
+}
+
+.narracao {
+    position: absolute;
+    bottom: 96px;
+    left: 0;
+    right: 0;
+    -unity-text-align: middle-center;
+    font-size: 30px;
+    -unity-font-style: italic;
+    color: rgb(255, 255, 255);
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.9);
+}

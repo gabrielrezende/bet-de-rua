@@ -108,6 +108,9 @@ namespace BetsDeRua.Editor
             // ---------- Amarelinha de giz na calçada do fundo ----------
             Amarelinha(t, new Vector3(-L * 0.25f, hCalcada + 0.004f, meiaRua + larguraCalcada * 0.5f));
 
+            // ---------- Casas fechando as pontas da rua e do lado de cá (para as câmeras de perto) ----------
+            MontarPontasELadoDeCa(t, config, r);
+
             // ---------- Morro com casinhas ao fundo ----------
             MontarMorro(t, config, r);
 
@@ -293,14 +296,16 @@ namespace BetsDeRua.Editor
             Juntar("TampaCaixa", caixaDagua, baseCentro + new Vector3(0f, 1.15f, 0f), new Vector3(1.36f, 0.1f, 1.36f), "cilindro");
         }
 
-        private static void Pichar(Transform t, Vector3 centro, float tamanho, Material material)
+        private static void Pichar(Transform t, Vector3 centro, float tamanho, Material material) => Pichar(t, centro, tamanho, material, Quaternion.identity);
+
+        private static void Pichar(Transform t, Vector3 centro, float tamanho, Material material, Quaternion giro)
         {
             GameObject q = GameObject.CreatePrimitive(PrimitiveType.Quad);
             q.name = "Pichacao";
             Object.DestroyImmediate(q.GetComponent<Collider>());
             q.transform.SetParent(t);
             q.transform.position = centro;
-            q.transform.rotation = Quaternion.identity; // olha para -Z (para a rua)
+            q.transform.rotation = giro; // sem giro, olha para -Z (para a rua)
             q.transform.localScale = new Vector3(tamanho, tamanho * 0.55f, 1f);
             q.GetComponent<MeshRenderer>().sharedMaterial = material;
             q.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -428,6 +433,72 @@ namespace BetsDeRua.Editor
             Vector3 d = b - a;
             GameObject g = CaixaNoMundo("Giz", t, meio, new Vector3(d.magnitude + espessura, 0.002f, espessura), giz);
             g.transform.rotation = Quaternion.FromToRotation(Vector3.right, d.normalized);
+        }
+
+        /// <summary>
+        /// Casa simples virada para qualquer lado (n = para onde a fachada olha): parede, porta,
+        /// janelas com grade por andar, laje com caixa d'água ou telhado plano.
+        /// </summary>
+        private static void CasaVirada(Vector3 frente, Vector3 n, float largura, float altura, float fundo, Material parede, System.Random r)
+        {
+            Vector3 u = Vector3.Cross(Vector3.up, n);
+            Vector3 au = new Vector3(Mathf.Abs(u.x), 0f, Mathf.Abs(u.z)), an = new Vector3(Mathf.Abs(n.x), 0f, Mathf.Abs(n.z));
+            Juntar("CasaVirada", parede, frente - n * fundo * 0.5f + Vector3.up * altura * 0.5f, au * largura + Vector3.up * altura + an * fundo);
+            Juntar("Barrado", concreto, frente + n * 0.012f + Vector3.up * 0.2f, au * largura + Vector3.up * 0.4f + an * 0.02f);
+            Juntar("Porta", r.NextDouble() < 0.5 ? porta : portao[r.Next(portao.Length)], frente + n * 0.03f + u * (-largura * 0.28f) + Vector3.up * 1.05f,
+                   au * (r.NextDouble() < 0.4 ? 2.4f : 0.95f) + Vector3.up * 2.1f + an * 0.06f);
+            int andares = Mathf.Max(1, Mathf.FloorToInt(altura / 2.9f));
+            for (int a = 0; a < andares; a++)
+            {
+                float y = a * 2.9f + 1.3f;
+                foreach (float lado in a == 0 ? new[] { 0.22f } : new[] { -0.22f, 0.22f })
+                {
+                    Juntar("Janela", janela, frente + n * 0.02f + u * (largura * lado) + Vector3.up * (y + 0.5f), au * 1.2f + Vector3.up * 1f + an * 0.05f);
+                    Juntar("Peitoril", concreto, frente + n * 0.08f + u * (largura * lado) + Vector3.up * (y - 0.04f), au * 1.4f + Vector3.up * 0.08f + an * 0.16f);
+                }
+            }
+            if (r.NextDouble() < 0.6)
+                Juntar("CaixaDagua", caixaDagua, frente - n * fundo * 0.6f + u * (largura * 0.2f) + Vector3.up * (altura + 0.55f), new Vector3(1.3f, 1.1f, 1.3f), "cilindro");
+        }
+
+        private static void MontarPontasELadoDeCa(Transform t, ConfigFisica config, System.Random r)
+        {
+            float L = config.comprimentoCampo;
+            float meiaLargura = config.larguraCampo * 0.5f;
+            float hb = 0f;
+            // Pontas: uma fileira de casas atravessada (a rua termina numa rua de frente, em T)
+            foreach (float lado in new[] { -1f, 1f })
+            {
+                float x = lado * (L * 0.5f + 22f);
+                Vector3 n = new Vector3(-lado, 0f, 0f);
+                // Calçada da rua de frente
+                Juntar("CalcadaPonta", calcada, new Vector3(x - lado * 1.5f, 0.07f, 0f), new Vector3(3f, 0.14f, 120f));
+                float z0 = -60f;
+                while (z0 < 60f)
+                {
+                    float w = 5f + r.Next(5);
+                    float h = r.NextDouble() < 0.5 ? 3.2f + (float)r.NextDouble() * 0.6f : 5.9f + (float)r.NextDouble() * 2.6f;
+                    Material m = r.NextDouble() < 0.3 ? tijolo : reboco[r.Next(reboco.Length)];
+                    CasaVirada(new Vector3(x, hb, z0 + w * 0.5f), n, w, h, 9f, m, r);
+                    if (r.NextDouble() < 0.35)
+                        Pichar(t, new Vector3(x - lado * 0.02f, 1.4f, z0 + w * 0.5f + 1f), 1.8f, pichacao[r.Next(pichacao.Length)], Quaternion.Euler(0f, lado * 90f, 0f));
+                    z0 += w;
+                }
+                // Poste na esquina
+                Poste(t, new Vector3(x - lado * 1.2f, 0.14f, meiaLargura + 1f));
+            }
+            // Lado de cá (atrás do muro baixo): casas térreas recuadas, abaixo da linha da câmera de transmissão
+            float zFrente = -(meiaLargura + 11f);
+            float x0 = -L * 0.5f - 22f;
+            while (x0 < L * 0.5f + 22f)
+            {
+                float w = 6f + r.Next(4);
+                Material m = r.NextDouble() < 0.35 ? tijolo : reboco[r.Next(reboco.Length)];
+                CasaVirada(new Vector3(x0 + w * 0.5f, hb, zFrente), Vector3.forward, w - 0.5f, 2.7f, 8f, m, r);
+                x0 += w;
+            }
+            // Quintal entre o muro e as casas: um pouco de calçada e mato
+            Juntar("Quintal", calcada, new Vector3(0f, 0.01f, -(meiaLargura + 5.5f)), new Vector3(L + 44f, 0.02f, 10.6f));
         }
 
         private static void MontarMorro(Transform pai, ConfigFisica config, System.Random r)

@@ -14,9 +14,28 @@ namespace BetsDeRua
         [SerializeField] private ConfigFisica config;
         [Tooltip("Cor do time no começo (camisa e boné). Depois quem pinta é o ControladorLance.")]
         [SerializeField] private Material materialTime;
+        [Tooltip("Corpos de verdade (com animação de captura). Vazio = boneco de peças gerado por código.")]
+        [SerializeField] private BibliotecaCorpos biblioteca;
 
         private Jogador jogador;
         private bool montado;
+        private Material timeAtual;
+
+        /// <summary>True quando o personagem usa o corpo de verdade (Animator).</summary>
+        public bool CorpoReal => biblioteca != null && biblioteca.Pronta;
+        /// <summary>A cor do time que o personagem veste agora.</summary>
+        public Material MaterialTime => timeAtual != null ? timeAtual : materialTime;
+
+        /// <summary>Veste a camisa e o boné com a cor do time.</summary>
+        public void Pintar(Material time)
+        {
+            if (time == null) return;
+            timeAtual = time;
+            if (CorpoReal) ConstrutorCorpoReal.PintarTime(transform, time, biblioteca);
+            else
+                foreach (MeshRenderer peca in GetComponentsInChildren<MeshRenderer>(true))
+                    if (peca.name.StartsWith("Time_")) peca.sharedMaterial = time;
+        }
 
         private void Awake()
         {
@@ -30,10 +49,23 @@ namespace BetsDeRua
             if (jogador == null) jogador = GetComponent<Jogador>();
             if (novoPerfil != null) jogador.DefinirPerfil(novoPerfil);
             PerfilPersonagem perfil = jogador.Perfil;
-            Material time = montado ? jogador.MaterialCorpo : null;
-            if (time == null) time = materialTime;
+            Material time = MaterialTime;
+            timeAtual = time;
 
-            ConstrutorBoneco.Montar(transform, perfil, time);
+            Animator corpoAnimado = null;
+            if (CorpoReal) corpoAnimado = ConstrutorCorpoReal.Montar(transform, perfil, time, biblioteca);
+            else ConstrutorBoneco.Montar(transform, perfil, time);
+            jogador.CorpoReal = CorpoReal;
+            AnimadorBoneco animadorPecas = GetComponent<AnimadorBoneco>();
+            if (animadorPecas != null) animadorPecas.enabled = !CorpoReal;
+            AnimadorCorpo animadorReal = GetComponent<AnimadorCorpo>();
+            if (CorpoReal)
+            {
+                if (animadorReal == null) animadorReal = gameObject.AddComponent<AnimadorCorpo>();
+                animadorReal.enabled = true;
+                animadorReal.Religar(corpoAnimado);
+            }
+            else if (animadorReal != null) animadorReal.enabled = false;
 
             float altura = jogador.Altura;
             CharacterController corpo = GetComponent<CharacterController>();
@@ -56,7 +88,7 @@ namespace BetsDeRua
             {
                 jogador.ReconhecerCorpo();
                 AnimadorBoneco animador = GetComponent<AnimadorBoneco>();
-                if (animador != null) animador.Religar();
+                if (animador != null && !CorpoReal) animador.Religar();
             }
             montado = true;
         }

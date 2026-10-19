@@ -73,8 +73,13 @@ namespace BetsDeRua
 
         public EstadoLance Estado { get; private set; }
 
+        /// <summary>Hora de festa: a dupla indicada comemora; com 'festa', a outra lamenta (as animações escutam).</summary>
+        public static event System.Action<Dupla, bool> Comemoracao;
+
         // ---- Para o HUD (placar, mensagem, instruções) e o treino
         public int Pontos(int lado) => pontos[lado];
+        /// <summary>Há quanto tempo (s) o lance está no estado atual.</summary>
+        public float TempoNoEstado => tempoNoEstado;
         public int LadoNoTaco => ladoNoTaco;
         public int Vencedor => vencedor;
         public int Meta => configPartida.metaPontos;
@@ -427,6 +432,7 @@ namespace BetsDeRua
         private void EntrarTrocaDePapel(string motivo)
         {
             Sons.Tocar(TipoSom.Queimou, 0.8f, 0f);
+            if (motivo.Contains("QUEIMOU")) Comemoracao?.Invoke(Dupla.Bola, true);
             Vibracao.PulsarTodos(0.8f, 0.4f, 0.35f);
             MudarPara(EstadoLance.TrocaDePapel);
             EncerrarJogadas();
@@ -443,6 +449,7 @@ namespace BetsDeRua
         private void EntrarFimDePartida(int lado)
         {
             Sons.Tocar(TipoSom.Vitoria, 0.9f, 0f);
+            Comemoracao?.Invoke(lado == ladoNoTaco ? Dupla.Taco : Dupla.Bola, true);
             vencedor = lado;
             MudarPara(EstadoLance.FimDePartida);
             EncerrarJogadas();
@@ -920,6 +927,7 @@ namespace BetsDeRua
         private void AoValidarPontos(int cruzadas)
         {
             Sons.Tocar(TipoSom.Ponto, 0.8f, 0f);
+            Comemoracao?.Invoke(Dupla.Taco, false);
             int meta = configPartida.metaPontos;
             // Já estava em match point: esta cruzada validada fecha o jogo
             if (EmMatchPoint(ladoNoTaco))

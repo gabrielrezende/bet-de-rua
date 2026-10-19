@@ -186,6 +186,8 @@ namespace BetsDeRua
                     {
                         new Opcao { nome = "Apelido", valor = () => p.nome, mudar = d => p.nome = Proximo(Nomes, p.nome, d),
                                     confirmar = () => campoNome?.Focus() },
+                        new Opcao { nome = "Corpo", valor = () => p.genero == Genero.Feminino ? "Feminino" : "Masculino",
+                                    mudar = d => p.genero = p.genero == Genero.Feminino ? Genero.Masculino : Genero.Feminino },
                         new Opcao { nome = "Idade", valor = () => p.faixaEtaria == FaixaEtaria.Crianca ? "Criança" : p.faixaEtaria == FaixaEtaria.Adolescente ? "Adolescente" : "Adulto",
                                     mudar = d => { p.faixaEtaria = Ciclo(p.faixaEtaria, d); p.altura = PerfilPersonagem.AlturaPadrao(p.faixaEtaria); } },
                         new Opcao { nome = "Altura", valor = () => $"{p.altura:0.00} m".Replace('.', ','),

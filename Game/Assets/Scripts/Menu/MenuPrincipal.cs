@@ -63,6 +63,8 @@ namespace BetsDeRua
         [SerializeField] private Camera cameraFundo;
         [SerializeField] private Material materialTime;
         [SerializeField] private ConfigFisica configFisica;
+        [Tooltip("Corpos de verdade; vazio = boneco de peças.")]
+        [SerializeField] private BibliotecaCorpos biblioteca;
 
         [Header("Câmera do fundo (posição, alvo) para cada tela")]
         [SerializeField] private Vector3 cameraRuaPosicao = new Vector3(-3.2f, 1.45f, -3.6f);
@@ -171,7 +173,17 @@ namespace BetsDeRua
         public void MostrarPersonagem(PerfilPersonagem perfil)
         {
             if (vitrine == null) return;
-            ConstrutorBoneco.Montar(vitrine, perfil, materialTime);
+            bool real = biblioteca != null && biblioteca.Pronta;
+            if (real)
+            {
+                Animator a = ConstrutorCorpoReal.Montar(vitrine, perfil, materialTime, biblioteca);
+                a.SetBool("Guarda", false);
+                VitrineIK ik = a.gameObject.AddComponent<VitrineIK>();
+                ik.vitrine = vitrine;
+                ik.cameraFundo = cameraFundo;
+            }
+            else ConstrutorBoneco.Montar(vitrine, perfil, materialTime);
+            if (pose != null) pose.enabled = !real;
             Transform pivo = vitrine.Find("MaoTaco");
             if (pivo == null)
             {

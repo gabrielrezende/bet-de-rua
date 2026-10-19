@@ -91,7 +91,7 @@ namespace BetsDeRua
                     p.faixaEtaria = FaixaEtaria.Adolescente; p.altura = 1.64f;
                     break;
                 default:
-                    p.nome = "Vizinha"; p.cabelo = EstiloCabelo.Longo; p.chapeu = Chapeu.Nada; p.corPele = new Color(0.62f, 0.43f, 0.3f);
+                    p.nome = "Vizinha"; p.genero = Genero.Feminino; p.cabelo = EstiloCabelo.Longo; p.chapeu = Chapeu.Nada; p.corPele = new Color(0.62f, 0.43f, 0.3f);
                     p.calcado = Calcado.Tenis; p.corCalcado = new Color(1f, 0.8f, 0.2f); p.estilo = EstiloJogo.Lancador; p.altura = 1.68f;
                     p.tipoCorpo = TipoCorpo.Magro; p.acessorio = Acessorio.Munhequeira;
                     break;

@@ -258,10 +258,21 @@ namespace BetsDeRua
             }
         }
 
+        [Tooltip("Para a bola ter o tamanho de verdade de perto e ampliado de longe (só o desenho).")]
+        [SerializeField] private ConfigHUD configHUD;
+
         private void AtualizarVisual()
         {
             if (config == null) return;
-            float raioVisual = config.raioBola * config.escalaVisualBola;
+            // Só o desenho muda com a distância da câmera; a física (garrafa, corpo) usa sempre o mesmo tamanho
+            float ampliar = config.escalaVisualBola;
+            Camera cam = Camera.main;
+            if (cam != null && configHUD != null)
+            {
+                float d = Vector3.Distance(cam.transform.position, posicao);
+                ampliar = Mathf.Lerp(1f, config.escalaVisualBola, Mathf.InverseLerp(configHUD.distanciaBolaReal, configHUD.distanciaReferenciaTela, d));
+            }
+            float raioVisual = config.raioBola * ampliar;
             transform.localScale = Vector3.one * (raioVisual * 2f);
             // Sobe o visual para a bola "grande" não afundar no chão
             transform.position = posicao + Vector3.up * (raioVisual - config.raioBola);

@@ -33,6 +33,34 @@ namespace BetsDeRua
         [Tooltip("Tempo (s) para a câmera se afastar ou aproximar.")]
         public float suavizacaoZoom = 0.6f;
 
+        [Header("Câmera do arremesso (como no MLB The Show)")]
+        [Tooltip("Antes do arremesso a câmera vai para trás de quem arremessa (ou do rebatedor, se a pessoa está no taco).")]
+        public bool usarCameraDoArremesso = true;
+        [Tooltip("Distância atrás de quem arremessa (m).")]
+        public float distanciaArremesso = 5.4f;
+        [Tooltip("Quanto a câmera do arremesso sai para o lado (m): quem arremessa fica no canto da tela, sem tapar a garrafa.")]
+        public float ladoArremesso = 1.5f;
+        [Tooltip("Altura da câmera do arremesso (m).")]
+        public float alturaArremesso = 2.9f;
+        [Tooltip("Distância atrás da casinha quando a pessoa está rebatendo (m).")]
+        public float distanciaRebatedor = 3.6f;
+        [Tooltip("Altura da câmera atrás do rebatedor (m).")]
+        public float alturaRebatedor = 1.9f;
+        [Tooltip("Campo de visão das câmeras de perto (graus).")]
+        public float campoVisaoPerto = 46f;
+        [Tooltip("Depois do arremesso, quanto tempo (s) a câmera do arremesso segue a bola antes de abrir para a transmissão (se ninguém rebateu).")]
+        public float tempoAteAbrir = 1.1f;
+        [Tooltip("Rapidez da troca entre as câmeras (maior = troca mais rápida).")]
+        public float rapidezTroca = 5f;
+
+        [Header("Close (ponto, queimada, vitória)")]
+        public bool usarClose = true;
+        [Tooltip("Quanto tempo (s) dura o close em quem comemora.")]
+        public float duracaoClose = 2.2f;
+        [Tooltip("Distância (m) do close até o jogador.")]
+        public float distanciaClose = 2.6f;
+        public float campoVisaoClose = 34f;
+
         [Tooltip("Distância máxima que a câmera desenha (m).")]
         public float distanciaDesenho = 300f;
     }

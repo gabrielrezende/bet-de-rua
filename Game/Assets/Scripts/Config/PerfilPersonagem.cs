@@ -3,6 +3,7 @@ using UnityEngine;
 namespace BetsDeRua
 {
     public enum FaixaEtaria { Crianca, Adolescente, Adulto }
+    public enum Genero { Masculino, Feminino }
     public enum TipoCorpo { Magro, Medio, Forte }
     public enum EstiloCabelo { Careca, Raspado, Curto, BlackPower, Moicano, Longo, Trancas }
     public enum Chapeu { Nada, Bone, BoneParaTras, Bucket, Touca }
@@ -32,6 +33,7 @@ namespace BetsDeRua
         [Header("Quem é")]
         public string nome = "Jogador";
         public FaixaEtaria faixaEtaria = FaixaEtaria.Adulto;
+        public Genero genero = Genero.Masculino;
         public EstiloJogo estilo = EstiloJogo.Equilibrado;
 
         [Header("Corpo")]

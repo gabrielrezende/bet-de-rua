@@ -244,6 +244,7 @@ namespace BetsDeRua
         /// <summary>Inclina o corpo para a frente, girando a partir dos pés.</summary>
         private void DeitarCorpo(float graus)
         {
+            if (CorpoReal) return;
             Quaternion giro = Quaternion.Euler(graus, 0f, 0f);
             for (int i = 0; i < partesDoCorpo.Length; i++)
             {
@@ -316,11 +317,13 @@ namespace BetsDeRua
         public float FatorPrecisao => perfil != null ? perfil.FatorPrecisao : 1f;
         public float FatorFolego => perfil != null ? perfil.FatorFolego : 1f;
 
-        /// <summary>Material da cor do time (camiseta e boné: as peças "Time_...").</summary>
+        /// <summary>Material da cor do time (camiseta e boné).</summary>
         public Material MaterialCorpo
         {
             get
             {
+                AparenciaBoneco aparencia = GetComponent<AparenciaBoneco>();
+                if (aparencia != null) return aparencia.MaterialTime;
                 foreach (MeshRenderer peca in GetComponentsInChildren<MeshRenderer>(true))
                     if (peca.name.StartsWith("Time_")) return peca.sharedMaterial;
                 return null;
@@ -330,9 +333,14 @@ namespace BetsDeRua
         /// <summary>Pinta camiseta e boné com a cor do time (na troca de papel a cor acompanha o time).</summary>
         public void PintarCorpo(Material material)
         {
+            AparenciaBoneco aparencia = GetComponent<AparenciaBoneco>();
+            if (aparencia != null) { aparencia.Pintar(material); return; }
             foreach (MeshRenderer peca in GetComponentsInChildren<MeshRenderer>(true))
                 if (peca.name.StartsWith("Time_")) peca.sharedMaterial = material;
         }
+
+        /// <summary>True com o corpo de verdade (a animação de mergulho já deita o corpo).</summary>
+        public bool CorpoReal { get; set; }
 
         /// <summary>Vira o corpo, na hora, para uma direção no chão.</summary>
         public void OlharPara(Vector3 direcao)

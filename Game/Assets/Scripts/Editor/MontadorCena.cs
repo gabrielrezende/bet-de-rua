@@ -93,6 +93,7 @@ namespace BetsDeRua.Editor
             objBola.transform.position = new Vector3(-meioBases, raioVisual, 0f);
             Bola bola = objBola.AddComponent<Bola>();
             Ligar(bola, "config", config);
+            Ligar(bola, "configHUD", configHUD);
             LigarLista(bola, "garrafas", todas);
 
             // ---------- Jogadores ----------
@@ -266,6 +267,17 @@ namespace BetsDeRua.Editor
 
             // ---------- Vindo do menu: pontos, dificuldade e personagens ----------
             objLance.AddComponent<AmbienteRua>();
+            // Torcida: a vizinhança assistindo nas calçadas
+            GameObject objTorcida = new GameObject("Torcida");
+            Torcida torcida = objTorcida.AddComponent<Torcida>();
+            Ligar(torcida, "biblioteca", AssetDatabase.LoadAssetAtPath<BibliotecaCorpos>("Assets/Config/BibliotecaCorpos.asset"));
+            Ligar(torcida, "config", config);
+            LigarLista(torcida, "coresDeCamisa", new Object[]
+            {
+                CriarMaterial("TorcidaVermelho", new Color(0.8f, 0.15f, 0.15f)), CriarMaterial("TorcidaBranco", new Color(0.92f, 0.92f, 0.9f)),
+                CriarMaterial("TorcidaVerde", new Color(0.15f, 0.55f, 0.3f)), CriarMaterial("TorcidaAmarelo", new Color(0.95f, 0.8f, 0.2f)),
+                CriarMaterial("TorcidaPreto", new Color(0.1f, 0.1f, 0.12f)), CriarMaterial("TorcidaRoxo", new Color(0.45f, 0.2f, 0.6f)),
+            });
             PartidaDoMenu doMenu = objLance.AddComponent<PartidaDoMenu>();
             Ligar(doMenu, "configPartida", configPartida);
             Ligar(doMenu, "gerenciador", gerenciador);
@@ -617,6 +629,7 @@ namespace BetsDeRua.Editor
                 AparenciaBoneco aparencia = raiz.AddComponent<AparenciaBoneco>();
                 Ligar(aparencia, "config", config);
                 Ligar(aparencia, "materialTime", matCorpo);
+                Ligar(aparencia, "biblioteca", AssetDatabase.LoadAssetAtPath<BibliotecaCorpos>("Assets/Config/BibliotecaCorpos.asset"));
 
                 if (papel == Papel.Rebatedor)
                 {

@@ -31,6 +31,21 @@ namespace BetsDeRua
         private float afastamento = 1f;   // 1 = o mais perto possível
         private float velocidadeAfastamento;
 
+        // Câmeras de perto (arremesso, rebatedor, close) misturadas com a transmissão
+        private ControladorLance lance;
+        private Vector3 posicaoTransmissao;
+        private Quaternion rotacaoTransmissao;
+        private float pesoPerto;           // 0 = transmissão, 1 = câmera de perto
+        private Vector3 posicaoPerto;
+        private Quaternion rotacaoPerto;
+        private float campoPerto;
+        private Jogador emClose;
+        private float closeAte;
+        private bool inscrito;
+        private int modoAtual;              // 0 = transmissão, 1 = arremesso/rebatedor, 2 = close
+        private Vector3 posicaoPertoSuave;
+        private Quaternion rotacaoPertoSuave;
+
         private void Awake()
         {
             cameraUnity = GetComponent<Camera>();
@@ -55,6 +70,105 @@ namespace BetsDeRua
                 focoX = focoDesejado;
             }
             Posicionar();
+            if (Application.isPlaying) MisturarCameras();
+        }
+
+        private void OnDisable()
+        {
+            if (inscrito) ControladorLance.Comemoracao -= AoComemorar;
+            inscrito = false;
+        }
+
+        /// <summary>Close em quem comemora (o humano dessa dupla, ou quem está mais perto da bola).</summary>
+        private void AoComemorar(Dupla dupla, bool festa)
+        {
+            if (!configCamera.usarClose || outrosAlvos == null) return;
+            Jogador melhor = null;
+            float menor = float.MaxValue;
+            foreach (Transform t in outrosAlvos)
+            {
+                Jogador j = t != null ? t.GetComponent<Jogador>() : null;
+                if (j == null || j.Dupla != dupla) continue;
+                float d = (j.Controlador != null ? -100f : 0f) + (alvo != null ? Vector3.Distance(j.transform.position, alvo.position) : 0f);
+                if (d < menor) { menor = d; melhor = j; }
+            }
+            if (melhor == null) return;
+            emClose = melhor;
+            closeAte = Time.time + configCamera.duracaoClose;
+        }
+
+        /// <summary>
+        /// Decide qual câmera vale agora e mistura com a transmissão:
+        /// close (comemoração) > arremesso (antes e logo depois do arremesso) > transmissão.
+        /// </summary>
+        private void MisturarCameras()
+        {
+            if (lance == null) lance = FindFirstObjectByType<ControladorLance>();
+            if (!inscrito) { ControladorLance.Comemoracao += AoComemorar; inscrito = true; }
+            posicaoTransmissao = transform.position;
+            rotacaoTransmissao = transform.rotation;
+
+            bool perto = false;
+            int modo = 0;
+            if (emClose != null && Time.time < closeAte)
+            {
+                // De frente para o jogador, na altura do peito, um pouco de lado
+                Transform j = emClose.transform;
+                Vector3 frente = j.forward;
+                Vector3 olho = j.position + Vector3.up * (emClose.Altura * 0.82f);
+                posicaoPerto = olho + (frente * configCamera.distanciaClose + j.right * 0.8f) + Vector3.up * 0.15f;
+                rotacaoPerto = Quaternion.LookRotation(olho - posicaoPerto, Vector3.up);
+                campoPerto = configCamera.campoVisaoClose;
+                perto = true;
+                modo = 2;
+            }
+            else if (configCamera.usarCameraDoArremesso && lance != null && lance.ArremessadorDaVez != null && lance.RebatedorDaVez != null
+                     && (lance.Estado == EstadoLance.Arremesso
+                         || (lance.Estado == EstadoLance.BolaViva && !lance.Rebatida && lance.Portador == null && lance.TempoNoEstado < configCamera.tempoAteAbrir)))
+            {
+                Vector3 arremessa = lance.ArremessadorDaVez.transform.position;
+                Vector3 garrafa = lance.GarrafaAlvo.transform.position;
+                Vector3 rumo = garrafa - arremessa;
+                rumo.y = 0f;
+                rumo.Normalize();
+                Vector3 lado = Vector3.Cross(Vector3.up, rumo);
+                bool pessoaNoTaco = lance.RebatedorDaVez.Jogador.Controlador != null && lance.ArremessadorDaVez.Jogador.Controlador == null;
+                if (pessoaNoTaco)
+                {
+                    // Atrás da casinha do rebatedor, olhando quem arremessa (lê a bola vindo)
+                    Vector3 rebatedor = lance.RebatedorDaVez.transform.position;
+                    posicaoPerto = garrafa + rumo * configCamera.distanciaRebatedor + Vector3.up * configCamera.alturaRebatedor
+                                   + (rebatedor - garrafa).normalized * -0.6f;
+                    Vector3 mira = Vector3.Lerp(garrafa, arremessa, 0.55f) + Vector3.up * 0.9f;
+                    rotacaoPerto = Quaternion.LookRotation(mira - posicaoPerto, Vector3.up);
+                }
+                else
+                {
+                    // Atrás de quem arremessa, por cima do ombro, olhando a garrafa do outro lado
+                    posicaoPerto = arremessa - rumo * configCamera.distanciaArremesso + Vector3.up * configCamera.alturaArremesso + lado * configCamera.ladoArremesso;
+                    Vector3 mira = Vector3.Lerp(arremessa, garrafa, 0.7f) + Vector3.up * 0.4f;
+                    rotacaoPerto = Quaternion.LookRotation(mira - posicaoPerto, Vector3.up);
+                }
+                campoPerto = configCamera.campoVisaoPerto;
+                perto = true;
+                modo = 1;
+            }
+
+            // Troca de câmera = corte seco (como na TV); dentro da mesma câmera, movimento suave
+            if (modo != modoAtual)
+            {
+                modoAtual = modo;
+                pesoPerto = perto ? 1f : 0f;
+                posicaoPertoSuave = posicaoPerto;
+                rotacaoPertoSuave = rotacaoPerto;
+            }
+            if (!perto) return;
+            float k = 1f - Mathf.Exp(-Time.deltaTime * configCamera.rapidezTroca);
+            posicaoPertoSuave = Vector3.Lerp(posicaoPertoSuave, posicaoPerto, k);
+            rotacaoPertoSuave = Quaternion.Slerp(rotacaoPertoSuave, rotacaoPerto, k);
+            transform.position = posicaoPertoSuave;
+            transform.rotation = rotacaoPertoSuave;
+            cameraUnity.fieldOfView = campoPerto;
         }
 
         /// <summary>Decide onde focar e quanto se afastar para caber a bola e os jogadores.</summary>
@@ -133,7 +247,7 @@ namespace BetsDeRua
         private void OnGUI()
         {
             if (Time.timeScale == 0f || HUDPartida.SobreposicaoAberta) return; // pausa ou fim de partida na frente
-            if (!Application.isPlaying || alvo == null || cameraUnity == null || configCamera == null) return;
+            if (!Application.isPlaying || alvo == null || cameraUnity == null || configCamera == null || pesoPerto > 0.3f) return;
             Vector3 naTela = cameraUnity.WorldToViewportPoint(alvo.position);
             bool dentro = naTela.z > 0f && naTela.x >= 0f && naTela.x <= 1f && naTela.y >= 0f && naTela.y <= 1f;
             if (dentro) return;

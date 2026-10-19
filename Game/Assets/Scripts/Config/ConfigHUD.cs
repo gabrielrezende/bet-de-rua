@@ -30,6 +30,12 @@ namespace BetsDeRua
         [Tooltip("Rebatedor controlado na zona de perigo: quantas vezes por segundo a seta vermelha pisca.")]
         public float piscadasPorSegundoPerigo = 3f;
 
+        [Header("Tamanho na tela (marcadores e bola não crescem nas câmeras de perto)")]
+        [Tooltip("Distância da câmera (m) em que marcadores e bola têm o tamanho configurado; mais perto, encolhem.")]
+        public float distanciaReferenciaTela = 24f;
+        [Tooltip("Abaixo desta distância (m) a bola aparece no tamanho de verdade; a partir da referência, no tamanho ampliado.")]
+        public float distanciaBolaReal = 5f;
+
         [Header("Boneco: animação por código")]
         [Tooltip("Passadas por segundo andando devagar.")]
         public float passadasPorSegundoBase = 1.1f;

@@ -41,8 +41,10 @@ namespace BetsDeRua
                 desenho.sharedMaterial = seguro ? materialSeguro : materialPerigo;
                 estavaSeguro = seguro;
             }
-            sinal.localPosition = Vector3.up * (jogador.Altura + configHUD.alturaSinalZona);
-            sinal.localScale = Vector3.one * configHUD.tamanhoSinalZona;
+            Camera cam = Camera.main;
+            float perto = cam != null ? Mathf.Clamp(Vector3.Distance(cam.transform.position, transform.position) / configHUD.distanciaReferenciaTela, 0.18f, 1.6f) : 1f;
+            sinal.localPosition = Vector3.up * (jogador.Altura + configHUD.alturaSinalZona * Mathf.Max(0.35f, perto));
+            sinal.localScale = Vector3.one * configHUD.tamanhoSinalZona * perto;
         }
     }
 }

@@ -15,6 +15,23 @@ MonoBehaviour:
   altura: 9.5
   distancia: 21
   campoVisao: 40
-  suavizacao: 0.3
+  inclinarParaCima: 7
+  margemEnquadramento: 3
+  afastamentoMaximo: 2
   margemAlemDoMuro: 1.5
+  suavizacao: 0.3
+  suavizacaoZoom: 0.6
+  usarCameraDoArremesso: 1
+  distanciaArremesso: 5.4
+  ladoArremesso: 1.5
+  alturaArremesso: 2.9
+  distanciaRebatedor: 3.6
+  alturaRebatedor: 1.9
+  campoVisaoPerto: 46
+  tempoAteAbrir: 1.1
+  rapidezTroca: 5
+  usarClose: 1
+  duracaoClose: 2.2
+  distanciaClose: 2.6
+  campoVisaoClose: 34
   distanciaDesenho: 300

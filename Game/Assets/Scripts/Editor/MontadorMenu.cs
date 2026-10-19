@@ -70,6 +70,7 @@ namespace BetsDeRua.Editor
             dados.FindProperty("cameraFundo").objectReferenceValue = camera;
             dados.FindProperty("materialTime").objectReferenceValue = MontadorCena.CriarMaterial("DuplaTaco", configPartida.corDuplaTaco);
             dados.FindProperty("configFisica").objectReferenceValue = config;
+            dados.FindProperty("biblioteca").objectReferenceValue = AssetDatabase.LoadAssetAtPath<BibliotecaCorpos>("Assets/Config/BibliotecaCorpos.asset");
             dados.ApplyModifiedPropertiesWithoutUndo();
             CriarSistemaDeEventos();
             interfaceObj.AddComponent<AmbienteRua>();

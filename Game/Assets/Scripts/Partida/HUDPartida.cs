@@ -42,6 +42,15 @@ namespace BetsDeRua
         private Label placarFinal, tituloFim;
         private VisualElement estatisticasFim;
         private int ultimaMensagem = -1;
+        // Cartão de entrada (MLB): quem está no taco e quem arremessa, a cada lance
+        private VisualElement cartaoEntrada;
+        private Label cartaoTaco, cartaoBola, cartaoTacoInfo, cartaoBolaInfo;
+        private VisualElement cartaoCorTaco, cartaoCorBola;
+        private float cartaoAte;
+        private EstadoLance estadoVisto = EstadoLance.FimDePartida;
+        // Narração de rua em legenda (o moleque sentado no muro)
+        private Label narracao;
+        private float narracaoAte;
         private float tempoMensagem;
         private bool pausado;
         private bool fimMostrado;
@@ -107,6 +116,9 @@ namespace BetsDeRua
             painelTreino.style.display = DisplayStyle.None;
             raiz.Add(painelTreino);
 
+            MontarCartao();
+            narracao = UI.Texto("", "narracao");
+            raiz.Add(narracao);
             MontarPausa();
             MontarFim();
         }
@@ -128,6 +140,70 @@ namespace BetsDeRua
             pontos = UI.Texto("0", "placar-pontos");
             time.Add(pontos);
             return time;
+        }
+
+        private void MontarCartao()
+        {
+            cartaoEntrada = UI.Caixa("cartao-entrada");
+            VisualElement Linha(string papel, out Label nome, out Label info, out VisualElement cor)
+            {
+                VisualElement l = UI.Caixa("cartao-linha");
+                cor = UI.Caixa("cartao-cor");
+                l.Add(cor);
+                l.Add(UI.Texto(papel, "cartao-papel"));
+                nome = UI.Texto("", "cartao-nome-grande");
+                l.Add(nome);
+                info = UI.Texto("", "cartao-info");
+                l.Add(info);
+                return l;
+            }
+            cartaoEntrada.Add(Linha("NO TACO", out cartaoTaco, out cartaoTacoInfo, out cartaoCorTaco));
+            cartaoEntrada.Add(Linha("ARREMESSA", out cartaoBola, out cartaoBolaInfo, out cartaoCorBola));
+            cartaoEntrada.style.display = DisplayStyle.None;
+            raiz.Add(cartaoEntrada);
+        }
+
+        private void MostrarCartao()
+        {
+            Jogador taco = lance.RebatedorDaVez != null ? lance.RebatedorDaVez.Jogador : null;
+            Jogador bola = lance.ArremessadorDaVez != null ? lance.ArremessadorDaVez.Jogador : null;
+            if (taco == null || bola == null || lance.Treino) return;
+            Preencher(taco, cartaoTaco, cartaoTacoInfo, cartaoCorTaco);
+            Preencher(bola, cartaoBola, cartaoBolaInfo, cartaoCorBola);
+            cartaoEntrada.style.display = DisplayStyle.Flex;
+            cartaoAte = Time.time + 3.2f;
+        }
+
+        private void Preencher(Jogador j, Label nome, Label info, VisualElement cor)
+        {
+            PerfilPersonagem p = j.Perfil;
+            string quem = j.Controlador != null ? $"P{j.Controlador.Numero} · " : "";
+            nome.text = (p != null ? p.nome : j.Nome).ToUpperInvariant();
+            info.text = p != null ? $"{quem}{MenuPrincipal.NomeEstilo(p.estilo)} · {p.NotaGeral}" : quem;
+            Material m = j.MaterialCorpo;
+            cor.style.backgroundColor = m != null && m.HasProperty("_BaseColor") ? m.GetColor("_BaseColor") : Color.gray;
+        }
+
+        /// <summary>Uma frase do moleque do muro para o lance (ou nada).</summary>
+        private static string Narrar(string m)
+        {
+            string[] Sortear(params string[] frases) => frases;
+            string[] opcoes =
+                m.Contains("QUEIMOU ERRADO") ? Sortear("Queimou errado! O taco tava no chão!", "Ih, derrubou à toa: taco no chão!") :
+                m.Contains("QUEIMOU") ? Sortear("Ih, queimou!", "Já era, perdeu o taco!", "Queimou! Passa o taco pra cá!", "Acertou em cheio a casinha!") :
+                m.Contains("MATCH POINT") ? Sortear("Match point! Agora é tudo ou nada!", "Mais uma cruzada e acabou!") :
+                m.Contains("FECHOU") ? Sortear("Acabou! Vai pra casa!", "Fechou o jogo! Quem perdeu paga o refri!") :
+                m.Contains("PONTO") ? Sortear("Cruzou! Ponto!", "Vai que dá, vai que dá... DEU!", "Corre, corre! Mais um!") :
+                m.Contains("PERFEITA") ? Sortear("Pancada! Mandou longe!", "No ponto doce do taco!", "Que batida, rapaz!") :
+                m.Contains("Espirrou") ? Sortear("Pegou mal... espirrou.", "Taco errado pra essa bola!") :
+                m.Contains("LANCHA") || m.Contains("no corpo") ? Sortear("Lancha! Pegou na canela!", "Ai! Na perna!") :
+                m.Contains("CORPO NA FRENTE") ? Sortear("Não vale proteger com o corpo, não!", "Corpo na frente é falta!") :
+                m.Contains("Bate-pronto") ? Sortear("Que bate-pronto!", "Olha o efeito dessa bola!") :
+                m.Contains("Errou") ? Sortear("Passou batido!", "Furou!", "Errou o tempo!") :
+                m.Contains("CRUZOU") ? Sortear("Cruzaram! Agora chega na base!", "Bateram os tacos, TEC!") :
+                m.Contains("DERRUBOU") ? Sortear("Derrubou! Mira boa!", "Na casinha!") :
+                null;
+            return opcoes == null ? null : opcoes[Random.Range(0, opcoes.Length)];
         }
 
         private void MontarPausa()
@@ -215,6 +291,24 @@ namespace BetsDeRua
                 bool ponto = lance.Mensagem.Contains("PONTO") || lance.Mensagem.Contains("MATCH POINT") || lance.Mensagem.Contains("DERRUBOU")
                              || lance.Mensagem.Contains("QUEIMOU") || lance.Mensagem.Contains("FECHOU");
                 mensagem.EnableInClassList("mensagem-ponto", ponto);
+                string frase = Narrar(lance.Mensagem);
+                if (frase != null)
+                {
+                    narracao.text = "MOLEQUE DO MURO:  " + frase;
+                    narracaoAte = Time.time + 2.8f;
+                }
+            }
+            narracao.style.display = Time.time < narracaoAte ? DisplayStyle.Flex : DisplayStyle.None;
+
+            // Cartão de entrada a cada novo arremesso
+            if (lance.Estado == EstadoLance.Arremesso && estadoVisto != EstadoLance.Arremesso) MostrarCartao();
+            estadoVisto = lance.Estado;
+            float restante = cartaoAte - Time.time;
+            cartaoEntrada.style.display = restante > 0f ? DisplayStyle.Flex : DisplayStyle.None;
+            if (restante > 0f)
+            {
+                float chegou = Mathf.Clamp01((3.2f - restante) / 0.25f), saindo = Mathf.Clamp01(restante / 0.3f);
+                cartaoEntrada.style.translate = new Translate(Length.Percent(-110f * (1f - Mathf.Min(chegou, saindo))), 0f);
             }
             tempoMensagem += Time.unscaledDeltaTime;
             mensagem.style.display = lance.MensagemVisivel ? DisplayStyle.Flex : DisplayStyle.None;

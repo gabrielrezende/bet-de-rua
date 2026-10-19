@@ -84,7 +84,11 @@ namespace BetsDeRua
                 escala = Mathf.Lerp(configHUD.escalaPiscar, 1f, t);
             }
 
-            float alturaTopo = jogador.Altura + configHUD.alturaTrianguloAcimaCabeca;
+            // Mesmo tamanho na tela: encolhe quando a câmera chega perto (câmera do arremesso, close)
+            Camera cam = Camera.main;
+            float perto = cam != null ? Mathf.Clamp(Vector3.Distance(cam.transform.position, transform.position) / configHUD.distanciaReferenciaTela, 0.18f, 1.6f) : 1f;
+            escala *= perto;
+            float alturaTopo = jogador.Altura + configHUD.alturaTrianguloAcimaCabeca * Mathf.Max(0.35f, perto);
             triangulo.localPosition = Vector3.up * alturaTopo;
             // Gira em torno do eixo vertical do mundo, sem herdar a rotação do corpo
             triangulo.rotation = Quaternion.Euler(0f, Time.time * configHUD.giroTriangulo, 0f);
