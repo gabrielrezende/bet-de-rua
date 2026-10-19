@@ -41,6 +41,5 @@ MonoBehaviour:
   anguloBalanco: 10
   duracaoBalanco: 0.7
   velocidadeTesteForteKmh: 70
-  velocidadeTesteFracoKmh: 7
+  velocidadeTesteFracoKmh: 10
   alturaSaidaTeste: 1.2
-  distanciaTesteFraco: 1

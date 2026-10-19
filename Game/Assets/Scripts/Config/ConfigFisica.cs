@@ -78,11 +78,9 @@ namespace BetsDeRua
         [Header("Lançador de teste (só para a Etapa 1)")]
         [Tooltip("Velocidade do lançamento forte de teste (km/h).")]
         public float velocidadeTesteForteKmh = 70f;
-        [Tooltip("Velocidade da bola fraca de teste, rolando no chão (km/h). Chega abaixo do limite da garrafa.")]
-        public float velocidadeTesteFracoKmh = 7f;
+        [Tooltip("Velocidade com que a rasteira fraca de teste CHEGA na garrafa (km/h). Abaixo de 15 ela só balança.")]
+        public float velocidadeTesteFracoKmh = 10f;
         [Tooltip("Altura de onde a bola de teste sai (m).")]
         public float alturaSaidaTeste = 1.2f;
-        [Tooltip("De quantos metros da garrafa sai a bola fraca rolando (m).")]
-        public float distanciaTesteFraco = 1f;
     }
 }

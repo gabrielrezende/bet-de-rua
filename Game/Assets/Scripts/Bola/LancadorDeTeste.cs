@@ -9,7 +9,7 @@ namespace BetsDeRua
     /// (Etapa 3) chegar.
     ///   A (✕) / Espaço  → lançamento forte em direção aleatória
     ///   B (○) / 1       → lançamento forte na garrafa B (deve derrubar)
-    ///   X (□) / 2       → lançamento fraco na garrafa B (só balança)
+    ///   X (□) / 2       → rasteira fraca da base A na garrafa B (só balança)
     ///   Y (△) / R       → reinicia bola e garrafas
     /// </summary>
     public class LancadorDeTeste : MonoBehaviour
@@ -52,12 +52,47 @@ namespace BetsDeRua
             bola.Lancar(PontoDeSaidaBaseA(), direcao * (config.velocidadeTesteForteKmh / 3.6f));
         }
 
-        /// <summary>Bola fraca rolando no chão até a garrafa alvo (deve só balançar).</summary>
+        /// <summary>
+        /// Rasteira fraca: a bola sai rolando da base A e chega na garrafa alvo
+        /// devagar, abaixo do limite de derrubar (deve só balançar).
+        /// </summary>
         private void RolarNaGarrafa()
         {
+            Vector3 saida = PosicaoRepouso(config);
             Vector3 alvo = garrafaAlvo.transform.position;
-            Vector3 saida = new Vector3(alvo.x - config.distanciaTesteFraco, config.raioBola, alvo.z);
-            bola.Lancar(saida, Vector3.right * (config.velocidadeTesteFracoKmh / 3.6f));
+            float distancia = Mathf.Abs(alvo.x - saida.x) - garrafaAlvo.Raio - config.raioBola;
+            float rapidezSaida = AcharRapidezRasteira(distancia, config.velocidadeTesteFracoKmh / 3.6f);
+            bola.Lancar(saida, Vector3.right * rapidezSaida);
+        }
+
+        /// <summary>
+        /// Procura com que velocidade a bola tem que sair rolando para chegar a
+        /// 'distancia' metros com 'rapidezChegada', contando atrito do chão e ar.
+        /// (Busca binária simulando a rolada.)
+        /// </summary>
+        private float AcharRapidezRasteira(float distancia, float rapidezChegada)
+        {
+            float minimo = 0f, maximo = 60f;
+            for (int i = 0; i < 25; i++)
+            {
+                float meio = (minimo + maximo) * 0.5f;
+                if (RapidezAoChegarRolando(distancia, meio) < rapidezChegada) minimo = meio;
+                else maximo = meio;
+            }
+            return (minimo + maximo) * 0.5f;
+        }
+
+        private float RapidezAoChegarRolando(float distancia, float v)
+        {
+            const float passo = 0.005f;
+            float x = 0f;
+            for (int i = 0; i < 20000 && x < distancia; i++)
+            {
+                v -= (config.atritoRolar + config.arrastoAr * v * v) * passo;
+                if (v <= 0f) return 0f;
+                x += v * passo;
+            }
+            return v;
         }
 
         /// <summary>Lança da base A na meia altura da garrafa alvo.</summary>
@@ -129,7 +164,7 @@ namespace BetsDeRua
                 "TESTE DA ETAPA 1\n" +
                 "A (✕) / Espaço: lançamento aleatório\n" +
                 "B (○) / 1: forte na garrafa B\n" +
-                "X (□) / 2: fraco na garrafa B\n" +
+                "X (□) / 2: rasteira fraca na garrafa B\n" +
                 "Y (△) / R: reiniciar\n\n" +
                 $"Bola agora: {bola.Velocidade.magnitude * 3.6f:0} km/h\n" +
                 $"Garrafa B: {(garrafaAlvo.Derrubada ? "CAIU" : "em pé")}   " +
