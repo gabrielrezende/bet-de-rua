@@ -75,6 +75,45 @@ namespace BetsDeRua
         [Tooltip("Duração do balanço de 'quase!' (s).")]
         public float duracaoBalanco = 0.7f;
 
+        [Header("Jogadores: velocidades")]
+        [Tooltip("Velocidade andando (m/s): analógico leve, ou L2/LT / Alt.")]
+        public float velocidadeAndar = 2f;
+        [Tooltip("Velocidade correndo (m/s): analógico todo.")]
+        public float velocidadeCorrer = 5f;
+        [Tooltip("Velocidade no sprint (m/s): R2/RT ou Shift.")]
+        public float velocidadeSprint = 7f;
+        [Tooltip("Até quanto do analógico (0 a 1) conta como andar. Acima disso vai acelerando até correr.")]
+        [Range(0.1f, 0.9f)] public float limiteAnalogicoAndar = 0.5f;
+        [Tooltip("Quanto a velocidade cresce por segundo ao acelerar (m/s²).")]
+        public float aceleracaoJogador = 14f;
+        [Tooltip("Quanto a velocidade cai por segundo ao frear ou mudar de direção (m/s²). " +
+                 "Mudar de direção bruscamente custa um tempinho, como meio passo.")]
+        public float frenagemJogador = 18f;
+        [Tooltip("Rapidez para virar o corpo (graus/s).")]
+        public float velocidadeVirar = 720f;
+
+        [Header("Jogadores: estamina do sprint")]
+        [Tooltip("Quantos segundos de sprint seguido com a estamina cheia.")]
+        public float duracaoSprint = 6f;
+        [Tooltip("Quantos segundos para recarregar a estamina do zero até cheia.")]
+        public float recargaSprint = 4f;
+
+        [Header("Jogadores: corpo e taco")]
+        [Tooltip("Altura da cápsula do jogador (m).")]
+        public float alturaJogador = 1.75f;
+        [Tooltip("Raio da cápsula do jogador (m).")]
+        public float raioJogador = 0.3f;
+        [Tooltip("Comprimento do taco (m).")]
+        public float comprimentoTaco = 0.73f;
+        [Tooltip("Espessura do taco (m).")]
+        public float espessuraTaco = 0.05f;
+        [Tooltip("Altura da mão que segura o taco (m). Precisa ser menor que o comprimento do taco para ele alcançar o chão.")]
+        public float alturaMaoTaco = 0.7f;
+        [Tooltip("Abaixo desta velocidade (m/s) o rebatedor conta como parado (taco desce no círculo).")]
+        public float velocidadeParadoJogador = 0.2f;
+        [Tooltip("Tempo (s) para o taco subir ou descer.")]
+        public float tempoMovimentoTaco = 0.12f;
+
         [Header("Lançador de teste (só para a Etapa 1)")]
         [Tooltip("Velocidade do lançamento forte de teste (km/h).")]
         public float velocidadeTesteForteKmh = 70f;

@@ -15,6 +15,8 @@ namespace BetsDeRua.Editor
         private const string CaminhoCena = "Assets/Scenes/Prototipo.unity";
         private const string CaminhoConfig = "Assets/Config/ConfigFisica.asset";
         private const string CaminhoConfigCamera = "Assets/Config/ConfigCamera.asset";
+        private const string CaminhoConfigPartida = "Assets/Config/ConfigPartida.asset";
+        private const string CaminhoConfigHUD = "Assets/Config/ConfigHUD.asset";
         private const string PastaMateriais = "Assets/Materiais";
 
         // Detalhes só de visual (não afetam o jogo): espessura do chão e
@@ -34,6 +36,8 @@ namespace BetsDeRua.Editor
 
             ConfigFisica config = CarregarOuCriarConfig<ConfigFisica>(CaminhoConfig);
             ConfigCamera configCamera = CarregarOuCriarConfig<ConfigCamera>(CaminhoConfigCamera);
+            ConfigPartida configPartida = CarregarOuCriarConfig<ConfigPartida>(CaminhoConfigPartida);
+            ConfigHUD configHUD = CarregarOuCriarConfig<ConfigHUD>(CaminhoConfigHUD);
 
             Material matChao = CriarMaterial("Chao", new Color(0.22f, 0.22f, 0.23f));
             Material matMuro = CriarMaterial("Muro", new Color(0.5f, 0.5f, 0.5f));
@@ -41,6 +45,13 @@ namespace BetsDeRua.Editor
             Material matGiz = CriarMaterial("Giz", new Color(0.95f, 0.95f, 0.95f));
             Material matGarrafa = CriarMaterial("Garrafa", new Color(0.8f, 0.82f, 0.85f));
             Material matBola = CriarMaterial("Bola", new Color(0.85f, 0.95f, 0.2f));
+            Material matDuplaTaco = CriarMaterial("DuplaTaco", configPartida.corDuplaTaco);
+            Material matDuplaBola = CriarMaterial("DuplaBola", configPartida.corDuplaBola);
+            Material matTaco = CriarMaterial("Taco", new Color(0.75f, 0.72f, 0.68f));
+            Material matRosto = CriarMaterial("Rosto", new Color(0.12f, 0.12f, 0.12f));
+            Material matMarcadorTaco = CriarMaterial("MarcadorDuplaTaco", configPartida.corDuplaTaco, true);
+            Material matMarcadorBola = CriarMaterial("MarcadorDuplaBola", configPartida.corDuplaBola, true);
+            Material matMarcadorGiz = CriarMaterial("MarcadorGiz", new Color(0.95f, 0.95f, 0.95f), true);
 
             float comprimento = config.comprimentoCampo;
             float largura = config.larguraCampo;
@@ -100,6 +111,30 @@ namespace BetsDeRua.Editor
             Ligar(bola, "config", config);
             LigarLista(bola, "garrafas", todas);
 
+            // ---------- Jogadores ----------
+            // Dupla do taco: um rebatedor em cada base, ao lado da garrafa (lado do fundo,
+            // para não esconder a garrafa da câmera). Dupla da bola: arremessador atrás da
+            // garrafa A, guardião atrás da garrafa B.
+            GameObject raizJogadores = new GameObject("Jogadores");
+            var montagem = new MontagemJogador(config, configHUD, matRosto, matTaco, matMarcadorGiz);
+            float lado = configPartida.afastamentoRebatedor;
+            Jogador rebatedorB = montagem.Criar("RebatedorB", "Rebatedor B", Dupla.Taco, Papel.Rebatedor,
+                new Vector3(meioBases, 0f, lado), Vector3.left, matDuplaTaco, matMarcadorTaco, raizJogadores.transform);
+            Jogador rebatedorA = montagem.Criar("RebatedorA", "Rebatedor A", Dupla.Taco, Papel.Rebatedor,
+                new Vector3(-meioBases, 0f, lado), Vector3.right, matDuplaTaco, matMarcadorTaco, raizJogadores.transform);
+            Jogador arremessador = montagem.Criar("Arremessador", "Arremessador", Dupla.Bola, Papel.Arremessador,
+                new Vector3(-meioBases - configPartida.afastamentoArremessador, 0f, 0f), Vector3.right,
+                matDuplaBola, matMarcadorBola, raizJogadores.transform);
+            Jogador guardiao = montagem.Criar("Guardiao", "Guardião", Dupla.Bola, Papel.Guardiao,
+                new Vector3(meioBases + configPartida.distanciaGuardiao, 0f, 0f), Vector3.left,
+                matDuplaBola, matMarcadorBola, raizJogadores.transform);
+            // Ordem importa: o primeiro de cada dupla é quem a pessoa pega ao entrar
+            Jogador[] todosJogadores = { rebatedorB, rebatedorA, arremessador, guardiao };
+
+            GerenciadorJogadores gerenciador = raizJogadores.AddComponent<GerenciadorJogadores>();
+            Ligar(gerenciador, "configPartida", configPartida);
+            LigarLista(gerenciador, "jogadores", todosJogadores);
+
             // ---------- Câmera de transmissão ----------
             Camera cameraPrincipal = Camera.main;
             cameraPrincipal.name = "CameraTransmissao";
@@ -107,6 +142,7 @@ namespace BetsDeRua.Editor
             Ligar(transmissao, "configCamera", configCamera);
             Ligar(transmissao, "configFisica", config);
             Ligar(transmissao, "alvo", objBola.transform);
+            LigarLista(transmissao, "outrosAlvos", System.Array.ConvertAll(todosJogadores, j => (Object)j.transform));
 
             // ---------- Lançador de teste ----------
             GameObject objLancador = new GameObject("LancadorDeTeste");
@@ -133,18 +169,25 @@ namespace BetsDeRua.Editor
             return config;
         }
 
-        private static Material CriarMaterial(string nome, Color cor)
+        /// <summary>
+        /// Cria (ou atualiza) um material. semLuz = cor chapada, sem sombra,
+        /// visível dos dois lados (bom para marcadores).
+        /// </summary>
+        private static Material CriarMaterial(string nome, Color cor, bool semLuz = false)
         {
             CriarPasta("Assets", "Materiais");
             string caminho = $"{PastaMateriais}/{nome}.mat";
+            Shader shader = Shader.Find(semLuz ? "Universal Render Pipeline/Unlit" : "Universal Render Pipeline/Lit");
             Material material = AssetDatabase.LoadAssetAtPath<Material>(caminho);
             if (material == null)
             {
-                material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                material = new Material(shader);
                 AssetDatabase.CreateAsset(material, caminho);
             }
+            material.shader = shader;
             material.SetColor("_BaseColor", cor);
-            material.SetFloat("_Smoothness", 0.1f);
+            if (semLuz) material.SetFloat("_Cull", 0f); // desenha os dois lados
+            else material.SetFloat("_Smoothness", 0.1f);
             EditorUtility.SetDirty(material);
             return material;
         }
@@ -222,6 +265,103 @@ namespace BetsDeRua.Editor
             for (int i = 0; i < valores.Length; i++)
                 lista.GetArrayElementAtIndex(i).objectReferenceValue = valores[i];
             objeto.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>Monta as cápsulas dos jogadores, com taco e marcador.</summary>
+        private class MontagemJogador
+        {
+            private readonly ConfigFisica config;
+            private readonly ConfigHUD configHUD;
+            private readonly Material matRosto;
+            private readonly Material matTaco;
+            private readonly Material matGiz;
+
+            public MontagemJogador(ConfigFisica config, ConfigHUD configHUD,
+                                   Material matRosto, Material matTaco, Material matGiz)
+            {
+                this.config = config;
+                this.configHUD = configHUD;
+                this.matRosto = matRosto;
+                this.matTaco = matTaco;
+                this.matGiz = matGiz;
+            }
+
+            public Jogador Criar(string nomeObjeto, string nome, Dupla dupla, Papel papel, Vector3 posicao,
+                                 Vector3 olhandoPara, Material matCorpo, Material matMarcador, Transform pai)
+            {
+                float altura = config.alturaJogador;
+                float raio = config.raioJogador;
+
+                // Raiz com o pivô nos pés
+                GameObject raiz = new GameObject(nomeObjeto);
+                raiz.transform.SetParent(pai);
+                raiz.transform.SetPositionAndRotation(posicao, Quaternion.LookRotation(olhandoPara, Vector3.up));
+
+                CharacterController controlador = raiz.AddComponent<CharacterController>();
+                controlador.height = altura;
+                controlador.radius = raio;
+                controlador.center = new Vector3(0f, altura * 0.5f, 0f);
+                controlador.stepOffset = 0.2f;
+                controlador.skinWidth = 0.02f;
+                controlador.minMoveDistance = 0f; // senão, com FPS alto, passos pequenos são ignorados
+
+                // Corpo: a cápsula do Unity tem 2 m de altura e 1 m de diâmetro na escala 1
+                GameObject corpo = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                corpo.name = "Corpo";
+                Object.DestroyImmediate(corpo.GetComponent<Collider>());
+                corpo.transform.SetParent(raiz.transform, false);
+                corpo.transform.localPosition = new Vector3(0f, altura * 0.5f, 0f);
+                corpo.transform.localScale = new Vector3(raio * 2f, altura * 0.5f, raio * 2f);
+                corpo.GetComponent<MeshRenderer>().sharedMaterial = matCorpo;
+
+                // "Rosto": faixa escura na frente, para ver para onde o jogador olha
+                GameObject rosto = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                rosto.name = "Rosto";
+                Object.DestroyImmediate(rosto.GetComponent<Collider>());
+                rosto.transform.SetParent(raiz.transform, false);
+                rosto.transform.localPosition = new Vector3(0f, altura * 0.85f, raio * 0.85f);
+                rosto.transform.localScale = new Vector3(raio * 1.2f, altura * 0.08f, raio * 0.5f);
+                rosto.GetComponent<MeshRenderer>().sharedMaterial = matRosto;
+
+                Jogador jogador = raiz.AddComponent<Jogador>();
+                SerializedObject dados = new SerializedObject(jogador);
+                dados.FindProperty("config").objectReferenceValue = config;
+                dados.FindProperty("dupla").enumValueIndex = (int)dupla;
+                dados.FindProperty("papel").enumValueIndex = (int)papel;
+                dados.FindProperty("nome").stringValue = nome;
+                dados.ApplyModifiedPropertiesWithoutUndo();
+
+                if (papel == Papel.Rebatedor) CriarTaco(raiz.transform, jogador);
+
+                MarcadorJogador marcador = raiz.AddComponent<MarcadorJogador>();
+                Ligar(marcador, "configHUD", configHUD);
+                Ligar(marcador, "configFisica", config);
+                Ligar(marcador, "jogador", jogador);
+                Ligar(marcador, "materialTriangulo", matMarcador);
+                Ligar(marcador, "materialGiz", matGiz);
+                return jogador;
+            }
+
+            private void CriarTaco(Transform dono, Jogador jogador)
+            {
+                // Pivô na mão, do lado direito e um pouco à frente do corpo
+                GameObject mao = new GameObject("MaoTaco");
+                mao.transform.SetParent(dono, false);
+                mao.transform.localPosition = new Vector3(config.raioJogador * 0.9f, config.alturaMaoTaco,
+                                                          config.raioJogador * 0.6f);
+
+                GameObject taco = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                taco.name = "Taco";
+                Object.DestroyImmediate(taco.GetComponent<Collider>());
+                taco.transform.SetParent(mao.transform, false);
+                taco.transform.localPosition = new Vector3(0f, -config.comprimentoTaco * 0.5f, 0f);
+                taco.transform.localScale = new Vector3(config.espessuraTaco, config.comprimentoTaco, config.espessuraTaco);
+                taco.GetComponent<MeshRenderer>().sharedMaterial = matTaco;
+
+                Taco componente = mao.AddComponent<Taco>();
+                Ligar(componente, "config", config);
+                Ligar(componente, "dono", jogador);
+            }
         }
     }
 }

@@ -22,6 +22,12 @@ namespace BetsDeRua
         [Tooltip("Quanto a câmera pode mostrar além dos muros do fundo (m). " +
                  "A câmera para de deslizar quando chega nesse limite.")]
         public float margemAlemDoMuro = 1.5f;
+        [Header("Zoom dinâmico")]
+        [Tooltip("Quanto a câmera pode abrir quando bola e jogadores se espalham (0,15 = 15% mais longe).")]
+        [Range(0f, 0.5f)] public float aberturaMaxima = 0.15f;
+        [Tooltip("Tempo (s) para a câmera abrir ou fechar.")]
+        public float suavizacaoZoom = 0.6f;
+
         [Tooltip("Distância máxima que a câmera desenha (m).")]
         public float distanciaDesenho = 300f;
     }
