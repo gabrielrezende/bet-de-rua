@@ -148,9 +148,10 @@ namespace BetsDeRua.Editor
                 RenderSettings.sun = sol;
                 RenderSettings.fog = true;
                 RenderSettings.fogMode = FogMode.Linear;
-                RenderSettings.fogColor = new Color(0.78f, 0.72f, 0.66f);
-                RenderSettings.fogStartDistance = 45f;
-                RenderSettings.fogEndDistance = 170f;
+                // Névoa só no horizonte: perto (casas, morro) a imagem fica limpa e com contraste
+                RenderSettings.fogColor = new Color(0.72f, 0.7f, 0.68f);
+                RenderSettings.fogStartDistance = 90f;
+                RenderSettings.fogEndDistance = 380f;
                 return;
             }
             Material ceu = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materiais/Ceu.mat");

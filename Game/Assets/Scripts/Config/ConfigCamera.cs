@@ -50,6 +50,10 @@ namespace BetsDeRua
         public float campoVisaoPerto = 46f;
         [Tooltip("Depois do arremesso, quanto tempo (s) a câmera do arremesso segue a bola antes de abrir para a transmissão (se ninguém rebateu).")]
         public float tempoAteAbrir = 1.1f;
+        [Tooltip("Tempo máximo na câmera do arremesso (s), se a bola demorar (rasteira lenta).")]
+        public float tempoMaximoCameraArremesso = 3f;
+        [Tooltip("Quanto a bola passa da garrafa (m) até a câmera abrir para a transmissão.")]
+        public float passarDaGarrafaParaAbrir = 1.5f;
         [Tooltip("Rapidez da troca entre as câmeras (maior = troca mais rápida).")]
         public float rapidezTroca = 5f;
 

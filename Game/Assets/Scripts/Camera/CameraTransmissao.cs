@@ -100,7 +100,8 @@ namespace BetsDeRua
             if (!configCamera.usarClose) return;
             pontoDestaque = ponto;
             destaqueQueimada = queimada;
-            float duracao = queimada ? configCamera.duracaoCameraLenta : configCamera.duracaoCameraLenta * 0.6f;
+            // Mesma duração na batida perfeita: 0,7 s era um "pisca" de câmera lenta (corte, corte)
+            float duracao = configCamera.duracaoCameraLenta;
             destaqueAte = Time.unscaledTime + duracao;
             // A comemoração vem depois do lance em câmera lenta
             closeAte = Mathf.Max(closeAte, Time.time) + duracao;
@@ -155,7 +156,9 @@ namespace BetsDeRua
                 perto = true;
                 modo = 3;
             }
-            else if (emClose != null && Time.time < closeAte)
+            // Close só com a jogada parada: com a bola viva (a cruzada vale ponto e o lance segue) a
+            // transmissão não pode largar a bola para mostrar quem comemora
+            else if (emClose != null && Time.time < closeAte && (lance == null || lance.Estado != EstadoLance.BolaViva))
             {
                 // De frente para o jogador, na altura do peito, um pouco de lado
                 Transform j = emClose.transform;
@@ -170,7 +173,7 @@ namespace BetsDeRua
             }
             else if (configCamera.usarCameraDoArremesso && lance != null && lance.ArremessadorDaVez != null && lance.RebatedorDaVez != null
                      && (lance.Estado == EstadoLance.Arremesso
-                         || (lance.Estado == EstadoLance.BolaViva && !lance.Rebatida && lance.Portador == null && lance.TempoNoEstado < configCamera.tempoAteAbrir)))
+                         || (lance.Estado == EstadoLance.BolaViva && !lance.Rebatida && lance.Portador == null && ArremessoAindaChegando())))
             {
                 Vector3 arremessa = lance.ArremessadorDaVez.transform.position;
                 Vector3 garrafa = lance.GarrafaAlvo.transform.position;
@@ -217,6 +220,24 @@ namespace BetsDeRua
             cameraUnity.fieldOfView = campoPerto;
             // Foco medido da câmera já no lugar (senão foca no fundo e desfoca quem importa)
             AjustarDesfoque(modo >= 2);
+        }
+
+        private Bola bolaDoLance;
+
+        /// <summary>
+        /// A câmera do arremesso fica até a bola chegar na casinha (ou ser rebatida): abrir antes, por tempo
+        /// fixo, fazia três cortes em um segundo quando a bola derrubava a garrafa (arremesso, transmissão,
+        /// câmera lenta). Passou da garrafa ou parou, abre para a transmissão.
+        /// </summary>
+        private bool ArremessoAindaChegando()
+        {
+            if (lance.TempoNoEstado < configCamera.tempoAteAbrir) return true;
+            if (lance.TempoNoEstado > configCamera.tempoMaximoCameraArremesso) return false;
+            if (bolaDoLance == null) bolaDoLance = FindFirstObjectByType<Bola>();
+            if (bolaDoLance == null || bolaDoLance.Parada || lance.GarrafaAlvo == null || lance.ArremessadorDaVez == null) return false;
+            Vector3 rumo = lance.GarrafaAlvo.transform.position - lance.ArremessadorDaVez.transform.position;
+            rumo.y = 0f;
+            return Vector3.Dot(bolaDoLance.transform.position - lance.GarrafaAlvo.transform.position, rumo.normalized) < configCamera.passarDaGarrafaParaAbrir;
         }
 
         /// <summary>Liga o fundo desfocado (foco em quem/no que importa) só nas câmeras de perto.</summary>
