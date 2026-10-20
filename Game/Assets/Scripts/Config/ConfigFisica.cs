@@ -329,5 +329,19 @@ namespace BetsDeRua
         public float alturaChegadaLancamento = 1.3f;
         [Tooltip("Passe do colega é pego sozinho quando a bola chega a até esta distância (m).")]
         public float raioReceberPasse = 1.4f;
+
+        [Header("Corpo do rebatedor (movimento)")]
+        [Tooltip("Parte do giro do taco que o quadril acompanha na batida (0 a 1). Os pés ficam plantados.")]
+        [Range(0f, 1f)] public float torcaoQuadril = 0.3f;
+        [Tooltip("Parte do giro do taco que o tronco (coluna e peito) acompanha, somada à do quadril (0 a 1).")]
+        [Range(0f, 1f)] public float torcaoTronco = 0.45f;
+        [Tooltip("Quanto o quadril desce na guarda (m): joelhos dobrados, pronto para bater.")]
+        public float agachamentoGuarda = 0.09f;
+        [Tooltip("Quanto o tronco inclina para a frente na guarda (graus).")]
+        public float inclinacaoGuarda = 16f;
+        [Tooltip("Segundos para o corpo destorcer e voltar à guarda depois da batida (o 'follow-through').")]
+        public float tempoVoltarDaBatida = 0.45f;
+        [Tooltip("Quanto da guarda já vem 'carregada' para trás antes de bater (graus de torção).")]
+        public float carregarGuarda = 18f;
     }
 }
