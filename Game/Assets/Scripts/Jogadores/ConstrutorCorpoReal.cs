@@ -109,9 +109,30 @@ namespace BetsDeRua
             Transform cabeca = anim.isHuman ? anim.GetBoneTransform(HumanBodyBones.Head) : null;
             if (cabeca != null)
             {
-                // Black power: volume redondo no osso da cabeça (o pacote não tem esse cabelo)
+                // Black power: uma base em cúpula coberta de cachinhos (o pacote não tem esse cabelo).
+                // Antes era uma bola só, que parecia um capacete preto e tampava o rosto.
                 if (estilo == EstiloCabelo.BlackPower)
-                    Enfeitar(cabeca, "BlackPower", new Vector3(0f, 0.155f, -0.02f), new Vector3(0.2f, 0.17f, 0.2f), MalhasBoneco.Esfera(), matCabelo1, escala);
+                {
+                    Vector3 centro = new Vector3(0f, 0.15f, -0.04f);
+                    Vector3 raio = new Vector3(0.122f, 0.126f, 0.132f);
+                    Enfeitar(cabeca, "BlackPower", centro, raio * 0.97f, MalhasBoneco.Calota(-5f, 90f), matCabelo1, escala);
+                    int n = 0;
+                    for (int anel = 0; anel < 7; anel++)
+                    {
+                        float lat = Mathf.Lerp(-14f, 82f, anel / 6f) * Mathf.Deg2Rad;
+                        int voltas = Mathf.Max(6, Mathf.RoundToInt(26 * Mathf.Cos(lat)));
+                        for (int k = 0; k < voltas; k++)
+                        {
+                            float lon = (k + (anel % 2) * 0.5f) / voltas * Mathf.PI * 2f;
+                            Vector3 d = new Vector3(Mathf.Cos(lat) * Mathf.Sin(lon), Mathf.Sin(lat), Mathf.Cos(lat) * Mathf.Cos(lon));
+                            // Deixa a testa e o rosto livres (a frente é +z)
+                            if (d.z > 0.3f && d.y < 0.62f) continue;
+                            float t = 0.026f + 0.008f * Mathf.Abs(Mathf.Sin(n * 2.3f));
+                            Enfeitar(cabeca, "Cacho", centro + Vector3.Scale(d, raio), Vector3.one * t, MalhasBoneco.Esfera(), matCabelo1, escala);
+                            n++;
+                        }
+                    }
+                }
                 if (estilo == EstiloCabelo.Moicano)
                     Enfeitar(cabeca, "Moicano", new Vector3(0f, 0.2f, 0f), new Vector3(0.04f, 0.07f, 0.13f), MalhasBoneco.Esfera(), matCabelo1, escala);
                 Chapeu chapeu = perfil != null ? perfil.chapeu : Chapeu.Nada;

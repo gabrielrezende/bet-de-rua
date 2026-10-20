@@ -187,6 +187,8 @@ namespace BetsDeRua
             Vector3 pega = dedo != null ? Vector3.Lerp(mao.position, dedo.position, 0.7f) : mao.position;
             float comprimento = configFisica != null ? configFisica.comprimentoTaco : 1f;
             Vector3 ponta = taco.transform.position - taco.transform.up * comprimento;
+            // Na guarda, a ponta do taco desenhado encosta no chão à frente (as mãos ficam na cintura)
+            if (pesoGuardaGravada > 0f) ponta = Vector3.Lerp(ponta, pontaGuarda, pesoGuardaGravada);
             Vector3 eixo = ponta - pega;
             if (eixo.sqrMagnitude < 0.01f) return;
             Vector3 dir = eixo.normalized;
@@ -237,6 +239,10 @@ namespace BetsDeRua
         private float batidaRapidaAte;
         private float pesoGuarda;      // 0 = em pé normal, 1 = guarda completa
         private Vector3 frenteDoTronco;
+        // Guarda do bets por cima da captura de beisebol: corpo centrado, pega na frente do peito
+        private float pesoGuardaGravada;
+        private Vector3 direitaPeito = Vector3.right, frentePeito = Vector3.forward;
+        private Vector3 pontaGuarda;
 
         /// <summary>
         /// O corpo do rebatedor por cima da animação: guarda (agachado, tronco para a frente),
@@ -251,6 +257,15 @@ namespace BetsDeRua
 
             // Quanto de guarda e de torção agora (com a captura de verdade, o corpo é o da gravação)
             bool captura = configFisica.usarCapturaNaBatida;
+            bool guardaGravada = captura && !taco.Girando && jogador.DentroDoCirculo() && velocidadeSuave < 0.6f;
+            pesoGuardaGravada = Mathf.MoveTowards(pesoGuardaGravada, guardaGravada ? 1f : 0f, Time.deltaTime * 4f);
+            if (pesoGuardaGravada > 0f)
+            {
+                // A gravação de beisebol anda para o lado: traz o corpo inteiro (pés juntos) para cima do jogador
+                Vector3 desloc = transform.position - quadril.position;
+                desloc.y = 0f;
+                quadril.position += desloc * configFisica.centralizarCorpoGuarda * pesoGuardaGravada;
+            }
             bool naGuarda = jogador.DentroDoCirculo() && velocidadeSuave < 0.6f && !captura;
             pesoGuarda = Mathf.MoveTowards(pesoGuarda, naGuarda || (taco.Girando && !captura) ? 1f : 0f, Time.deltaTime * 4f);
             float alvoTorcao = naGuarda ? configFisica.carregarGuarda : 0f;
@@ -291,10 +306,54 @@ namespace BetsDeRua
             frenteDoTronco = Quaternion.AngleAxis(torcao * (configFisica.torcaoQuadril + configFisica.torcaoTronco), Vector3.up) * frente;
             Vector3 direitaTronco = Vector3.Cross(Vector3.up, frenteDoTronco);
             Transform braco = animador.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+            Transform bracoD = animador.GetBoneTransform(HumanBodyBones.RightUpperArm);
+            Vector3 alvoPega = taco.transform.position - taco.transform.up * 0.02f;
+            Vector3 dicaCotovelo = braco != null ? braco.position + Vector3.down * 0.4f - direitaTronco * 0.35f - frenteDoTronco * 0.15f : Vector3.zero;
+            if (braco != null && bracoD != null)
+            {
+                // A frente e a direita de verdade do peito (pelos ombros), para as mãos não cruzarem
+                Vector3 d = bracoD.position - braco.position;
+                d.y = 0f;
+                if (d.sqrMagnitude > 1e-4f)
+                {
+                    direitaPeito = d.normalized;
+                    frentePeito = Vector3.Cross(direitaPeito, Vector3.up);
+                }
+                if (pesoGuardaGravada > 0f)
+                {
+                    // Bets: as duas mãos no cabo na altura da cintura, a ponta do taco no chão à frente
+                    Vector3 meioOmbros = (braco.position + bracoD.position) * 0.5f;
+                    // Tudo na medida do corpo (criança tem braço mais curto): 1,45 m = ombro de um adulto
+                    float medida = Mathf.Clamp((meioOmbros.y - transform.position.y) / 1.45f, 0.6f, 1.2f);
+                    Vector3 pegaGuarda = meioOmbros + (frentePeito * configFisica.pegaGuardaFrente
+                                         + Vector3.down * configFisica.pegaGuardaAbaixo + direitaPeito * configFisica.pegaGuardaLado) * medida;
+                    pontaGuarda = transform.position
+                                  + (frentePeito * configFisica.pontaGuardaFrente + direitaPeito * configFisica.pontaGuardaLado) * medida;
+                    // As duas mãos têm que alcançar: desce a pega só até onde os dois braços chegam
+                    // (a de baixo fica 'distanciaEntreMaos' mais embaixo no cabo)
+                    float bracoE = Comprimento(HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand) * 0.97f;
+                    float bracoDir = Comprimento(HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand) * 0.97f;
+                    float frenteE = Vector3.Dot(pegaGuarda - braco.position, frentePeito), ladoE = Vector3.Dot(pegaGuarda - braco.position, direitaPeito);
+                    float frenteD = Vector3.Dot(pegaGuarda - bracoD.position, frentePeito), ladoD = Vector3.Dot(pegaGuarda - bracoD.position, direitaPeito);
+                    float descerE = Mathf.Sqrt(Mathf.Max(0.0025f, bracoE * bracoE - frenteE * frenteE - ladoE * ladoE));
+                    float descerD = Mathf.Sqrt(Mathf.Max(0.0025f, bracoDir * bracoDir - frenteD * frenteD - ladoD * ladoD)) - configFisica.distanciaEntreMaos;
+                    float descer = Mathf.Min(meioOmbros.y - pegaGuarda.y, descerE, descerD);
+                    pegaGuarda.y = Mathf.Min(braco.position.y, bracoD.position.y) - descer;
+                    alvoPega = Vector3.Lerp(alvoPega, pegaGuarda, pesoGuardaGravada);
+                    dicaCotovelo = Vector3.Lerp(dicaCotovelo, braco.position + Vector3.down * 0.45f - direitaPeito * 0.3f, pesoGuardaGravada);
+                }
+            }
             if (braco != null)
                 IKDoisOssos.Resolver(braco, animador.GetBoneTransform(HumanBodyBones.LeftLowerArm), animador.GetBoneTransform(HumanBodyBones.LeftHand),
-                                     taco.transform.position - taco.transform.up * 0.02f,
-                                     braco.position + Vector3.down * 0.4f - direitaTronco * 0.35f - frenteDoTronco * 0.15f, pesoMaosNoTaco);
+                                     alvoPega, dicaCotovelo, pesoMaosNoTaco);
+        }
+
+        /// <summary>Comprimento do braço (ombro-cotovelo-mão) nesta pessoa.</summary>
+        private float Comprimento(HumanBodyBones a, HumanBodyBones b, HumanBodyBones c)
+        {
+            Transform ta = animador.GetBoneTransform(a), tb = animador.GetBoneTransform(b), tc = animador.GetBoneTransform(c);
+            if (ta == null || tb == null || tc == null) return 0.5f;
+            return Vector3.Distance(ta.position, tb.position) + Vector3.Distance(tb.position, tc.position);
         }
 
         /// <summary>A mão direita segura o cabo logo abaixo da esquerda (no taco desenhado); dedos fechados no cabo.</summary>
@@ -305,8 +364,9 @@ namespace BetsDeRua
             if (braco == null) return;
             Vector3 direitaTronco = Vector3.Cross(Vector3.up, frenteDoTronco);
             IKDoisOssos.Resolver(braco, animador.GetBoneTransform(HumanBodyBones.RightLowerArm), animador.GetBoneTransform(HumanBodyBones.RightHand),
-                                 caboAtual + eixoAtual * 0.11f,
-                                 braco.position + Vector3.down * 0.4f + direitaTronco * 0.35f - frenteDoTronco * 0.15f, pesoMaosNoTaco);
+                                 caboAtual + eixoAtual * (configFisica != null ? configFisica.distanciaEntreMaos : 0.11f),
+                                 Vector3.Lerp(braco.position + Vector3.down * 0.4f + direitaTronco * 0.35f - frenteDoTronco * 0.15f,
+                                              braco.position + Vector3.down * 0.45f + direitaPeito * 0.3f, pesoGuardaGravada), pesoMaosNoTaco);
             // A direção dos dedos fica de través ao taco (a mão fecha em volta do cabo)
             AjeitarMao(HumanBodyBones.LeftHand, HumanBodyBones.LeftMiddleProximal);
             AjeitarMao(HumanBodyBones.RightHand, HumanBodyBones.RightMiddleProximal);

@@ -351,5 +351,21 @@ namespace BetsDeRua
         public float rapidezBatidaCaptura = 1.6f;
         [Tooltip("Segundos de batida acelerada; depois a finalização toca na rapidez normal.")]
         public float tempoBatidaRapida = 0.14f;
+
+        [Header("Guarda do bets (taco com a ponta no chão, as duas mãos no cabo)")]
+        [Tooltip("Traz o corpo da gravação de volta para cima do jogador na guarda (0 a 1). A captura de beisebol anda uns 40 cm para o lado e o braço não alcançava o taco.")]
+        [Range(0f, 1f)] public float centralizarCorpoGuarda = 1f;
+        [Tooltip("Onde fica a pega (mãos) na guarda: à frente do peito (m).")]
+        public float pegaGuardaFrente = 0.14f;
+        [Tooltip("Onde fica a pega na guarda: abaixo da linha dos ombros (m). Cintura = ~0.45.")]
+        public float pegaGuardaAbaixo = 0.42f;
+        [Tooltip("Onde fica a pega na guarda: para o lado direito do peito (m) (destro: um pouco para a direita).")]
+        public float pegaGuardaLado = 0.03f;
+        [Tooltip("Onde a ponta do taco encosta no chão na guarda: à frente do jogador (m).")]
+        public float pontaGuardaFrente = 0.55f;
+        [Tooltip("Onde a ponta do taco encosta no chão na guarda: para a direita (m).")]
+        public float pontaGuardaLado = 0.12f;
+        [Tooltip("Distância entre as duas mãos no cabo (m).")]
+        public float distanciaEntreMaos = 0.09f;
     }
 }
