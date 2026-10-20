@@ -74,7 +74,7 @@ MonoBehaviour:
   afastamentoParceiroEspelho: 0.8
   tempoSeguroParaEncerrar: 1.5
   tempoTrocaDePapel: 4
-  soAssistir: 1
+  soAssistir: 0
   arremessadorAutomatico: 1
   esperaArremessoAutomatico: 2
   rebatedorAutomatico: 1

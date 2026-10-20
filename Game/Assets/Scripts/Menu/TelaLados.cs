@@ -7,7 +7,8 @@ namespace BetsDeRua
 {
     /// <summary>
     /// Escolha de lado, como no FIFA: cada controle conectado aparece no meio (fora do jogo);
-    /// esquerda/direita leva para o LADO 1 (começa no taco) ou o LADO 2 (começa na bola).
+    /// esquerda/direita leva direto para o LADO 1 (começa no taco) ou o LADO 2 (começa na bola);
+    /// para baixo volta para FORA. ✕ com ninguém nos lados leva quem apertou para o LADO 1.
     /// No máximo 2 por lado; vaga vazia é bot. Juntos no mesmo lado = parceiros contra a CPU;
     /// em lados diferentes = um contra o outro. △ muda a dificuldade dos bots, □ os pontos.
     /// ✕ (ou OPTIONS) começa.
@@ -67,6 +68,7 @@ namespace BetsDeRua
 
             Raiz.Add(menu.Rodape(UI.Dica(IconeBotao.Qual.Confirmar, "Começar"),
                                  UI.DicaTexto(() => "◀ ▶", "Mudar de lado"),
+                                 UI.DicaTexto(() => "▼", "Ficar fora"),
                                  UI.Dica(IconeBotao.Qual.Triangulo, "Dificuldade"),
                                  UI.Dica(IconeBotao.Qual.Quadrado, "Pontos"),
                                  UI.Dica(IconeBotao.Qual.Voltar, "Voltar")));
@@ -176,9 +178,10 @@ namespace BetsDeRua
             {
                 Ficha f = fichas.Find(x => x.dispositivo == e.dispositivo);
                 if (f == null) continue;
-                if (e.direcao.x != 0)
+                if (e.direcao.x != 0 || e.direcao.y < 0)
                 {
-                    int nova = Mathf.Clamp(f.posicao + e.direcao.x, -1, 1);
+                    // De um lado vai direto para o outro (sem parar no FORA); para baixo sai do lado
+                    int nova = e.direcao.y < 0 && e.direcao.x == 0 ? 0 : e.direcao.x < 0 ? -1 : 1;
                     if (nova != 0 && fichas.FindAll(x => x.posicao == nova).Count >= 2) nova = f.posicao; // lado cheio
                     if (nova != f.posicao) { f.posicao = nova; mudou = true; Sons.Tocar(TipoSom.MenuMover, 0.6f); }
                 }
@@ -193,13 +196,15 @@ namespace BetsDeRua
                     mudou = true;
                 }
                 if (e.voltar) { menu.Voltar(); return; }
-                if (e.confirmar || e.start) { Comecar(); return; }
+                if (e.confirmar || e.start) { Comecar(f); return; }
             }
             if (mudou) Desenhar();
         }
 
-        private void Comecar()
+        private void Comecar(Ficha quemApertou)
         {
+            // Ninguém escolheu lado: quem apertou ✕ joga no LADO 1 (não fica parado sem resposta)
+            if (!fichas.Exists(x => x.posicao != 0)) quemApertou.posicao = -1;
             var pessoas = new List<PessoaNaPartida>();
             foreach (Ficha f in fichas)
             {
