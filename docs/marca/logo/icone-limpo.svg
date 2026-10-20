@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>BETS DE RUA</title>
+  <defs>
+    <mask id="giz" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <rect width="1024" height="1024" fill="#fff"/>
+      <g fill="#000">
+      <rect x="409.2" y="625.0" width="145.6" height="11.6" transform="rotate(-16 482.0 485.0)"/>
+      <rect x="409.2" y="655.8" width="145.6" height="11.6" transform="rotate(-16 482.0 485.0)"/>
+      <rect x="409.2" y="686.6" width="145.6" height="11.6" transform="rotate(-16 482.0 485.0)"/>
+      
+      </g>
+    </mask>
+  </defs>
+  <rect width="1024" height="1024" rx="225" fill="#2B2D31"/>
+  <g mask="url(#giz)">
+    <circle cx="512.0" cy="512.0" r="394" fill="none" stroke="#F4F1E8" stroke-width="56"/>
+    <path d="M439.7,205.0 L524.3,205.0 Q557.6,205.0 557.6,238.3 L549.2,513.0 C549.2,557.8 518.4,563.4 518.4,597.0 L518.4,725.8 L535.2,745.4 Q535.2,765.0 515.6,765.0 L448.4,765.0 Q428.8,765.0 428.8,745.4 L445.6,725.8 L445.6,597.0 C445.6,563.4 414.8,557.8 414.8,513.0 L406.4,238.3 Q406.4,205.0 439.7,205.0 Z" fill="#F4F1E8" transform="rotate(-16 482.0 485.0)"/>
+  </g>
+  <circle cx="712" cy="712" r="87" fill="#E8E337"/>
+</svg>
