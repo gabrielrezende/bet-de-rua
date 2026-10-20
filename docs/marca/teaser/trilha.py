@@ -12,6 +12,7 @@ import wave
 import numpy as np
 
 TAXA = 48000
+BPM = float(__import__("os").environ.get("TRILHA_BPM", "92"))  # andamento; o teaser rápido usa 120
 rng = np.random.default_rng(3)
 
 # acordes (frequências) — Ré maior, Si menor, Sol maior, Lá (I vi IV V), clima de fim de tarde
@@ -102,7 +103,7 @@ def gerar(duracao, secoes):
     """secoes: lista de (inicio, fim, intensidade 0..3).
     0 = notas soltas, 1 = dedilhado, 2 = dedilhado + ganzá + surdo, 3 = batida cheia."""
     trilha = np.zeros((int(TAXA * duracao), 2))
-    bpm = 92
+    bpm = BPM
     tempo_batida = 60 / bpm
     cache = {}
 
