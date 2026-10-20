@@ -603,3 +603,95 @@
     color: rgb(255, 255, 255);
     text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.9);
 }
+
+/* ---------- início no estilo FC 26 ---------- */
+
+.fc-topo {
+    flex-direction: row;
+    align-items: center;
+    height: 96px;
+    padding-left: 60px;
+    padding-right: 56px;
+}
+
+.fc-lista {
+    position: absolute;
+    left: 60px;
+    top: 150px;
+    width: 460px;
+}
+
+.fc-item {
+    -unity-font: url("Fontes/BarlowCondensed-Bold.ttf");
+    font-size: 26px;
+    color: rgb(170, 175, 185);
+    letter-spacing: 1px;
+    height: 46px;
+    -unity-text-align: middle-left;
+    transition-property: font-size, color;
+    transition-duration: 0.12s;
+}
+
+.fc-item-ativo {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 40px;
+    color: rgb(255, 255, 255);
+    height: 62px;
+}
+
+.fc-centro {
+    position: absolute;
+    left: 31%;
+    width: 38%;
+    top: 150px;
+    align-items: center;
+}
+
+.fc-monograma {
+    -unity-font: url("Fontes/Bangers-Regular.ttf");
+    font-size: 150px;
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-center;
+    text-shadow: 6px 6px 0px rgba(0, 0, 0, 0.55);
+    border-width: 6px;
+    border-color: rgba(255, 255, 255, 0.85);
+    border-radius: 120px;
+    width: 240px;
+    height: 240px;
+    margin-bottom: 18px;
+}
+
+.fc-frase {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 46px;
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-center;
+    white-space: normal;
+    text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.6);
+}
+
+.fc-destaques {
+    font-size: 24px;
+    color: rgb(225, 228, 235);
+    -unity-text-align: middle-center;
+    margin-top: 8px;
+    white-space: normal;
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.6);
+}
+
+.fc-pilula {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 26px;
+    padding: 8px 26px 8px 12px;
+    border-radius: 30px;
+    background-color: rgba(70, 60, 170, 0.92);
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.fc-pilula-texto {
+    -unity-font: url("Fontes/BarlowCondensed-Bold.ttf");
+    font-size: 26px;
+    color: rgb(255, 255, 255);
+}

@@ -32,7 +32,8 @@ namespace BetsDeRua
             GameObject corpo = Object.Instantiate(modelo, raiz, false);
             corpo.name = "Corpo";
             corpo.transform.localPosition = Vector3.zero;
-            corpo.transform.localRotation = Quaternion.identity;
+            // O modelo do pacote olha para -Z; o jogador olha para +Z: meia volta
+            corpo.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
             float altura = perfil != null ? perfil.altura : PerfilPersonagem.AlturaReferencia;
             float escala = altura / b.alturaBase;
             corpo.transform.localScale = Vector3.one * escala;
@@ -92,6 +93,10 @@ namespace BetsDeRua
 
             // ---- Cabelo, barba, sobrancelhas
             EstiloCabelo estilo = perfil != null ? perfil.cabelo : EstiloCabelo.Curto;
+            // Com boné/chapéu, o cabelo curto fica escondido (raspado aparece só nas laterais)
+            Chapeu naCabeca = perfil != null ? perfil.chapeu : Chapeu.Nada;
+            if (naCabeca != Chapeu.Nada && (estilo == EstiloCabelo.Curto || estilo == EstiloCabelo.BlackPower || estilo == EstiloCabelo.Moicano))
+                estilo = EstiloCabelo.Raspado;
             GameObject cabelo = estilo == EstiloCabelo.Raspado || estilo == EstiloCabelo.Moicano ? (feminino ? b.cabeloRaspadoFeminino : b.cabeloRaspado)
                               : estilo == EstiloCabelo.Curto ? b.cabeloCurto
                               : estilo == EstiloCabelo.Longo ? b.cabeloLongo
@@ -106,25 +111,25 @@ namespace BetsDeRua
             {
                 // Black power: volume redondo no osso da cabeça (o pacote não tem esse cabelo)
                 if (estilo == EstiloCabelo.BlackPower)
-                    Enfeitar(cabeca, "BlackPower", new Vector3(0f, 0.12f, -0.025f), new Vector3(0.24f, 0.2f, 0.23f), MalhasBoneco.Esfera(), matCabelo1, escala);
+                    Enfeitar(cabeca, "BlackPower", new Vector3(0f, 0.155f, -0.02f), new Vector3(0.2f, 0.17f, 0.2f), MalhasBoneco.Esfera(), matCabelo1, escala);
                 if (estilo == EstiloCabelo.Moicano)
-                    Enfeitar(cabeca, "Moicano", new Vector3(0f, 0.19f, 0f), new Vector3(0.045f, 0.12f, 0.22f), MalhasBoneco.Esfera(), matCabelo1, escala);
+                    Enfeitar(cabeca, "Moicano", new Vector3(0f, 0.2f, 0f), new Vector3(0.04f, 0.07f, 0.13f), MalhasBoneco.Esfera(), matCabelo1, escala);
                 Chapeu chapeu = perfil != null ? perfil.chapeu : Chapeu.Nada;
                 if (chapeu == Chapeu.Bone || chapeu == Chapeu.BoneParaTras)
                 {
                     float frente = chapeu == Chapeu.Bone ? 1f : -1f;
-                    Enfeitar(cabeca, "Time_Bone", new Vector3(0f, 0.105f, 0.005f), new Vector3(0.105f, 0.075f, 0.118f), MalhasBoneco.Calota(0f, 90f), tecidoTime, escala);
-                    Enfeitar(cabeca, "Time_Aba", new Vector3(0f, 0.11f, frente * 0.12f), new Vector3(0.085f, 0.008f, 0.07f), MalhasBoneco.Esfera(), tecidoTime, escala);
+                    Enfeitar(cabeca, "Time_Bone", new Vector3(0f, 0.145f, 0.01f), new Vector3(0.112f, 0.11f, 0.124f), MalhasBoneco.Calota(-8f, 90f), tecidoTime, escala);
+                    Enfeitar(cabeca, "Time_Aba", new Vector3(0f, 0.14f, frente * 0.155f), new Vector3(0.088f, 0.01f, 0.085f), MalhasBoneco.Esfera(), tecidoTime, escala);
                 }
                 else if (chapeu == Chapeu.Bucket)
                 {
-                    Enfeitar(cabeca, "Time_Bone", new Vector3(0f, 0.11f, 0f), new Vector3(0.11f, 0.085f, 0.12f), MalhasBoneco.Calota(0f, 90f), tecidoTime, escala);
-                    Enfeitar(cabeca, "Time_Aba", new Vector3(0f, 0.11f, 0f), Vector3.one, MalhasBoneco.Aba(0.1f, 0.17f, 0.008f), tecidoTime, escala);
+                    Enfeitar(cabeca, "Time_Bone", new Vector3(0f, 0.13f, 0f), new Vector3(0.112f, 0.1f, 0.122f), MalhasBoneco.Calota(0f, 90f), tecidoTime, escala);
+                    Enfeitar(cabeca, "Time_Aba", new Vector3(0f, 0.13f, 0f), Vector3.one, MalhasBoneco.Aba(0.1f, 0.17f, 0.008f), tecidoTime, escala);
                 }
                 else if (chapeu == Chapeu.Touca)
-                    Enfeitar(cabeca, "Time_Bone", new Vector3(0f, 0.11f, -0.01f), new Vector3(0.112f, 0.11f, 0.122f), MalhasBoneco.Calota(-5f, 90f), tecidoTime, escala);
+                    Enfeitar(cabeca, "Time_Bone", new Vector3(0f, 0.125f, -0.01f), new Vector3(0.112f, 0.115f, 0.124f), MalhasBoneco.Calota(-5f, 90f), tecidoTime, escala);
                 if (perfil != null && perfil.acessorio == Acessorio.Oculos)
-                    Enfeitar(cabeca, "Oculos", new Vector3(0f, 0.075f, 0.105f), new Vector3(0.085f, 0.02f, 0.012f), MalhasBoneco.Esfera(), Mat("oculos", new Color(0.04f, 0.04f, 0.05f), null, null, 0.9f), escala);
+                    Enfeitar(cabeca, "Oculos", new Vector3(0f, 0.085f, 0.1f), new Vector3(0.085f, 0.02f, 0.012f), MalhasBoneco.Esfera(), Mat("oculos", new Color(0.04f, 0.04f, 0.05f), null, null, 0.9f), escala);
                 // Criança: cabeça um pouco maior; adolescente, um pouco
                 if (perfil != null && perfil.faixaEtaria != FaixaEtaria.Adulto)
                     cabeca.localScale = Vector3.one * (perfil.faixaEtaria == FaixaEtaria.Crianca ? 1.18f : 1.07f);

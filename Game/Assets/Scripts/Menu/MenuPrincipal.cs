@@ -55,7 +55,7 @@ namespace BetsDeRua
     /// </summary>
     public class MenuPrincipal : MonoBehaviour
     {
-        public enum Enquadramento { Rua, Personagem, Abertura }
+        public enum Enquadramento { Rua, Personagem, Abertura, Tomada }
 
         [SerializeField] private UIDocument documento;
         [SerializeField] private StyleSheet estilo;
@@ -92,6 +92,21 @@ namespace BetsDeRua
         }
         private readonly List<EntradaMenu> entradas = new List<EntradaMenu>();
         private PoseVitrine pose;
+        private Animator animadorVitrine;
+        // Tomada de cinema do início (FC 26): em volta do personagem, com o fundo desfocado
+        private float tomadaAngulo, tomadaDistancia = 3.4f, tomadaAltura = 1.2f, tomadaOlhar = 1.05f;
+        private UnityEngine.Rendering.Universal.DepthOfField desfoque;
+        private Vector3 peitoSuave;
+
+        /// <summary>Define a tomada da câmera em volta do personagem (o início troca a cada modo).</summary>
+        public void DefinirTomada(float angulo, float distancia, float altura, float olhar, bool guarda)
+        {
+            tomadaAngulo = angulo;
+            tomadaDistancia = distancia;
+            tomadaAltura = altura;
+            tomadaOlhar = olhar;
+            if (animadorVitrine != null) animadorVitrine.SetBool("Guarda", guarda);
+        }
         private float giroVitrine;
         private float zoomVitrine;
         private bool carregando;
@@ -178,6 +193,7 @@ namespace BetsDeRua
             {
                 Animator a = ConstrutorCorpoReal.Montar(vitrine, perfil, materialTime, biblioteca);
                 a.SetBool("Guarda", false);
+                animadorVitrine = a;
                 VitrineIK ik = a.gameObject.AddComponent<VitrineIK>();
                 ik.vitrine = vitrine;
                 ik.cameraFundo = cameraFundo;
@@ -309,10 +325,48 @@ namespace BetsDeRua
                     posicao = cameraAberturaPosicao + new Vector3(Mathf.Sin(t) * 1.5f, 0f, 0f);
                     alvo = cameraAberturaAlvo;
                     break;
+                case Enquadramento.Tomada:
+                {
+                    Vector3 basePos = vitrine != null ? vitrine.position : Vector3.zero;
+                    float deriva = Mathf.Sin(Time.time * 0.25f) * 5f;
+                    // Ângulo contado a partir de para onde o peito aponta (na guarda o corpo fica de lado)
+                    Vector3 peito = Quaternion.Euler(0f, 200f, 0f) * Vector3.forward;
+                    if (animadorVitrine != null && animadorVitrine.isHuman)
+                    {
+                        Transform ombroE = animadorVitrine.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+                        Transform ombroD = animadorVitrine.GetBoneTransform(HumanBodyBones.RightUpperArm);
+                        if (ombroE != null && ombroD != null)
+                        {
+                            Vector3 f = Vector3.Cross(ombroD.position - ombroE.position, Vector3.up);
+                            f.y = 0f;
+                            if (f.sqrMagnitude > 0.0001f) peitoSuave = Vector3.Slerp(peitoSuave == Vector3.zero ? f.normalized : peitoSuave, f.normalized, Time.deltaTime * 3f);
+                            peito = peitoSuave;
+                        }
+                    }
+                    Vector3 dir = Quaternion.Euler(0f, tomadaAngulo + deriva, 0f) * peito;
+                    posicao = basePos + dir * tomadaDistancia + Vector3.up * tomadaAltura;
+                    Vector3 olharPara = basePos + Vector3.up * tomadaOlhar;
+                    // O personagem fica à direita do centro (o texto do modo fica no meio, a lista à esquerda)
+                    Vector3 direita = Vector3.Cross(Vector3.up, (olharPara - posicao).normalized);
+                    alvo = olharPara - direita * tomadaDistancia * 0.32f;
+                    break;
+                }
                 default:
                     posicao = cameraRuaPosicao;
                     alvo = cameraRuaAlvo;
                     break;
+            }
+            // Desfoque de profundidade: foco no personagem
+            if (desfoque == null)
+            {
+                var volume = FindFirstObjectByType<UnityEngine.Rendering.Volume>();
+                if (volume != null && volume.profile != null) volume.profile.TryGet(out desfoque);
+            }
+            if (desfoque != null && vitrine != null)
+            {
+                bool ligado = qual == Enquadramento.Tomada || qual == Enquadramento.Personagem;
+                desfoque.active = ligado;
+                desfoque.focusDistance.value = Vector3.Distance(cameraFundo.transform.position, vitrine.position + Vector3.up * 1.2f);
             }
             float k = 1f - Mathf.Exp(-Time.deltaTime * 4f);
             cameraFundo.transform.position = Vector3.Lerp(cameraFundo.transform.position, posicao, k);

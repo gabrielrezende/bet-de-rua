@@ -56,7 +56,7 @@ namespace BetsDeRua.Editor
             camera.transform.LookAt(new Vector3(-0.9f, 1.05f, 0f));
             camera.fieldOfView = 38f;
             ConfigurarCamera(camera);
-            CriarVolume();
+            CriarVolume("Assets/Settings/PosMenu.asset", true);
 
             // ---------- Interface ----------
             GameObject interfaceObj = new GameObject("Interface");
@@ -161,13 +161,15 @@ namespace BetsDeRua.Editor
         }
 
         /// <summary>Volume global: tom de filme (ACES), um pouco mais de cor e contraste, brilho e vinheta.</summary>
-        public static void CriarVolume()
+        public static void CriarVolume() => CriarVolume(CaminhoPos, false);
+
+        public static void CriarVolume(string caminho, bool desfoque)
         {
-            VolumeProfile perfil = AssetDatabase.LoadAssetAtPath<VolumeProfile>(CaminhoPos);
+            VolumeProfile perfil = AssetDatabase.LoadAssetAtPath<VolumeProfile>(caminho);
             if (perfil == null)
             {
                 perfil = ScriptableObject.CreateInstance<VolumeProfile>();
-                AssetDatabase.CreateAsset(perfil, CaminhoPos);
+                AssetDatabase.CreateAsset(perfil, caminho);
                 Tonemapping tom = perfil.Add<Tonemapping>(true);
                 tom.mode.Override(TonemappingMode.ACES);
                 ColorAdjustments cor = perfil.Add<ColorAdjustments>(true);
@@ -180,6 +182,15 @@ namespace BetsDeRua.Editor
                 Vignette vinheta = perfil.Add<Vignette>(true);
                 vinheta.intensity.Override(0.22f);
                 vinheta.smoothness.Override(0.45f);
+                if (desfoque)
+                {
+                    // Menu: fundo desfocado atrás do personagem (como o FC 26)
+                    DepthOfField dof = perfil.Add<DepthOfField>(true);
+                    dof.mode.Override(DepthOfFieldMode.Bokeh);
+                    dof.focusDistance.Override(3f);
+                    dof.focalLength.Override(70f);
+                    dof.aperture.Override(2.2f);
+                }
                 foreach (VolumeComponent c in perfil.components) AssetDatabase.AddObjectToAsset(c, perfil);
                 EditorUtility.SetDirty(perfil);
             }
