@@ -13,7 +13,7 @@ namespace BetsDeRua.Editor
     /// casinhas ao fundo. A física continua a mesma (ConfigFisica): calçada, fachadas e muros do
     /// fim da rua têm colisão; o resto é só cenário. Tudo é sorteado com semente fixa (sempre igual).
     /// </summary>
-    public static class ConstrutorRuaEditor
+    public static partial class ConstrutorRuaEditor
     {
         private const string PastaMalhas = "Assets/Malhas";
         private const string PastaMateriais = "Assets/Materiais/Rua";
@@ -122,7 +122,7 @@ namespace BetsDeRua.Editor
             MontarMorro(morro.transform, config, r);
             FinalizarJuntas(morro.transform, "Morro_");
 
-            // ---------- Os outros lugares: terrão, campinho, fazenda (desligados; a partida sorteia) ----------
+            // ---------- Os outros lugares: terrão, campinho, fazenda, favela, avenida, rodovia, pontilhão (desligados; a partida sorteia) ----------
             MontarMapas(rua.transform, config, r);
 
             foreach (Transform filho in rua.GetComponentsInChildren<Transform>(true))
@@ -772,9 +772,19 @@ namespace BetsDeRua.Editor
             ColisoesDoCampo(fazenda, config);
             FinalizarJuntas(fazenda, "Fazenda_");
 
+            // ---------------- Favela, avenida, rodovia e pontilhão (ConstrutorRuaEditorLugares.cs) ----------------
+            Transform favela = MontarFavela(pai, config, r);
+            Transform avenida = MontarAvenida(pai, config, r, grama);
+            Transform rodovia = MontarRodovia(pai, config, r, madeira);
+            Transform pontilhao = MontarPontilhao(pai, config, r);
+
             terrao.gameObject.SetActive(false);
             campinho.gameObject.SetActive(false);
             fazenda.gameObject.SetActive(false);
+            favela.gameObject.SetActive(false);
+            avenida.gameObject.SetActive(false);
+            rodovia.gameObject.SetActive(false);
+            pontilhao.gameObject.SetActive(false);
         }
 
         private static Transform NovoMapa(Transform pai, string nome)

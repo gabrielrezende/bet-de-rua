@@ -3,7 +3,7 @@ using UnityEngine;
 namespace BetsDeRua
 {
     /// <summary>
-    /// Os lugares onde se joga bets (GDD: rua, terrão, campinho, fazenda...). Cada um tem o seu chão:
+    /// Os lugares onde se joga bets (GDD: rua, terrão, campinho, fazenda, favela, avenida, rodovia, pontilhão). Cada um tem o seu chão:
     /// a terra segura a bola e quica torto, a grama freia e quica baixo, o asfalto deixa correr.
     /// Os números multiplicam os do ConfigFisica (1 = igual ao asfalto).
     /// </summary>
@@ -46,6 +46,14 @@ namespace BetsDeRua
             new Mapa { nome = "Terrao", titulo = "TERRÃO DA VILA", temCalcada = false, quique = 0.8f, atritoQuique = 0.88f, atritoRolar = 1.7f, quiqueMuro = 0.9f, desvioQuique = 9f },
             new Mapa { nome = "Campinho", titulo = "CAMPINHO DO BAIRRO", temCalcada = false, quique = 0.68f, atritoQuique = 0.84f, atritoRolar = 2.3f, quiqueMuro = 0.6f, desvioQuique = 3f },
             new Mapa { nome = "Fazenda", titulo = "FAZENDA DO TIO", temCalcada = false, mostrarMorro = false, quique = 0.58f, atritoQuique = 0.8f, atritoRolar = 2.9f, quiqueMuro = 0.75f, desvioQuique = 5f },
+            // Cimentado rachado da viela: quica quase como o asfalto, mas as paredes coladas devolvem a bola forte
+            new Mapa { nome = "Favela", titulo = "ESCADÃO DO MORRO", temCalcada = false, quique = 0.92f, atritoQuique = 0.95f, atritoRolar = 1.25f, quiqueMuro = 1.15f, desvioQuique = 4f },
+            // Asfalto novo e liso: a bola corre mais que na rua; calçada e canteiro central com meio-fio
+            new Mapa { nome = "Avenida", titulo = "AVENIDA DO COMÉRCIO", quique = 1.05f, atritoQuique = 1.02f, atritoRolar = 0.85f, quiqueMuro = 1f, desvioQuique = 0f },
+            // Asfalto grosso do acostamento com brita solta; o guard-rail de metal devolve a bola com força
+            new Mapa { nome = "Rodovia", titulo = "ACOSTAMENTO DA BR", temCalcada = false, mostrarMorro = false, quique = 0.95f, atritoQuique = 0.96f, atritoRolar = 1.15f, quiqueMuro = 1.25f, desvioQuique = 2f },
+            // Concreto com poeira embaixo do viaduto: quique honesto, a poeira freia um pouco a bola rolando
+            new Mapa { nome = "Pontilhao", titulo = "BAIXO DO PONTILHÃO", temCalcada = false, quique = 0.98f, atritoQuique = 0.97f, atritoRolar = 1.3f, quiqueMuro = 1.1f, desvioQuique = 1.5f },
         };
     }
 

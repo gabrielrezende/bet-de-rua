@@ -72,7 +72,7 @@ namespace BetsDeRua.Editor
 
             // ---------- Rua: asfalto com faixa amarela, meio-fio, calçadas e fachadas ----------
             ConstrutorRuaEditor.Montar(campo.transform, config);
-            // Lugar da partida sorteado (rua, terrão, campinho, fazenda)
+            // Lugar da partida sorteado (rua, terrão, campinho, fazenda, favela, avenida, rodovia, pontilhão)
             MapaDaPartida mapa = campo.AddComponent<MapaDaPartida>();
             Ligar(mapa, "config", CarregarOuCriarConfig<ConfigMapas>("Assets/Config/ConfigMapas.asset"));
             Transform ruaMontada = campo.transform.Find("Rua");
@@ -80,7 +80,9 @@ namespace BetsDeRua.Editor
             Ligar(mapa, "morro", ruaMontada.Find("Morro").gameObject);
             LigarLista(mapa, "cenarios", new Object[]
             {
-                ruaMontada.Find("Mapa_Terrao").gameObject, ruaMontada.Find("Mapa_Campinho").gameObject, ruaMontada.Find("Mapa_Fazenda").gameObject
+                ruaMontada.Find("Mapa_Terrao").gameObject, ruaMontada.Find("Mapa_Campinho").gameObject, ruaMontada.Find("Mapa_Fazenda").gameObject,
+                ruaMontada.Find("Mapa_Favela").gameObject, ruaMontada.Find("Mapa_Avenida").gameObject, ruaMontada.Find("Mapa_Rodovia").gameObject,
+                ruaMontada.Find("Mapa_Pontilhao").gameObject
             });
 
             // Bases riscadas de giz: casinha da garrafa + área do taco na frente (a zona segura em volta é invisível)

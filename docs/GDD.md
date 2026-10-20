@@ -699,8 +699,14 @@ A cada partida o jogo sorteia onde vai ser, e o nome aparece na tela ("HOJE O JO
 | Terrão da Vila | Terra batida | Quica mais baixo, freia mais rolando e **quica torto** (até 9°): difícil de ler | Muro de bloco pichado, casas atrás, morro |
 | Campinho do Bairro | Grama com terra gasta nas bases | Quica baixo e morre rápido; o alambrado segura a bola | Alambrado, árvores, casas ao longe |
 | Fazenda do Tio | Pasto | Quica bem baixo, a bola para logo | Cerca de madeira, vacas pastando, celeiro vermelho, morros verdes |
+| Escadão do Morro (favela) | Cimentado rachado | Quica quase como o asfalto, **quica torto** (até 4°) nas rachaduras; as paredes coladas devolvem a bola mais forte | Viela com casas de tijolo e reboco subindo o morro em fileiras, escadão de concreto com corrimão, gatos de fio, varal na laje, casas fechando as pontas |
+| Avenida do Comércio | Asfalto novo e liso, calçada e canteiro central com meio-fio | A bola **corre mais** que na rua; pega na quina do meio-fio e sobe, dos dois lados | Canteiro com grama e palmeiras, a outra pista com carros, lojas com prédio em cima, ponto de ônibus, faixa de pedestre, semáforo e cones nas pontas |
+| Acostamento da BR | Asfalto grosso com brita solta | Freia um pouco mais e quica levemente torto (até 2°); o **guard-rail devolve a bola com força** | Pista com faixa dupla amarela e tachões do lado da câmera, guard-rail, capim seco, cerca de arame, eucaliptos, placa verde "BR-116 KM 42", caminhão parado |
+| Baixo do Pontilhão | Concreto com poeira | Quique honesto; a poeira freia a bola rolando | Tabuleiro do viaduto fazendo sombra no fundo do campo, pilares pichados, parede do encontro grafitada, mureta, pneus velhos e um sofá largado |
 
-Próximos lugares da lista (pedido do Gabriel): favela (vielas e escadão), avenida (canteiro central), rodovia/acostamento, pontilhão (embaixo do viaduto, com eco), paralelepípedo, beira-mar e as versões noturnas.
+O tamanho do campo é o mesmo em todos (ConfigFisica); o que muda é o chão, a força com que a parede devolve a bola e o cenário. Na favela as paredes ficam coladas no campo, para dar a sensação de viela apertada.
+
+Próximos lugares da lista: paralelepípedo, beira-mar, o eco embaixo do pontilhão e as versões noturnas.
 
 ## Arte, ambientação e som
 

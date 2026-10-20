@@ -55,3 +55,43 @@ MonoBehaviour:
     atritoRolar: 2.9
     quiqueMuro: 0.75
     desvioQuique: 5
+  - nome: Favela
+    titulo: "ESCAD\xC3O DO MORRO"
+    peso: 1
+    temCalcada: 0
+    mostrarMorro: 1
+    quique: 0.92
+    atritoQuique: 0.95
+    atritoRolar: 1.25
+    quiqueMuro: 1.15
+    desvioQuique: 4
+  - nome: Avenida
+    titulo: "AVENIDA DO COM\xC9RCIO"
+    peso: 1
+    temCalcada: 1
+    mostrarMorro: 1
+    quique: 1.05
+    atritoQuique: 1.02
+    atritoRolar: 0.85
+    quiqueMuro: 1
+    desvioQuique: 0
+  - nome: Rodovia
+    titulo: ACOSTAMENTO DA BR
+    peso: 1
+    temCalcada: 0
+    mostrarMorro: 0
+    quique: 0.95
+    atritoQuique: 0.96
+    atritoRolar: 1.15
+    quiqueMuro: 1.25
+    desvioQuique: 2
+  - nome: Pontilhao
+    titulo: "BAIXO DO PONTILH\xC3O"
+    peso: 1
+    temCalcada: 0
+    mostrarMorro: 1
+    quique: 0.98
+    atritoQuique: 0.97
+    atritoRolar: 1.3
+    quiqueMuro: 1.1
+    desvioQuique: 1.5

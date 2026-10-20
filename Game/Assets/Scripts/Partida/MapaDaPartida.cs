@@ -3,7 +3,7 @@ using UnityEngine;
 namespace BetsDeRua
 {
     /// <summary>
-    /// Sorteia onde a partida acontece (rua, terrão, campinho, fazenda), liga só o cenário dele e
+    /// Sorteia onde a partida acontece (rua, terrão, campinho, fazenda, favela, avenida, rodovia, pontilhão), liga só o cenário dele e
     /// passa o chão para a física da bola. Roda antes de todo mundo (a torcida já nasce no lugar certo).
     /// </summary>
     [DefaultExecutionOrder(-500)]
