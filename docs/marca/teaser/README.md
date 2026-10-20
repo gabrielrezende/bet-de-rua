@@ -17,6 +17,16 @@ Teaser de 83 s feito com IA, no estilo cinema realista, contando a história do 
 
 Custo: cerca de 400 créditos do Higgsfield (de 946 para 545), contando as refações; quadros ~0,25 cada, vídeos ~12,5 cada.
 
+## Versão 2 (rampas de câmera lenta e transições)
+
+`teaser_a_rua_nova_v2.mp4` (83 s; há uma cópia menor, `_celular.mp4`, que abre no celular), montada por `montar_v2.py`:
+
+- **Câmera lenta com rampa** nos 4 impactos (tacos, garrafa, batida, cruzada): a cena corre normal, quase congela no contato e acelera de volta. Para isso foram gerados 3 vídeos novos de aproximação (`06i`, `09i`, `20i`), usando o recurso de quadro inicial e final do Kling: o vídeo novo termina exatamente no quadro em que o antigo começa. Na batida e na cruzada, o impacto é um corte seco na ação, como nas transmissões esportivas.
+- **Câmera lenta lisa:** o ffmpeg cria os quadros intermediários (interpolação de movimento), em vez de repetir quadros.
+- **Transições:** clarão branco em cada impacto e na entrada do logo; mergulho no preto antes do "Um dia, faltou gente." e na virada do dia para a noite; chicote (borrão lateral) da batida para o "CORRE!"; arremesso e bola vindo cortados no tempo da música.
+- **Som:** no trecho lento o som de rua sai e fica a trilha, com o "tec!" no mesmo quadro do clarão (conferido: diferença menor que 20 ms).
+- Custo extra: cerca de 45 créditos.
+
 ## Como refazer ou ajustar
 
 Os vídeos brutos ficam em `brutos/` e os quadros em `quadros/` (fora do git; os links para baixar de novo estão em `urls_higgsfield.txt`). Para mudar o corte de um plano, a duração, um letreiro ou a câmera lenta, edite a lista `MONTAGEM` no começo de `montar.py` e rode, da raiz do repositório (precisa de um ffmpeg; o `imageio-ffmpeg` do pip traz um):
