@@ -249,7 +249,8 @@ namespace BetsDeRua.Editor
 
         private static AnimationClip Clipe(string nome)
         {
-            foreach (string arquivo in new[] { "Assets/Personagens/Animacoes/UAL1_Standard.fbx", "Assets/Personagens/Animacoes/UAL2_Standard.fbx" })
+            foreach (string arquivo in new[] { "Assets/Personagens/Animacoes/UAL1_Standard.fbx", "Assets/Personagens/Animacoes/UAL2_Standard.fbx",
+                                               "Assets/Personagens/Animacoes/CMU/Rebatida_CMU.fbx", "Assets/Personagens/Animacoes/CMU/Arremesso_CMU.fbx" })
                 foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(arquivo))
                     if (o is AnimationClip c && (c.name == nome || c.name.EndsWith("|" + nome))) return c;
             Debug.LogWarning($"[Bets] animação não encontrada: {nome}");
@@ -264,6 +265,8 @@ namespace BetsDeRua.Editor
             c.AddParameter("Velocidade", AnimatorControllerParameterType.Float);
             c.AddParameter("Guarda", AnimatorControllerParameterType.Bool);
             c.AddParameter("Mergulhando", AnimatorControllerParameterType.Bool);
+            AnimatorControllerParameter rapidez = new AnimatorControllerParameter { name = "RapidezBatida", type = AnimatorControllerParameterType.Float, defaultFloat = 1f };
+            c.AddParameter(rapidez);
             AnimatorStateMachine sm = c.layers[0].stateMachine;
 
             AnimatorState locomocao = c.CreateBlendTreeInController("Locomocao", out BlendTree arvore, 0);
@@ -277,7 +280,9 @@ namespace BetsDeRua.Editor
             sm.defaultState = locomocao;
 
             AnimatorState guarda = sm.AddState("Guarda");
-            guarda.motion = Clipe("Sword_Idle");
+            // Guarda e batida: captura de movimento de verdade (rebatida da CMU, ver ImportadorCapturas)
+            guarda.motion = Clipe("GuardaCMU");
+            guarda.iKOnFeet = true; // pés plantados onde estavam na gravação (o quadril do boneco não desce igual)
             var ida = locomocao.AddTransition(guarda);
             ida.AddCondition(AnimatorConditionMode.If, 0f, "Guarda");
             ida.hasExitTime = false;
@@ -289,7 +294,10 @@ namespace BetsDeRua.Editor
 
             // Gestos tocados pelo jogo (CrossFade com o nome do estado); voltam sozinhos para a locomoção
             Gesto(sm, locomocao, "Arremesso", Clipe("OverhandThrow"), 0.92f);
-            Gesto(sm, locomocao, "Batida", Clipe("Sword_Regular_A"), 0.9f);
+            AnimatorState batida = Gesto(sm, guarda, "Batida", Clipe("BatidaCMU"), 0.97f);
+            batida.speedParameter = "RapidezBatida";
+            batida.speedParameterActive = true;
+            batida.iKOnFeet = true;
             Gesto(sm, locomocao, "Pegar", Clipe("PickUp_Table"), 0.85f);
             Gesto(sm, locomocao, "Comemorar", Clipe("Yes"), 0.95f);
             Gesto(sm, locomocao, "Lamentar", Clipe("Idle_No_Loop"), 0.9f);
@@ -318,7 +326,7 @@ namespace BetsDeRua.Editor
             return c;
         }
 
-        private static void Gesto(AnimatorStateMachine sm, AnimatorState volta, string nome, AnimationClip clipe, float saida)
+        private static AnimatorState Gesto(AnimatorStateMachine sm, AnimatorState volta, string nome, AnimationClip clipe, float saida)
         {
             AnimatorState e = sm.AddState(nome);
             e.motion = clipe;
@@ -326,6 +334,7 @@ namespace BetsDeRua.Editor
             t.hasExitTime = true;
             t.exitTime = saida;
             t.duration = 0.2f;
+            return e;
         }
 
         private static AnimatorController ControladorTorcida()

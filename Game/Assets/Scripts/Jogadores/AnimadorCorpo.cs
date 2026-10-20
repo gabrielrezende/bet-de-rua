@@ -33,6 +33,7 @@ namespace BetsDeRua
         private static readonly int pVelocidade = Animator.StringToHash("Velocidade");
         private static readonly int pGuarda = Animator.StringToHash("Guarda");
         private static readonly int pMergulhando = Animator.StringToHash("Mergulhando");
+        private static readonly int pRapidezBatida = Animator.StringToHash("RapidezBatida");
 
         /// <summary>Em que ponto da animação o braço solta a bola (0 a 1): o gesto começa daí.</summary>
         private const float SolturaArremesso = 0.4f;
@@ -117,7 +118,22 @@ namespace BetsDeRua
             if (mergulhando && !estavaMergulhando) animador.CrossFade("MergulhoInicio", 0.05f, 0, 0f);
             estavaMergulhando = mergulhando;
 
-            if (taco != null) estavaGirando = taco.Girando;
+            if (taco != null)
+            {
+                // Batida com a captura de verdade: entra no fim do "carregar", acelerada até o contato
+                bool captura = configFisica != null && configFisica.usarCapturaNaBatida;
+                if (captura && taco.Girando && !estavaGirando)
+                {
+                    animador.SetFloat(pRapidezBatida, configFisica.rapidezBatidaCaptura);
+                    animador.CrossFadeInFixedTime("Batida", 0.03f, 0, configFisica.inicioBatidaCaptura);
+                    batidaRapidaAte = Time.time + configFisica.tempoBatidaRapida;
+                    tocandoBatida = true;
+                }
+                if (Time.time > batidaRapidaAte) animador.SetFloat(pRapidezBatida, 1f);
+                if (tocandoBatida && !taco.Girando && !animador.GetCurrentAnimatorStateInfo(0).IsName("Batida") && !animador.IsInTransition(0))
+                    tocandoBatida = false;
+                estavaGirando = taco.Girando;
+            }
 
             // Enchendo o arco do arremesso: o braço vai para trás (a animação fica na preparação)
             if (arremessador != null && arremessador.ComBola && arremessador.Carregando && velocidadeSuave < 1.2f && Time.time > gestoAte)
@@ -143,6 +159,10 @@ namespace BetsDeRua
                                                             taco.Girando || taco.BatendoTacos ? 1f : Mathf.Clamp01(Time.deltaTime * 12f));
             }
             VirarCorpoParaOndeVai();
+            // Mãos presas no taco do jogo: soltam na batida gravada (as mãos da captura mandam) e voltam na guarda
+            float alvoMaos = tocandoBatida ? 0f : 1f;
+            pesoMaosNoTaco = Mathf.MoveTowards(pesoMaosNoTaco, alvoMaos,
+                Time.deltaTime / Mathf.Max(0.02f, tocandoBatida ? 0.04f : (configFisica != null ? configFisica.tempoVoltarDaBatida : 0.4f)));
             CorpoDoRebatedor();
             ColarTacoNaMao();
             MaoDireitaNoCabo();
@@ -170,6 +190,14 @@ namespace BetsDeRua
             Vector3 eixo = ponta - pega;
             if (eixo.sqrMagnitude < 0.01f) return;
             Vector3 dir = eixo.normalized;
+            // Na batida gravada o taco segue as mãos da captura: sai da mão de cima passando pela de baixo
+            Transform outra = animador.GetBoneTransform(HumanBodyBones.RightHand);
+            if (pesoMaosNoTaco < 1f && outra != null)
+            {
+                Vector3 pelasMaos = outra.position - mao.position;
+                if (pelasMaos.sqrMagnitude > 0.0009f) dir = Vector3.Slerp(pelasMaos.normalized, dir, pesoMaosNoTaco).normalized;
+            }
+            eixo = dir;
             desenho.position = pega - dir * 0.05f; // o pomo do cabo aparece um pouco acima da mão
             Vector3 frente = Vector3.ProjectOnPlane(transform.forward, dir);
             if (frente.sqrMagnitude < 0.0001f) frente = Vector3.ProjectOnPlane(transform.right, dir);
@@ -204,6 +232,9 @@ namespace BetsDeRua
         private bool temCabo;
 
         private float torcao;          // graus que o tronco está virado em relação à frente do jogador
+        private float pesoMaosNoTaco = 1f; // 1 = mãos presas no taco do jogo; 0 = mãos da captura
+        private bool tocandoBatida;
+        private float batidaRapidaAte;
         private float pesoGuarda;      // 0 = em pé normal, 1 = guarda completa
         private Vector3 frenteDoTronco;
 
@@ -218,11 +249,12 @@ namespace BetsDeRua
             Transform quadril = animador.GetBoneTransform(HumanBodyBones.Hips);
             if (quadril == null) return;
 
-            // Quanto de guarda e de torção agora
-            bool naGuarda = jogador.DentroDoCirculo() && velocidadeSuave < 0.6f;
-            pesoGuarda = Mathf.MoveTowards(pesoGuarda, naGuarda || taco.Girando ? 1f : 0f, Time.deltaTime * 4f);
+            // Quanto de guarda e de torção agora (com a captura de verdade, o corpo é o da gravação)
+            bool captura = configFisica.usarCapturaNaBatida;
+            bool naGuarda = jogador.DentroDoCirculo() && velocidadeSuave < 0.6f && !captura;
+            pesoGuarda = Mathf.MoveTowards(pesoGuarda, naGuarda || (taco.Girando && !captura) ? 1f : 0f, Time.deltaTime * 4f);
             float alvoTorcao = naGuarda ? configFisica.carregarGuarda : 0f;
-            if (taco.Girando) torcao = Mathf.Lerp(70f, -95f, Mathf.SmoothStep(0f, 1f, taco.FracaoGiro));
+            if (taco.Girando && !captura) torcao = Mathf.Lerp(70f, -95f, Mathf.SmoothStep(0f, 1f, taco.FracaoGiro));
             else torcao = Mathf.Lerp(torcao, alvoTorcao, 1f - Mathf.Exp(-Time.deltaTime * 3f / Mathf.Max(0.05f, configFisica.tempoVoltarDaBatida)));
 
             // Onde os pés estão na animação (ficam plantados)
@@ -262,7 +294,7 @@ namespace BetsDeRua
             if (braco != null)
                 IKDoisOssos.Resolver(braco, animador.GetBoneTransform(HumanBodyBones.LeftLowerArm), animador.GetBoneTransform(HumanBodyBones.LeftHand),
                                      taco.transform.position - taco.transform.up * 0.02f,
-                                     braco.position + Vector3.down * 0.4f - direitaTronco * 0.35f - frenteDoTronco * 0.15f, 1f);
+                                     braco.position + Vector3.down * 0.4f - direitaTronco * 0.35f - frenteDoTronco * 0.15f, pesoMaosNoTaco);
         }
 
         /// <summary>A mão direita segura o cabo logo abaixo da esquerda (no taco desenhado); dedos fechados no cabo.</summary>
@@ -274,7 +306,7 @@ namespace BetsDeRua
             Vector3 direitaTronco = Vector3.Cross(Vector3.up, frenteDoTronco);
             IKDoisOssos.Resolver(braco, animador.GetBoneTransform(HumanBodyBones.RightLowerArm), animador.GetBoneTransform(HumanBodyBones.RightHand),
                                  caboAtual + eixoAtual * 0.11f,
-                                 braco.position + Vector3.down * 0.4f + direitaTronco * 0.35f - frenteDoTronco * 0.15f, 1f);
+                                 braco.position + Vector3.down * 0.4f + direitaTronco * 0.35f - frenteDoTronco * 0.15f, pesoMaosNoTaco);
             // A direção dos dedos fica de través ao taco (a mão fecha em volta do cabo)
             AjeitarMao(HumanBodyBones.LeftHand, HumanBodyBones.LeftMiddleProximal);
             AjeitarMao(HumanBodyBones.RightHand, HumanBodyBones.RightMiddleProximal);

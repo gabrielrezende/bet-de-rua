@@ -44,3 +44,11 @@ Antes de trocar de computador: commit e push. Ao chegar no outro: pull antes de 
 - **Prints**: `ScreenCapture.CaptureScreenshot("caminho absoluto")` pelo eval funciona no Play. Fora do Play, a ferramenta `BetsDeRua.Editor.FotoBoneco.Foto(caminho)` fotografa os 4 personagens num estúdio.
 - **Build de Windows**: `unity command build --target StandaloneWindows64 --outputPath "Builds/BetsDeRua/BetsDeRua.exe" --confirm true` e esperar `build_status` = completed (ou menu Bets > Gerar build Windows). O log do jogo instalado fica onde for passado em `-logFile`.
 - Avisos de "GaussianDepthOfField / BokehDepthOfField / PaniniProjection stripped" no jogo instalado são normais: o jogo não usa esses efeitos.
+
+## Aprendido nos personagens (captura de movimento)
+
+- **Filmar movimento quadro a quadro**: `BetsDeRua.GravadorQuadros.Iniciar(pasta, quadros, cada, 60f)` + `.Seguir(jogador.transform, deslocamento)` pelo eval, com o Play ligado. Para a batida, chamar `Taco.Girar()` no rebatedor que está na base.
+- **O jogo tem câmera lenta nos impactos** (ConfigCamera, escala 0,3): numa batida certa os quadros saem em câmera lenta; gravar mais quadros (`cada = 3`) para ver o golpe inteiro.
+- **Testar a partida sem o menu**: o `soAssistir` fica desligado no asset; ligar só na memória (`LoadAssetAtPath<ConfigPartida>(...).soAssistir = true`) antes do Play e desligar + salvar depois, senão o jogo para na tela antiga "Seu time começa com o quê?".
+- **Blender pela linha de comando**: `blender.exe -b --python script.py -- argumentos`. Passar caminhos com barra normal (`cygpath -m`), nunca `\$var` no bash.
+- Capturas da CMU: ver `ferramentas/captura_cmu/LEIAME.md`.

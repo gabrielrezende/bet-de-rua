@@ -157,3 +157,13 @@ MonoBehaviour:
   alturaChegadaPasse: 1
   alturaChegadaLancamento: 1.3
   raioReceberPasse: 1.4
+  torcaoQuadril: 0.3
+  torcaoTronco: 0.45
+  agachamentoGuarda: 0.09
+  inclinacaoGuarda: 16
+  tempoVoltarDaBatida: 0.45
+  carregarGuarda: 18
+  usarCapturaNaBatida: 1
+  inicioBatidaCaptura: 0.42
+  rapidezBatidaCaptura: 1.6
+  tempoBatidaRapida: 0.14

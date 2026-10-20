@@ -343,5 +343,13 @@ namespace BetsDeRua
         public float tempoVoltarDaBatida = 0.45f;
         [Tooltip("Quanto da guarda já vem 'carregada' para trás antes de bater (graus de torção).")]
         public float carregarGuarda = 18f;
+        [Tooltip("Usa a rebatida gravada de uma pessoa de verdade (captura da CMU) na batida. Desligado: o giro é todo feito por código.")]
+        public bool usarCapturaNaBatida = true;
+        [Tooltip("Em que segundo da captura a batida começa quando o taco gira (o fim do 'carregar').")]
+        public float inicioBatidaCaptura = 0.42f;
+        [Tooltip("Rapidez da captura até o contato (o giro do jogo é mais curto que o da gravação).")]
+        public float rapidezBatidaCaptura = 1.6f;
+        [Tooltip("Segundos de batida acelerada; depois a finalização toca na rapidez normal.")]
+        public float tempoBatidaRapida = 0.14f;
     }
 }
