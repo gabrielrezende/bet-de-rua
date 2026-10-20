@@ -158,7 +158,7 @@ Shader "Bets/PersonagemEstilizado"
                 #endif
                 half cinza = dot(base.rgb, half3(0.299h, 0.587h, 0.114h));
                 // Só as dobras do tecido passam para a tinta: o brilho "assado" na textura da IA é cortado
-                half dobra = lerp(0.72h, 1.0h, smoothstep(0.08h, 0.45h, cinza));
+                half dobra = lerp(0.84h, 1.0h, smoothstep(0.08h, 0.45h, cinza));
                 half3 tecido1 = _CorTime.rgb * dobra;
                 half3 tecido2 = _CorTime2.rgb * dobra;
                 half3 albedo = base.rgb;

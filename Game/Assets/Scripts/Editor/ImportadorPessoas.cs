@@ -22,6 +22,17 @@ namespace BetsDeRua.Editor
         public static string Importar()
         {
             if (!AssetDatabase.IsValidFolder(Pasta)) return "sem pasta " + Pasta;
+            // Texturas de relevo ("..._norm") marcadas como normal map (senão a bermuda fica manchada)
+            foreach (string guid in AssetDatabase.FindAssets("t:Texture2D", new[] { Pasta }))
+            {
+                string c = AssetDatabase.GUIDToAssetPath(guid);
+                if (!Path.GetFileName(c).ToLowerInvariant().Contains("norm")) continue;
+                if (AssetImporter.GetAtPath(c) is TextureImporter ti && ti.textureType != TextureImporterType.NormalMap)
+                {
+                    ti.textureType = TextureImporterType.NormalMap;
+                    ti.SaveAndReimport();
+                }
+            }
             var lista = new List<BibliotecaCorpos.Pessoa>();
             foreach (string arquivo in Directory.GetFiles(Pasta, "*.fbx"))
             {
@@ -46,6 +57,7 @@ namespace BetsDeRua.Editor
             BibliotecaCorpos b = AssetDatabase.LoadAssetAtPath<BibliotecaCorpos>(CaminhoBiblioteca);
             if (b == null) return "sem BibliotecaCorpos";
             b.pessoas = lista.ToArray();
+            if (b.shaderEstilizado == null) b.shaderEstilizado = Shader.Find("Bets/PersonagemEstilizado");
             EditorUtility.SetDirty(b);
             AssetDatabase.SaveAssets();
             var resumo = new System.Text.StringBuilder($"{lista.Count} pessoas: ");

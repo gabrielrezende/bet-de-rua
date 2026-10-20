@@ -243,11 +243,87 @@ namespace BetsDeRua.Editor
                 lente.intensity.Override(0.06f);
                 AssetDatabase.AddObjectToAsset(lente, perfil);
             }
+            AplicarVisualEstilizado(perfil);
             EditorUtility.SetDirty(perfil);
             GameObject objVolume = new GameObject("PosProcessamento");
             Volume volume = objVolume.AddComponent<Volume>();
             volume.isGlobal = true;
             volume.sharedProfile = perfil;
+        }
+
+        private static T Pegar<T>(VolumeProfile perfil) where T : VolumeComponent
+        {
+            if (!perfil.TryGet(out T c))
+            {
+                c = perfil.Add<T>(true);
+                AssetDatabase.AddObjectToAsset(c, perfil);
+            }
+            c.active = true;
+            return c;
+        }
+
+        /// <summary>
+        /// Visual estilizado (Valorant / FC Street): cor viva e limpa, sem efeitos de "câmera de cinema".
+        /// Neutral em vez de ACES (o ACES puxa as cores chapadas para o marrom), mais saturação, bloom suave,
+        /// sem grão, sem aberração de lente e sem borrão de movimento (silhueta limpa e mais leve na placa).
+        /// </summary>
+        public static void AplicarVisualEstilizado(VolumeProfile perfil)
+        {
+            Pegar<Tonemapping>(perfil).mode.Override(TonemappingMode.Neutral);
+            ColorAdjustments cor = Pegar<ColorAdjustments>(perfil);
+            cor.postExposure.Override(0.25f);
+            cor.contrast.Override(14f);
+            cor.saturation.Override(24f);
+            Bloom brilho = Pegar<Bloom>(perfil);
+            brilho.intensity.Override(0.25f);
+            brilho.threshold.Override(1.0f);
+            brilho.scatter.Override(0.65f);
+            Vignette vinheta = Pegar<Vignette>(perfil);
+            vinheta.intensity.Override(0.16f);
+            vinheta.smoothness.Override(0.5f);
+            if (perfil.TryGet(out FilmGrain grao)) grao.active = false;
+            if (perfil.TryGet(out ChromaticAberration lente)) lente.active = false;
+            if (perfil.TryGet(out MotionBlur borrao)) borrao.active = false;
+            EditorUtility.SetDirty(perfil);
+            ConfigurarLuzEstilizada();
+        }
+
+        /// <summary>
+        /// Sombra e oclusão de ambiente (SSAO) leves para placa integrada: SSAO em meia resolução, raio curto
+        /// (só os cantos e o pé das paredes escurecem), 2 cascatas de sombra com borda suave média.
+        /// </summary>
+        public static void ConfigurarLuzEstilizada()
+        {
+            var rp = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>("Assets/Settings/PC_RPAsset.asset");
+            if (rp != null)
+            {
+                var so = new SerializedObject(rp);
+                so.FindProperty("m_ShadowCascadeCount").intValue = 2;
+                so.FindProperty("m_ShadowDistance").floatValue = 45f;
+                SerializedProperty q = so.FindProperty("m_SoftShadowQuality");
+                if (q != null) q.intValue = 2;
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+            var dados = AssetDatabase.LoadAssetAtPath<UniversalRendererData>("Assets/Settings/PC_Renderer.asset");
+            if (dados == null) return;
+            foreach (ScriptableRendererFeature f in dados.rendererFeatures)
+            {
+                if (f == null || f.GetType().Name != "ScreenSpaceAmbientOcclusion") continue;
+                f.SetActive(true);
+                var so = new SerializedObject(f);
+                void Num(string nome, float v) { var p = so.FindProperty("m_Settings." + nome); if (p == null) return; if (p.propertyType == SerializedPropertyType.Float) p.floatValue = v; else if (p.propertyType == SerializedPropertyType.Boolean) p.boolValue = v > 0.5f; else p.intValue = (int)v; }
+                Num("Downsample", 1f);
+                Num("Intensity", 0.6f);
+                Num("Radius", 0.35f);
+                Num("Falloff", 60f);
+                SerializedProperty amostras = so.FindProperty("m_Settings.Samples");
+                if (amostras != null) amostras.intValue = 2; // Low
+                SerializedProperty blur = so.FindProperty("m_Settings.BlurQuality");
+                if (blur != null) blur.intValue = 2; // Low (rápido)
+                so.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(f);
+            }
+            EditorUtility.SetDirty(dados);
         }
     }
 }

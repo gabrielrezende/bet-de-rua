@@ -74,6 +74,12 @@ namespace BetsDeRua
         public float giroPessoas = 180f; // o modelo do MakeHuman olha para -Z, como o corpo de peças
         public Pessoa[] pessoas = new Pessoa[0];
 
+        [Header("Visual estilizado (Shaders/PersonagemEstilizado)")]
+        [Tooltip("Pele, camisa, bermuda e tênis das pessoas com o shader estilizado (luz em faixas, contorno). Desligado: material realista do MakeHuman.")]
+        public bool usarEstilizado = true;
+        [Tooltip("O shader estilizado (referência aqui para entrar no .exe).")]
+        public Shader shaderEstilizado;
+
         /// <summary>
         /// A pessoa que mais combina com a ficha: mesmo gênero e faixa de idade, tom de pele mais
         /// perto e o tipo de cabelo; entre as parecidas, escolhe pelo nome (sempre a mesma pessoa).

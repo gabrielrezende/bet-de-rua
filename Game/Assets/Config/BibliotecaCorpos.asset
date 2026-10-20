@@ -151,4 +151,5 @@ MonoBehaviour:
     tomPele: 0.8
     cabeloComprido: 0
     alturaModelo: 1.3668764
-  ajusteChapeuPessoas: -0.05
+  usarEstilizado: 1
+  shaderEstilizado: {fileID: 4800000, guid: 48f772f98a28b48498c6e399225fd5d6, type: 3}

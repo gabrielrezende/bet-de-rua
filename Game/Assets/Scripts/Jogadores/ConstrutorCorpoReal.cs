@@ -200,6 +200,13 @@ namespace BetsDeRua
                     r.sharedMaterial = Tingir(r.sharedMaterial, Color.Lerp(Color.white, corCalcado, 0.3f), "tenis");
                 else if (comChapeu && n.StartsWith("cabelo") && r.sharedMaterial != null && !CabeloPreso(r.sharedMaterial.name))
                     r.gameObject.SetActive(false); // cabelo solto vazaria pelo boné; rabo de cavalo e trança aparecem por trás
+                // Visual estilizado: pele e roupa no shader de faixas; cabelo, olhos e cílios ficam no material de recorte
+                if (b.usarEstilizado && b.shaderEstilizado != null)
+                {
+                    if (r.name == "Time_Camisa") r.sharedMaterial = Estilizado(r.sharedMaterial, b.shaderEstilizado, CorDe(tecidoTime));
+                    else if (r.name == "Corpo" || n.StartsWith("bermuda") || n.StartsWith("tenis"))
+                        r.sharedMaterial = Estilizado(r.sharedMaterial, b.shaderEstilizado, null);
+                }
             }
 
             Transform cabeca = animador.isHuman ? animador.GetBoneTransform(HumanBodyBones.Head) : null;
@@ -213,6 +220,47 @@ namespace BetsDeRua
         {
             string m = material.ToLowerInvariant();
             return m.Contains("ponytail") || m.Contains("braid");
+        }
+
+        private static Texture2D mascaraPecaInteira;
+
+        /// <summary>Máscara "peça inteira na cor principal": só o canal vermelho (o verde é a cor secundária).</summary>
+        private static Texture2D MascaraPecaInteira()
+        {
+            if (mascaraPecaInteira != null) return mascaraPecaInteira;
+            mascaraPecaInteira = new Texture2D(4, 4, TextureFormat.RGBA32, false, true) { name = "MascaraPecaInteira", hideFlags = HideFlags.DontSave };
+            Color[] px = new Color[16];
+            for (int i = 0; i < px.Length; i++) px[i] = new Color(1f, 0f, 0f, 1f);
+            mascaraPecaInteira.SetPixels(px);
+            mascaraPecaInteira.Apply();
+            return mascaraPecaInteira;
+        }
+
+        private static Color CorDe(Material m) => m == null ? Color.white : m.HasProperty("_BaseColor") ? m.GetColor("_BaseColor") : m.color;
+
+        /// <summary>
+        /// Cópia estilizada de um material (mesma textura, relevo e tinta), no shader PersonagemEstilizado.
+        /// Com 'corTime', a peça inteira é tingida com a cor do time (máscara branca) e a textura dá as dobras.
+        /// </summary>
+        private static Material Estilizado(Material original, Shader shader, Color? corTime)
+        {
+            if (original == null) return null;
+            if (original.shader == shader && corTime == null) return original;
+            string chave = $"estilo{original.name}{(corTime.HasValue ? ColorUtility.ToHtmlStringRGB(corTime.Value) : "")}";
+            if (materiais.TryGetValue(chave, out Material pronto) && pronto != null) return pronto;
+            Material m = new Material(shader) { name = "Estilo_" + original.name };
+            if (original.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", original.GetTexture("_BaseMap"));
+            if (original.HasProperty("_BumpMap") && original.GetTexture("_BumpMap") != null) m.SetTexture("_BumpMap", original.GetTexture("_BumpMap"));
+            if (corTime.HasValue)
+            {
+                m.SetColor("_BaseColor", Color.white);
+                m.SetTexture("_MascaraTime", MascaraPecaInteira());
+                m.SetColor("_CorTime", corTime.Value);
+            }
+            else if (original.HasProperty("_BaseColor")) m.SetColor("_BaseColor", original.GetColor("_BaseColor"));
+            m.enableInstancing = true;
+            materiais[chave] = m;
+            return m;
         }
 
         /// <summary>Camisa do time por cima da camiseta do MakeHuman: mantém a textura do tecido e pinta com a cor do time.</summary>
@@ -409,8 +457,20 @@ namespace BetsDeRua
             foreach (Renderer r in raiz.GetComponentsInChildren<Renderer>(true))
             {
                 if (!r.name.StartsWith("Time_")) continue;
+                // Camiseta estilizada: troca só a cor do time no shader (mesma textura)
+                if (r is SkinnedMeshRenderer && r.sharedMaterial != null && b != null && b.shaderEstilizado != null && r.sharedMaterial.shader == b.shaderEstilizado)
+                {
+                    string chave = $"estiloTroca{r.sharedMaterial.GetTexture("_BaseMap")?.name}{ColorUtility.ToHtmlStringRGB(CorDe(time))}";
+                    if (!materiais.TryGetValue(chave, out Material m) || m == null)
+                    {
+                        m = new Material(r.sharedMaterial) { name = "Estilo_troca" };
+                        m.SetColor("_CorTime", CorDe(time));
+                        materiais[chave] = m;
+                    }
+                    r.sharedMaterial = m;
+                }
                 // Camiseta do MakeHuman: só troca a cor (a textura do tecido e as costuras ficam)
-                if (r is SkinnedMeshRenderer && r.sharedMaterial != null && r.sharedMaterial.name.StartsWith("Pessoa_"))
+                else if (r is SkinnedMeshRenderer && r.sharedMaterial != null && r.sharedMaterial.name.StartsWith("Pessoa_"))
                     r.sharedMaterial = MatTecidoPessoa(r.sharedMaterial, time);
                 else r.sharedMaterial = r is SkinnedMeshRenderer ? camisa : time;
             }
