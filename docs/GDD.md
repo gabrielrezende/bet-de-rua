@@ -675,6 +675,33 @@ Do ícone até a primeira batida em menos de 60 segundos: o tutorial é a primei
 - **Online:** as telas do grupo (você + 3 vagas e o código do grupo), dos amigos e do código estão prontas; a conexão entra com a Steam (Steamworks: lobby, convites e lista de amigos).
 - **Ajustes:** dificuldade dos bots, pontos para vencer, prévia do arremesso, tela cheia, qualidade da imagem e volume (salvos no computador).
 
+### O que pegamos de cada jogo de referência (versão 0.3)
+
+Analisamos gameplay do EA FC 26, FIFA Street, Madden NFL 26, MLB The Show 25 e NBA 2K26 e o menu do FC 26. O que encaixou no bets:
+
+| Jogo | O que pegamos | Como ficou no Bets de Rua |
+| --- | --- | --- |
+| MLB The Show (o mais parecido: arremesso e batida) | Câmera atrás do arremessador antes do lance; câmera atrás do rebatedor para ler a bola; cartão do jogador ao entrar no taco | Antes de cada arremesso a câmera corta para trás de quem arremessa (ou para trás da casinha, se você está no taco); depois da batida, abre para a transmissão. Cartão "NO TACO / ARREMESSA" com nome, estilo e nota |
+| NBA 2K / FIFA Street | Anel no chão e nome em quem você controla; closes de reação | Anel colorido (P1 azul, P2 vermelho, P3 verde, P4 amarelo) embaixo do seu jogador; close de 2 s em quem comemora |
+| FC 26 (menu) | Lista vertical de modos, monograma, frase, botão "Entrar", fundo de cinema com desfoque | Tela de início igual: lista à esquerda, monograma (PR, ML, TA, TB...), tomada de câmera diferente para cada modo, fundo desfocado |
+| FC / Madden (corpos) | Corpos e animações de captura | Personagens de verdade (Quaternius, CC0): corpo masculino/feminino, cabelos, animações de andar, correr, arremessar, bater, pegar, deslizar, comemorar |
+| Transmissões em geral | Corte seco entre câmeras; câmera lenta no lance decisivo; narração | Troca de câmera por corte; queimada em câmera lenta com close na garrafa caindo; "moleque do muro" narrando em legenda |
+| FIFA Street | Torcida perto do campo, ambiente de rua | Vizinhos assistindo nas calçadas (em pé, conversando, no celular), que comemoram e reclamam |
+| Teaser do FC 26 (qualidade de imagem) | Lente de cinema: fundo desfocado nos closes, grão de filme, borrão de movimento, câmera baixa colada no chão, poeira/grama levantando no contato | Closes e câmera lenta com fundo desfocado; grão de filme e borrão leves na partida; poeira quando a bola quica forte; texturas de foto (asfalto, concreto, tijolo, reboco, terra, grama) e céu de foto (HDRI) |
+
+### Lugares sorteados (versão 0.4)
+
+A cada partida o jogo sorteia onde vai ser, e o nome aparece na tela ("HOJE O JOGO É: TERRÃO DA VILA"). Cada lugar tem o seu chão, e o chão muda o jogo (números no `ConfigMapas`, multiplicando os do asfalto):
+
+| Lugar | Chão | Como a bola se comporta | Em volta |
+| --- | --- | --- | --- |
+| Rua do Bar do Zé | Asfalto e calçada com meio-fio | Quica alto e corre; pega na quina do meio-fio e sobe | Casas coloridas, bar, chaveiro, postes com fio, morro com casinhas |
+| Terrão da Vila | Terra batida | Quica mais baixo, freia mais rolando e **quica torto** (até 9°): difícil de ler | Muro de bloco pichado, casas atrás, morro |
+| Campinho do Bairro | Grama com terra gasta nas bases | Quica baixo e morre rápido; o alambrado segura a bola | Alambrado, árvores, casas ao longe |
+| Fazenda do Tio | Pasto | Quica bem baixo, a bola para logo | Cerca de madeira, vacas pastando, celeiro vermelho, morros verdes |
+
+Próximos lugares da lista (pedido do Gabriel): favela (vielas e escadão), avenida (canteiro central), rodovia/acostamento, pontilhão (embaixo do viaduto, com eco), paralelepípedo, beira-mar e as versões noturnas.
+
 ## Arte, ambientação e som
 
 Visual 3D estilizado e colorido (low poly com textura pintada à mão), leve para rodar bem no Steam Deck e em PC de entrada.
@@ -875,6 +902,12 @@ Além das skins (só visuais), a ideia é ter **tipos** de taco e de bola com je
 - Visual: bonés, camisas de time de várzea inventado, chinelo, tênis de mola, joelheira de skate, curativo no joelho.
 - Comemorações: dancinha, "aviaozinho", bater os tacos no chão, apontar para a janela da vizinha.
 - Giz personalizado: cor e desenho do círculo da base e do escudo da dupla.
+
+**Parcerias de marca (futuro, dinheiro sem atrapalhar o jogo)**
+
+- **Garrafa da casinha:** na rua a gente jogava com garrafa PET de refrigerante com um pouco de líquido dentro (da metade para cima, para dar peso). No jogo ela já é assim: PET de 2 litros, plástico transparente, líquido e rótulo. Hoje os rótulos são inventados (cola com tampa vermelha, guaraná com garrafa verde). No futuro, versões oficiais em parceria com marcas de refrigerante (Coca-Cola, Pepsi, Guaraná Antarctica, Dolly e afins), como item cosmético ou como "garrafa da temporada" patrocinada.
+- **Fachadas e banners das lojas da rua:** o bar, o mercadinho, a padaria, o chaveiro e a lan house têm placas. Elas podem virar espaço de propaganda de marcas reais (bebida, lanche, tênis, operadora de celular), trocando por temporada, do mesmo jeito que as placas de publicidade em volta do campo no FC.
+- Regra: propaganda só no cenário e nos cosméticos, nunca em pop-up nem atrapalhando a partida. Precisa de contrato e de cuidado com a classificação etária (refrigerante, sim; bebida alcoólica, não).
 
 **Loja e progressão**
 
@@ -1463,6 +1496,7 @@ A turma da rua é fixa e aparece no teaser, no tutorial, na narração e nos men
 - **Escuta da comunidade:** votação mensal de regras e de qual arena vem a seguir.
 - **Correções:** atualização de balanceamento a cada 2 semanas no acesso antecipado.
 - **Expansão:** consoles, versão internacional, modo história e, se houver demanda, versão mobile simplificada.
+- **Realidade virtual (ideia de futuro):** jogar de óculos VR com um amigo, cada um na sua casa, como se os dois estivessem na mesma rua: você segura o taco com as mãos (o controle vira o taco) e arremessa a bola com o braço. Depende de o online estar maduro e de uma versão própria das câmeras (primeira pessoa). Fica para depois do lançamento.
 
 ## Riscos e plano B
 

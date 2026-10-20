@@ -15,7 +15,7 @@ namespace BetsDeRua
         [SerializeField] private ConfigFisica config;
         [SerializeField] private Material[] coresDeCamisa;
         [Tooltip("Quantas pessoas assistindo.")]
-        [SerializeField] private int quantidade = 12;
+        [SerializeField] private int quantidade = 28;
 
         private readonly List<Torcedor> torcedores = new List<Torcedor>();
 
@@ -25,21 +25,40 @@ namespace BetsDeRua
             System.Random r = new System.Random(42);
             float meio = config.distanciaBases * 0.5f;
             float meiaLargura = config.larguraCampo * 0.5f;
-            var lugares = new List<(Vector3 pos, float giro, string pose)>();
-            for (int i = 0; i < quantidade; i++)
+            var lugares = new List<(Vector3 pos, float giro, string pose, bool crianca)>();
+            // Em rodinhas de 2 a 4 pessoas (como na rua de verdade), nas duas calçadas, em duas fileiras:
+            // a da frente colada no meio-fio (crianças agachadas ali), a de trás encostada no muro.
+            int grupo = 0;
+            while (lugares.Count < quantidade && grupo < quantidade)
             {
-                bool fundo = i % 3 != 0;
-                float x;
+                grupo++;
+                bool fundo = grupo % 3 != 0;
+                float centro;
                 int tentativas = 0;
                 do
                 {
-                    x = (float)(r.NextDouble() - 0.5) * (config.comprimentoCampo - 6f);
+                    centro = (float)(r.NextDouble() - 0.5) * (config.comprimentoCampo - 6f);
                     tentativas++;
-                } while (Mathf.Abs(Mathf.Abs(x) - meio) < 4f && tentativas < 20); // longe das bases
-                Vector3 pos = fundo ? new Vector3(x, config.alturaCalcada, meiaLargura - 0.55f) : new Vector3(x, 0f, -meiaLargura - 0.9f);
-                float giro = fundo ? 180f + (float)(r.NextDouble() - 0.5) * 50f : (float)(r.NextDouble() - 0.5) * 50f;
-                string[] poses = fundo ? new[] { "BracosCruzados", "Conversando", "Celular", "Parado", "Agachado" } : new[] { "BracosCruzados", "Parado", "Conversando" };
-                lugares.Add((pos, giro, poses[r.Next(poses.Length)]));
+                } while (Mathf.Abs(Mathf.Abs(centro) - meio) < 4.5f && tentativas < 30); // longe das bases
+                int tamanho = 2 + r.Next(3);
+                for (int k = 0; k < tamanho && lugares.Count < quantidade; k++)
+                {
+                    bool frente = k % 2 == 0;
+                    bool crianca = frente && r.NextDouble() < 0.5;
+                    float x = centro + (k - tamanho * 0.5f) * 0.75f + (float)(r.NextDouble() - 0.5) * 0.3f;
+                    if (Mathf.Abs(Mathf.Abs(x) - meio) < 4f) continue;
+                    // Na rua, a calçada do fundo (a fileira da frente colada no meio-fio); nos outros
+                    // lugares, do lado de fora da cerca. Do lado da câmera, sempre atrás do muro baixo.
+                    float meiaRua = config.larguraRua * 0.5f;
+                    float z = fundo
+                        ? (SuperficieAtual.TemCalcada ? (frente ? meiaRua + 0.45f : meiaLargura - 0.5f) : (frente ? meiaLargura + 0.45f : meiaLargura + 1.2f))
+                        : (frente ? -meiaLargura - 0.45f : -meiaLargura - 1.2f);
+                    float y = fundo && SuperficieAtual.TemCalcada ? config.alturaCalcada : 0f;
+                    float giro = (fundo ? 180f : 0f) + (float)(r.NextDouble() - 0.5) * 50f;
+                    string[] poses = crianca ? new[] { "Agachado", "Parado", "Torcendo" }
+                                   : fundo ? new[] { "BracosCruzados", "Conversando", "Celular", "Parado" } : new[] { "BracosCruzados", "Parado", "Conversando" };
+                    lugares.Add((new Vector3(x, y, z), giro, poses[r.Next(poses.Length)], crianca));
+                }
             }
             int n = 0;
             foreach (var lugar in lugares)
@@ -47,18 +66,30 @@ namespace BetsDeRua
                 GameObject g = new GameObject($"Torcedor{++n}");
                 g.transform.SetParent(transform);
                 g.transform.SetPositionAndRotation(lugar.pos, Quaternion.Euler(0f, lugar.giro, 0f));
-                PerfilPersonagem p = Sortear(r);
+                PerfilPersonagem p = Sortear(r, lugar.crianca);
                 Material camisa = coresDeCamisa != null && coresDeCamisa.Length > 0 ? coresDeCamisa[r.Next(coresDeCamisa.Length)] : null;
                 Animator a = ConstrutorCorpoReal.Montar(g.transform, p, camisa, biblioteca);
                 a.runtimeAnimatorController = biblioteca.controladorTorcida;
                 Torcedor t = a.gameObject.AddComponent<Torcedor>();
-                t.Iniciar(lugar.pose, (float)r.NextDouble());
+                t.Iniciar(lugar.pose, (float)r.NextDouble(), lugar.crianca);
                 torcedores.Add(t);
             }
             ControladorLance.Comemoracao += AoComemorar;
+            ControladorLance.Destaque += AoDestaque;
         }
 
-        private void OnDestroy() => ControladorLance.Comemoracao -= AoComemorar;
+        private void OnDestroy()
+        {
+            ControladorLance.Comemoracao -= AoComemorar;
+            ControladorLance.Destaque -= AoDestaque;
+        }
+
+        /// <summary>Lance bonito (garrafa caiu, batida perfeita): a rua inteira levanta.</summary>
+        private void AoDestaque(Vector3 onde, bool garrafa)
+        {
+            foreach (Torcedor t in torcedores)
+                if (t != null) t.Reagir(true);
+        }
 
         private void AoComemorar(Dupla dupla, bool festa)
         {
@@ -66,12 +97,12 @@ namespace BetsDeRua
                 if (t != null) t.Reagir(festa || Random.value < 0.6f);
         }
 
-        private static PerfilPersonagem Sortear(System.Random r)
+        private static PerfilPersonagem Sortear(System.Random r, bool crianca)
         {
             PerfilPersonagem p = ScriptableObject.CreateInstance<PerfilPersonagem>();
             p.hideFlags = HideFlags.DontSave;
             p.genero = r.NextDouble() < 0.45 ? Genero.Feminino : Genero.Masculino;
-            p.faixaEtaria = r.NextDouble() < 0.25 ? FaixaEtaria.Crianca : r.NextDouble() < 0.3 ? FaixaEtaria.Adolescente : FaixaEtaria.Adulto;
+            p.faixaEtaria = crianca ? FaixaEtaria.Crianca : r.NextDouble() < 0.12 ? FaixaEtaria.Crianca : r.NextDouble() < 0.3 ? FaixaEtaria.Adolescente : FaixaEtaria.Adulto;
             Vector2 faixa = PerfilPersonagem.FaixaAltura(p.faixaEtaria);
             p.altura = Mathf.Lerp(faixa.x, faixa.y, (float)r.NextDouble());
             p.tipoCorpo = (TipoCorpo)r.Next(3);
@@ -86,50 +117,6 @@ namespace BetsDeRua
             p.calcado = (Calcado)r.Next(3);
             p.corCalcado = r.NextDouble() < 0.5 ? Color.white : new Color((float)r.NextDouble(), (float)r.NextDouble(), (float)r.NextDouble());
             return p;
-        }
-    }
-
-    /// <summary>Uma pessoa da torcida: fica na pose dela, olha a bola e reage aos lances.</summary>
-    public class Torcedor : MonoBehaviour
-    {
-        private Animator animador;
-        private string pose;
-        private float voltarEm;
-        private Transform bola;
-
-        public void Iniciar(string pose, float fase)
-        {
-            animador = GetComponent<Animator>();
-            this.pose = pose;
-            animador.Play(pose, 0, fase);
-        }
-
-        public void Reagir(bool festa)
-        {
-            if (animador == null) return;
-            animador.CrossFade(festa ? (Random.value < 0.5f ? "Torcendo" : "Sim") : "Nao", 0.2f, 0, 0f);
-            voltarEm = Time.time + Random.Range(1.8f, 3f);
-        }
-
-        private void Update()
-        {
-            if (voltarEm > 0f && Time.time > voltarEm)
-            {
-                voltarEm = 0f;
-                animador.CrossFade(pose, 0.3f, 0, Random.value);
-            }
-        }
-
-        private void OnAnimatorIK(int camada)
-        {
-            if (bola == null)
-            {
-                Bola b = FindFirstObjectByType<Bola>();
-                if (b != null) bola = b.transform;
-            }
-            if (bola == null || animador == null) return;
-            animador.SetLookAtWeight(0.8f, 0.1f, 0.8f, 0f, 0.6f);
-            animador.SetLookAtPosition(bola.position);
         }
     }
 }

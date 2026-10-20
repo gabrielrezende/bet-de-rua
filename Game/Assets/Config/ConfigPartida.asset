@@ -12,28 +12,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f9f333b2aaa7406f839fca9e47d5730, type: 3}
   m_Name: ConfigPartida
   m_EditorClassIdentifier: Assembly-CSharp::BetsDeRua.ConfigPartida
-  metaPontos: 10
+  metaPontos: 5
   aberturaMinimaBatidaBot: 8
   aberturaMaximaBatidaBot: 32
   nivelLado1: 1
   nivelLado2: 1
   niveisBots:
   - nome: "F\xE1cil"
-    erroBatidaMs: 270
+    erroBatidaMs: 290
     desvioArremesso: 1.1
     desvioChute: 0.5
     reacao: 0.4
-    margemRiscoCorrida: -0.75
+    margemRiscoCorrida: -0.6
     variarLugarArremesso: 0.3
-    acertoAlturaBatida: 0.7
+    acertoAlturaBatida: 0.78
   - nome: "M\xE9dio"
-    erroBatidaMs: 230
+    erroBatidaMs: 255
     desvioArremesso: 0.8
-    desvioChute: 0.35
-    reacao: 0.25
-    margemRiscoCorrida: -0.5
+    desvioChute: 0.25
+    reacao: 0.18
+    margemRiscoCorrida: -0.25
     variarLugarArremesso: 1.2
-    acertoAlturaBatida: 0.8
+    acertoAlturaBatida: 0.88
   - nome: "Dif\xEDcil"
     erroBatidaMs: 150
     desvioArremesso: 0.35
@@ -42,7 +42,7 @@ MonoBehaviour:
     margemRiscoCorrida: -0.1
     variarLugarArremesso: 2.5
     acertoAlturaBatida: 0.93
-  reiniciarSozinhoNoFim: 0
+  reiniciarSozinhoNoFim: 1
   alternarQuemComecaNoTaco: 1
   gravarLog: 1
   intervaloFotoLog: 0.5
@@ -63,7 +63,7 @@ MonoBehaviour:
   tempoGarrafaCaidaQueimaErrada: 1.2
   caiMetadeAoPerderTacoNoMatchPoint: 1
   pegarNoArPerdeTaco: 0
-  afastamentoRebatedor: 0.85
+  afastamentoRebatedor: 0.95
   afastamentoArremessador: 1.2
   distanciaGuardiao: 4
   corDuplaTaco: {r: 0.2, g: 0.45, b: 0.95, a: 1}
@@ -74,7 +74,7 @@ MonoBehaviour:
   afastamentoParceiroEspelho: 0.8
   tempoSeguroParaEncerrar: 1.5
   tempoTrocaDePapel: 4
-  soAssistir: 0
+  soAssistir: 1
   arremessadorAutomatico: 1
   esperaArremessoAutomatico: 2
   rebatedorAutomatico: 1

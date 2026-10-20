@@ -38,6 +38,8 @@ namespace BetsDeRua.Editor
             ConfigCamera configCamera = CarregarOuCriarConfig<ConfigCamera>(CaminhoConfigCamera);
             ConfigPartida configPartida = CarregarOuCriarConfig<ConfigPartida>(CaminhoConfigPartida);
             ConfigHUD configHUD = CarregarOuCriarConfig<ConfigHUD>(CaminhoConfigHUD);
+            configHUD.materialPoeira = CriarMaterialPoeira();
+            EditorUtility.SetDirty(configHUD);
 
             Material matChao = CriarMaterial("Chao", new Color(0.22f, 0.22f, 0.23f));
             Material matGiz = CriarMaterial("Giz", new Color(0.95f, 0.95f, 0.95f));
@@ -70,6 +72,16 @@ namespace BetsDeRua.Editor
 
             // ---------- Rua: asfalto com faixa amarela, meio-fio, calçadas e fachadas ----------
             ConstrutorRuaEditor.Montar(campo.transform, config);
+            // Lugar da partida sorteado (rua, terrão, campinho, fazenda)
+            MapaDaPartida mapa = campo.AddComponent<MapaDaPartida>();
+            Ligar(mapa, "config", CarregarOuCriarConfig<ConfigMapas>("Assets/Config/ConfigMapas.asset"));
+            Transform ruaMontada = campo.transform.Find("Rua");
+            Ligar(mapa, "soDaRua", ruaMontada.Find("SoDaRua").gameObject);
+            Ligar(mapa, "morro", ruaMontada.Find("Morro").gameObject);
+            LigarLista(mapa, "cenarios", new Object[]
+            {
+                ruaMontada.Find("Mapa_Terrao").gameObject, ruaMontada.Find("Mapa_Campinho").gameObject, ruaMontada.Find("Mapa_Fazenda").gameObject
+            });
 
             // Bases riscadas de giz: casinha da garrafa + área do taco na frente (a zona segura em volta é invisível)
             GameObject bases = new GameObject("Bases");
@@ -291,6 +303,7 @@ namespace BetsDeRua.Editor
             Ligar(hud, "estilo", AssetDatabase.LoadAssetAtPath<UnityEngine.UIElements.StyleSheet>(MontadorMenu.CaminhoEstilo));
             Ligar(hud, "lance", lance);
             Ligar(hud, "configPartida", configPartida);
+            Ligar(hud, "gerenciador", gerenciador);
             MontadorMenu.CriarSistemaDeEventos();
 
             // ---------- Luz, céu e pós-processamento (o mesmo clima do menu) ----------
@@ -541,6 +554,11 @@ namespace BetsDeRua.Editor
             tampa.GetComponent<MeshRenderer>().sharedMaterial = materialTampa;
             Object.DestroyImmediate(tampa.GetComponent<Collider>());
 
+            // Visual de garrafa PET de verdade (o cilindro acima fica só como colisão)
+            corpoVisual.GetComponent<MeshRenderer>().enabled = false;
+            tampa.GetComponent<MeshRenderer>().enabled = false;
+            VestirPet(raiz.transform, config, nome.EndsWith("A") ? 1 : 0);
+
             Rigidbody corpo = raiz.AddComponent<Rigidbody>();
             corpo.mass = config.massaGarrafa;
             corpo.isKinematic = true;
@@ -550,6 +568,133 @@ namespace BetsDeRua.Editor
             Garrafa garrafa = raiz.AddComponent<Garrafa>();
             Ligar(garrafa, "config", config);
             return garrafa;
+        }
+
+        /// <summary>
+        /// Garrafa PET de 2 litros: base com pétalas, corpo, ombro, gargalo e tampa; plástico
+        /// transparente; líquido até um pouco acima da metade (para dar peso, como na rua) e rótulo.
+        /// 'marca': 0 = cola (garrafa clara, líquido escuro, tampa vermelha), 1 = guaraná (garrafa verde,
+        /// líquido âmbar, tampa verde). Marcas reais ficam para parcerias no futuro (GDD).
+        /// </summary>
+        internal static void VestirPet(Transform raiz, ConfigFisica config, int marca)
+        {
+            // Um pouco mais fina que a colisão, para ter a proporção de uma PET de 2 litros
+            float H = config.alturaGarrafa, R = config.diametroGarrafa * 0.5f * 0.82f;
+            var perfil = new System.Collections.Generic.List<Vector2>
+            {
+                new Vector2(0f, 0f), new Vector2(0.003f, R * 0.55f), new Vector2(0.012f, R * 0.85f), new Vector2(0.03f, R * 0.98f),
+                new Vector2(H * 0.2f, R), new Vector2(H * 0.22f, R * 0.95f), new Vector2(H * 0.24f, R), new Vector2(H * 0.5f, R),
+                new Vector2(H * 0.58f, R * 0.96f), new Vector2(H * 0.66f, R * 0.84f), new Vector2(H * 0.74f, R * 0.62f),
+                new Vector2(H * 0.8f, R * 0.42f), new Vector2(H * 0.84f, R * 0.33f), new Vector2(H * 0.86f, R * 0.32f),
+                new Vector2(H * 0.865f, R * 0.4f), new Vector2(H * 0.875f, R * 0.4f), new Vector2(H * 0.88f, R * 0.32f), new Vector2(H * 0.9f, 0f)
+            };
+            Color tintaPet = marca == 1 ? new Color(0.3f, 0.7f, 0.4f, 0.3f) : new Color(0.9f, 0.95f, 1f, 0.12f);
+            Color liquido = marca == 1 ? new Color(0.88f, 0.55f, 0.12f) : new Color(0.09f, 0.035f, 0.015f);
+            Color tampa = marca == 1 ? new Color(0.1f, 0.55f, 0.2f) : new Color(0.85f, 0.1f, 0.1f);
+            Color rotulo = marca == 1 ? new Color(0.1f, 0.5f, 0.2f) : new Color(0.8f, 0.08f, 0.08f);
+
+            Material matPet = MaterialTransparente($"Pet{marca}", tintaPet);
+            Peca3D("Pet", raiz, Vector3.zero, Vector3.one, MalhasBoneco.Torno($"pet{marca}", perfil, 1f, 1f, 28), matPet);
+            // Líquido: 58% da altura, um pouco menor que a garrafa
+            var perfilLiquido = new System.Collections.Generic.List<Vector2>
+            {
+                new Vector2(0.004f, 0f), new Vector2(0.006f, R * 0.8f), new Vector2(0.03f, R * 0.94f), new Vector2(H * 0.56f, R * 0.94f), new Vector2(H * 0.561f, 0f)
+            };
+            Peca3D("Liquido", raiz, Vector3.zero, Vector3.one, MalhasBoneco.Torno($"liquido{marca}", perfilLiquido, 1f, 1f, 24), CriarMaterial($"Liquido{marca}", liquido));
+            // Rótulo: faixa colorida com uma onda branca (sem marca registrada)
+            var perfilRotulo = new System.Collections.Generic.List<Vector2>
+            {
+                new Vector2(H * 0.26f, R * 1.012f), new Vector2(H * 0.46f, R * 1.012f)
+            };
+            Material matRotulo = CriarMaterial($"Rotulo{marca}", rotulo);
+            matRotulo.SetFloat("_Smoothness", 0.55f);
+            Peca3D("Rotulo", raiz, Vector3.zero, Vector3.one, MalhasBoneco.Torno($"rotulo{marca}", perfilRotulo, 1f, 1f, 28), matRotulo);
+            Peca3D("RotuloFaixa", raiz, Vector3.zero, Vector3.one, MalhasBoneco.Torno($"rotuloFaixa{marca}", new System.Collections.Generic.List<Vector2>
+                { new Vector2(H * 0.34f, R * 1.016f), new Vector2(H * 0.38f, R * 1.016f) }, 1f, 1f, 28), CriarMaterial("RotuloBranco", Color.white));
+            Material matTampa = CriarMaterial($"TampaPet{marca}", tampa);
+            Peca3D("TampaLado", raiz, new Vector3(0f, H * 0.89f, 0f), Vector3.one, MalhasBoneco.Torno($"tampaPet{marca}", new System.Collections.Generic.List<Vector2>
+                { new Vector2(0f, 0f), new Vector2(0.001f, R * 0.37f), new Vector2(H * 0.06f, R * 0.37f), new Vector2(H * 0.065f, R * 0.3f), new Vector2(H * 0.066f, 0f) }, 1f, 1f, 18), matTampa);
+        }
+
+        private static void Peca3D(string nome, Transform pai, Vector3 local, Vector3 escala, Mesh malha, Material material)
+        {
+            GameObject g = new GameObject(nome);
+            g.transform.SetParent(pai, false);
+            g.transform.localPosition = local;
+            g.transform.localScale = escala;
+            g.AddComponent<MeshFilter>().sharedMesh = SalvarMalhaGarrafa(malha);
+            g.AddComponent<MeshRenderer>().sharedMaterial = material;
+        }
+
+        private static Mesh SalvarMalhaGarrafa(Mesh m)
+        {
+            if (AssetDatabase.Contains(m)) return m;
+            CriarPasta("Assets", "Malhas");
+            string caminho = $"Assets/Malhas/{m.name.Replace(':', '_')}.asset";
+            Mesh existente = AssetDatabase.LoadAssetAtPath<Mesh>(caminho);
+            if (existente != null) { EditorUtility.CopySerialized(m, existente); return existente; }
+            Mesh copia = Object.Instantiate(m);
+            AssetDatabase.CreateAsset(copia, caminho);
+            return copia;
+        }
+
+        /// <summary>Material transparente (plástico PET): deixa ver o líquido dentro.</summary>
+        private static Material MaterialTransparente(string nome, Color cor)
+        {
+            Material m = CriarMaterial(nome, cor);
+            m.SetFloat("_Surface", 1f);
+            m.SetFloat("_Blend", 0f);
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.SetFloat("_ZWrite", 0f);
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            m.SetFloat("_Smoothness", 0.95f);
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>Material da poeira: nuvem redonda e macia (textura gerada), transparente, sem luz.</summary>
+        private static Material CriarMaterialPoeira()
+        {
+            CriarPasta("Assets", "Texturas");
+            string caminhoTex = "Assets/Texturas/Poeira.png";
+            const int n = 64;
+            Texture2D t = new Texture2D(n, n, TextureFormat.RGBA32, false);
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x, y), new Vector2(n * 0.5f, n * 0.5f)) / (n * 0.5f);
+                    float ruido = Mathf.PerlinNoise(x * 0.15f, y * 0.15f) * 0.5f + 0.5f;
+                    float a = Mathf.Clamp01(1f - d) * Mathf.Clamp01(1f - d) * ruido;
+                    t.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+                }
+            System.IO.File.WriteAllBytes(caminhoTex, t.EncodeToPNG());
+            Object.DestroyImmediate(t);
+            AssetDatabase.ImportAsset(caminhoTex);
+            TextureImporter imp = (TextureImporter)AssetImporter.GetAtPath(caminhoTex);
+            imp.alphaIsTransparency = true;
+            imp.wrapMode = TextureWrapMode.Clamp;
+            imp.SaveAndReimport();
+            string caminho = "Assets/Materiais/Poeira.mat";
+            Material m = AssetDatabase.LoadAssetAtPath<Material>(caminho);
+            if (m == null)
+            {
+                m = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+                AssetDatabase.CreateAsset(m, caminho);
+            }
+            m.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(caminhoTex));
+            m.SetFloat("_Surface", 1f);
+            m.SetFloat("_Blend", 0f);
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.SetFloat("_ZWrite", 0f);
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            EditorUtility.SetDirty(m);
+            return m;
         }
 
         /// <summary>Preenche um campo [SerializeField] privado de um componente.</summary>

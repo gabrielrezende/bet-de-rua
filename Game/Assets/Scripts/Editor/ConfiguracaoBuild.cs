@@ -11,7 +11,7 @@ namespace BetsDeRua.Editor
     /// </summary>
     public static class ConfiguracaoBuild
     {
-        public const string Versao = "0.2.0";
+        public const string Versao = "0.4.0";
         public const string PastaSaida = "Builds/BetsDeRua";
 
         [MenuItem("Bets/Preparar build")]
@@ -42,7 +42,8 @@ namespace BetsDeRua.Editor
                 scenes = new[] { "Assets/Scenes/Menu.unity", "Assets/Scenes/Prototipo.unity" },
                 locationPathName = caminho,
                 target = BuildTarget.StandaloneWindows64,
-                options = BuildOptions.None,
+                // Sempre do zero: o cache já entregou uma cena velha (level0 "corrompido") depois de mudar scripts
+                options = BuildOptions.CleanBuildCache,
             };
             var relatorio = BuildPipeline.BuildPlayer(opcoes);
             return $"{relatorio.summary.result} · {relatorio.summary.totalSize / (1024 * 1024)} MB · {relatorio.summary.totalTime}";

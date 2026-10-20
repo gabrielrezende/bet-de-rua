@@ -41,12 +41,15 @@ namespace BetsDeRua.Editor
 
             GameObject rua = new GameObject("Rua");
             rua.transform.SetParent(pai);
-            Transform t = rua.transform;
+            // Tudo o que é só da rua de asfalto fica num grupo (os outros lugares desligam ele)
+            GameObject soRua = new GameObject("SoDaRua");
+            soRua.transform.SetParent(rua.transform);
+            Transform t = soRua.transform;
             raizAvulsos = t;
 
             // ---------- Chão: asfalto da rua (um pouco além das pontas) e terra em volta ----------
             Caixa("Asfalto", t, new Vector3(0f, 0.0008f, 0f), new Vector3(L + 40f, 0.001f, config.larguraRua + 0.2f), asfalto, false);
-            Caixa("TerraEmVolta", t, new Vector3(0f, -0.02f, 0f), new Vector3(400f, 0.02f, 400f), terra, false);
+            Caixa("TerraEmVolta", rua.transform, new Vector3(0f, -0.02f, 0f), new Vector3(400f, 0.02f, 400f), terra, false);
 
             // Faixa amarela tracejada no meio da rua
             const float traco = 3f, espaco = 2f;
@@ -111,11 +114,18 @@ namespace BetsDeRua.Editor
             // ---------- Casas fechando as pontas da rua e do lado de cá (para as câmeras de perto) ----------
             MontarPontasELadoDeCa(t, config, r);
 
-            // ---------- Morro com casinhas ao fundo ----------
-            MontarMorro(t, config, r);
+            FinalizarJuntas(t, "");
 
-            FinalizarJuntas(t);
-            foreach (Transform filho in rua.GetComponentsInChildren<Transform>())
+            // ---------- Morro com casinhas ao fundo (some na fazenda) ----------
+            GameObject morro = new GameObject("Morro");
+            morro.transform.SetParent(rua.transform);
+            MontarMorro(morro.transform, config, r);
+            FinalizarJuntas(morro.transform, "Morro_");
+
+            // ---------- Os outros lugares: terrão, campinho, fazenda (desligados; a partida sorteia) ----------
+            MontarMapas(rua.transform, config, r);
+
+            foreach (Transform filho in rua.GetComponentsInChildren<Transform>(true))
                 GameObjectUtility.SetStaticEditorFlags(filho.gameObject, StaticEditorFlags.BatchingStatic | StaticEditorFlags.ContributeGI);
         }
 
@@ -503,24 +513,48 @@ namespace BetsDeRua.Editor
 
         private static void MontarMorro(Transform pai, ConfigFisica config, System.Random r)
         {
-            // Um morro subindo atrás das casas, coberto de casinhas coloridas e de tijolo.
-            // O morro é meia esfera achatada; cada casinha fica assentada na encosta (nada flutua).
-            float zCentro = config.larguraCampo * 0.5f + 70f;
-            Vector3 raio = new Vector3(150f, 26f, 48f);
-            Juntar("Morro", terra, new Vector3(0f, 0f, zCentro), raio * 2f, "esfera");
-            for (int i = 0; i < 230; i++)
+            // Um morro de mato atrás das casas, coberto de casinhas de tijolo aparente e reboco,
+            // com janela, laje e caixa d'água (como as comunidades de verdade). Fica mais longe e mais
+            // baixo para não tomar a tela da transmissão; cada casinha fica assentada na encosta.
+            float zCentro = config.larguraCampo * 0.5f + 88f;
+            Vector3 raio = new Vector3(170f, 22f, 52f);
+            Material mato = Mat("MatoMorro", new Color(0.55f, 0.62f, 0.42f), Foto("leafy_grass", false), Foto("leafy_grass", true), 9f, 0.03f);
+            Juntar("Morro", mato, new Vector3(0f, 0f, zCentro), raio * 2f, "esfera");
+            for (int i = 0; i < 520; i++)
             {
-                float x = (float)(r.NextDouble() - 0.5) * 2f * raio.x * 0.85f;
-                float z = zCentro - raio.z * (0.15f + (float)r.NextDouble() * 0.8f);
+                float x = (float)(r.NextDouble() - 0.5) * 2f * raio.x * 0.82f;
+                float z = zCentro - raio.z * (0.1f + (float)r.NextDouble() * 0.85f);
+                float dentro = 1f - (x * x) / (raio.x * raio.x) - ((z - zCentro) * (z - zCentro)) / (raio.z * raio.z);
+                if (dentro <= 0.04f) continue;
+                // Mais casas embaixo e no meio; no alto, mato com poucas casas
+                float chao = raio.y * Mathf.Sqrt(dentro);
+                if (chao > raio.y * 0.8f && r.NextDouble() < 0.6) continue;
+                Vector3 tam = new Vector3(3f + (float)r.NextDouble() * 3f, 2.7f + (float)r.Next(2) * 2.8f, 3f + (float)r.NextDouble() * 2.5f);
+                Material m = r.NextDouble() < 0.6 ? tijolo : reboco[r.Next(reboco.Length)];
+                Vector3 centro = new Vector3(x, chao + tam.y * 0.5f - 1.4f, z);
+                Juntar("CasaMorro", m, centro, tam + new Vector3(0f, 1.4f, 0f));
+                // Laje (concreto) por cima e janelas na frente (virada para a rua)
+                Juntar("LajeMorro", concreto, centro + Vector3.up * (tam.y * 0.5f + 0.06f), new Vector3(tam.x + 0.2f, 0.12f, tam.z + 0.2f));
+                float frente = centro.z - tam.z * 0.5f - 0.03f;
+                int andares = tam.y > 4f ? 2 : 1;
+                for (int a = 0; a < andares; a++)
+                {
+                    float y = chao - 1.4f + 1.4f + a * 2.8f + 1.5f;
+                    Juntar("JanelaMorro", janela, new Vector3(x - tam.x * 0.22f, y, frente), new Vector3(0.9f, 0.8f, 0.06f));
+                    if (r.NextDouble() < 0.6) Juntar("JanelaMorro", janela, new Vector3(x + tam.x * 0.22f, y, frente), new Vector3(0.9f, 0.8f, 0.06f));
+                }
+                if (r.NextDouble() < 0.45)
+                    Juntar("CaixaMorro", caixaDagua, centro + Vector3.up * (tam.y * 0.5f + 0.55f) + new Vector3(tam.x * 0.25f, 0f, 0f), new Vector3(1f, 0.85f, 1f), "cilindro");
+            }
+            // Árvores e moitas no meio das casas (o verde da encosta)
+            for (int i = 0; i < 140; i++)
+            {
+                float x = (float)(r.NextDouble() - 0.5) * 2f * raio.x * 0.9f;
+                float z = zCentro - raio.z * (0.05f + (float)r.NextDouble() * 0.95f);
                 float dentro = 1f - (x * x) / (raio.x * raio.x) - ((z - zCentro) * (z - zCentro)) / (raio.z * raio.z);
                 if (dentro <= 0.02f) continue;
                 float chao = raio.y * Mathf.Sqrt(dentro);
-                Vector3 tam = new Vector3(3f + (float)r.NextDouble() * 3.5f, 2.6f + (float)r.NextDouble() * 3f, 3f + (float)r.NextDouble() * 3f);
-                Material m = r.NextDouble() < 0.45 ? tijolo : reboco[r.Next(reboco.Length)];
-                // Afunda um pouco no morro (a encosta é inclinada)
-                Juntar("CasaMorro", m, new Vector3(x, chao + tam.y * 0.5f - 1.2f, z), tam + new Vector3(0f, 1.2f, 0f));
-                if (r.NextDouble() < 0.3)
-                    Juntar("CaixaMorro", caixaDagua, new Vector3(x, chao + tam.y + 0.4f, z), new Vector3(1f, 0.8f, 1f), "cilindro");
+                Juntar("CopaMorro", folhagem, new Vector3(x, chao + 1.2f, z), Vector3.one * (2.5f + (float)r.NextDouble() * 3f), "esfera");
             }
         }
 
@@ -626,7 +660,7 @@ namespace BetsDeRua.Editor
             return m;
         }
 
-        private static void FinalizarJuntas(Transform pai)
+        private static void FinalizarJuntas(Transform pai, string prefixo)
         {
             int k = 0;
             foreach (var par in juntar)
@@ -643,7 +677,7 @@ namespace BetsDeRua.Editor
                         vertices += lista[inicio].mesh.vertexCount;
                         parte.Add(lista[inicio++]);
                     }
-                    Mesh m = new Mesh { name = $"Junta_{par.Key}_{k++}" };
+                    Mesh m = new Mesh { name = $"Junta_{prefixo}{par.Key}_{k++}" };
                     m.CombineMeshes(parte.ToArray(), true, true);
                     m.RecalculateBounds();
                     GameObject g = new GameObject($"Junta_{par.Key}");
@@ -651,6 +685,202 @@ namespace BetsDeRua.Editor
                     g.AddComponent<MeshFilter>().sharedMesh = SalvarMalha(m);
                     g.AddComponent<MeshRenderer>().sharedMaterial = materiaisJuntar[par.Key];
                 }
+            }
+            juntar.Clear();
+        }
+
+        // ------------------------------------------------------------------ outros lugares
+
+        private static void MontarMapas(Transform pai, ConfigFisica config, System.Random r)
+        {
+            float L = config.comprimentoCampo;
+            float meia = config.larguraCampo * 0.5f;
+            Material grama = Mat("Grama", new Color(0.82f, 0.9f, 0.75f), Foto("leafy_grass", false), Foto("leafy_grass", true), 3f, 0.05f);
+            Material gramaFazenda = Mat("GramaFazenda", new Color(0.7f, 0.85f, 0.6f), Foto("leafy_grass", false), Foto("leafy_grass", true), 2.2f, 0.04f);
+            Material bloco = Mat("Bloco", new Color(0.66f, 0.67f, 0.68f), Foto("brushed_concrete", false), Foto("brushed_concrete", true), 1.2f, 0.05f);
+            Material madeira = Mat("MadeiraCerca", new Color(0.55f, 0.42f, 0.3f), null, null, 1f, 0.1f);
+            Material alambrado = Mat("Alambrado", new Color(0.62f, 0.64f, 0.66f), GeradorTexturas.Alambrado(), null, 1f / 5f, 0.4f, true);
+            Material ferro = Mat("PosteAlambrado", new Color(0.45f, 0.47f, 0.5f), null, null, 1f, 0.5f);
+            Material vacaBranca = Mat("VacaBranca", new Color(0.93f, 0.91f, 0.86f), null, null, 1f, 0.15f);
+            Material vacaPreta = Mat("VacaPreta", new Color(0.08f, 0.07f, 0.07f), null, null, 1f, 0.15f);
+            Material vacaCaramelo = Mat("VacaCaramelo", new Color(0.55f, 0.33f, 0.18f), null, null, 1f, 0.15f);
+            Material focinho = Mat("VacaFocinho", new Color(0.85f, 0.6f, 0.58f), null, null, 1f, 0.2f);
+            Material celeiro = Mat("Celeiro", new Color(0.62f, 0.14f, 0.1f), Foto("beige_wall_001", false), Foto("beige_wall_001", true), 3f, 0.08f);
+
+            // ---------------- Terrão da vila: chão de terra batida, muro de bloco pichado, casas atrás ----------------
+            Transform terrao = NovoMapa(pai, "Mapa_Terrao");
+            Juntar("ChaoTerrao", terra, new Vector3(0f, 0.002f, 0f), new Vector3(L + 60f, 0.004f, 2f * meia + 40f));
+            MuroDeBloco(terrao, config, bloco, r);
+            CasasAtras(config, r, meia + 6.5f);
+            foreach (float x in new[] { -L * 0.5f - 4f, L * 0.5f + 4f, -L * 0.25f, L * 0.3f })
+                Arvore(terrao, new Vector3(x, 0f, meia + 3f), r);
+            ColisoesDoCampo(terrao, config);
+            FinalizarJuntas(terrao, "Terrao_");
+
+            // ---------------- Campinho de grama: alambrado, terra gasta nas bases, casas ao longe ----------------
+            Transform campinho = NovoMapa(pai, "Mapa_Campinho");
+            Juntar("ChaoGrama", grama, new Vector3(0f, 0.002f, 0f), new Vector3(L + 80f, 0.004f, 2f * meia + 60f));
+            foreach (float lado in new[] { -1f, 1f })
+                Juntar("TerraGasta", terra, new Vector3(lado * config.distanciaBases * 0.5f, 0.004f, 0f), new Vector3(4.5f, 0.004f, 3.2f));
+            Juntar("TerraGastaMeio", terra, new Vector3(0f, 0.004f, 0f), new Vector3(config.distanciaBases * 0.8f, 0.004f, 1.1f));
+            Cercar(campinho, config, 1.6f, 3.2f, 3f, (a, b, h) =>
+            {
+                PainelAlambrado(campinho, a, b, h, alambrado);
+                Juntar("PosteAlambrado", ferro, a + Vector3.up * h * 0.5f, new Vector3(0.07f, h, 0.07f), "cilindro");
+            });
+            CasasAtras(config, r, meia + 14f);
+            for (int i = 0; i < 6; i++)
+                Arvore(campinho, new Vector3(-L * 0.5f + i * L / 5f + (float)(r.NextDouble() - 0.5) * 4f, 0f, meia + 5f + (float)r.NextDouble() * 3f), r);
+            ColisoesDoCampo(campinho, config);
+            FinalizarJuntas(campinho, "Campinho_");
+
+            // ---------------- Fazenda: pasto, cerca de madeira, vacas, celeiro e morros verdes ----------------
+            Transform fazenda = NovoMapa(pai, "Mapa_Fazenda");
+            Juntar("ChaoPasto", gramaFazenda, new Vector3(0f, 0.002f, 0f), new Vector3(400f, 0.004f, 400f));
+            Cercar(fazenda, config, 1.1f, 1.3f, 2.5f, (a, b, h) =>
+            {
+                Juntar("Mourao", madeira, a + Vector3.up * (h * 0.5f + 0.05f), new Vector3(0.14f, h + 0.1f, 0.14f), "cilindro");
+                foreach (float f in new[] { 0.35f, 0.65f, 0.92f })
+                {
+                    Vector3 c = (a + b) * 0.5f + Vector3.up * h * f;
+                    Vector3 d = b - a;
+                    Juntar("Ripa", madeira, c, new Vector3(Mathf.Abs(d.x) + 0.08f, 0.09f, Mathf.Abs(d.z) + 0.08f) + new Vector3(Mathf.Abs(d.x) < 0.01f ? 0.04f : 0f, 0f, Mathf.Abs(d.z) < 0.01f ? 0.04f : 0f));
+                }
+            });
+            for (int i = 0; i < 9; i++)
+            {
+                float x = (float)(r.NextDouble() - 0.5) * (L + 30f);
+                float z = meia + 5f + (float)r.NextDouble() * 22f;
+                Material pelo = r.NextDouble() < 0.4 ? vacaCaramelo : vacaBranca;
+                Vaca(new Vector3(x, 0f, z), r.NextDouble() < 0.5 ? 1f : -1f, pelo, vacaPreta, focinho, r, pelo == vacaBranca);
+            }
+            // Celeiro vermelho ao fundo, com telhado de duas águas
+            Vector3 cel = new Vector3(-L * 0.3f, 0f, meia + 34f);
+            Juntar("Celeiro", celeiro, cel + Vector3.up * 3f, new Vector3(14f, 6f, 10f));
+            Juntar("PortaCeleiro", madeira, cel + new Vector3(0f, 2.1f, -5.02f), new Vector3(4f, 4.2f, 0.06f));
+            foreach (float lado in new[] { -1f, 1f })
+            {
+                GameObject agua = CaixaNoMundo("TelhadoCeleiro", fazenda, cel + new Vector3(0f, 7.4f, lado * 2.6f), new Vector3(14.6f, 0.2f, 6.6f), telha);
+                agua.transform.rotation = Quaternion.Euler(lado * 32f, 0f, 0f);
+            }
+            for (int i = 0; i < 10; i++)
+                Arvore(fazenda, new Vector3((float)(r.NextDouble() - 0.5) * 160f, 0f, meia + 18f + (float)r.NextDouble() * 40f), r);
+            // Morros verdes no horizonte (no lugar do morro de casinhas)
+            for (int i = 0; i < 5; i++)
+                Juntar("MorroVerde", gramaFazenda, new Vector3(-160f + i * 80f + (float)(r.NextDouble() - 0.5) * 30f, -4f, meia + 110f + (float)r.NextDouble() * 40f),
+                       new Vector3(140f + (float)r.NextDouble() * 60f, 40f + (float)r.NextDouble() * 25f, 80f), "esfera");
+            ColisoesDoCampo(fazenda, config);
+            FinalizarJuntas(fazenda, "Fazenda_");
+
+            terrao.gameObject.SetActive(false);
+            campinho.gameObject.SetActive(false);
+            fazenda.gameObject.SetActive(false);
+        }
+
+        private static Transform NovoMapa(Transform pai, string nome)
+        {
+            GameObject g = new GameObject(nome);
+            g.transform.SetParent(pai);
+            raizAvulsos = g.transform;
+            return g.transform;
+        }
+
+        /// <summary>
+        /// Percorre a volta do campo em pedaços de 'passo' metros e chama 'peca(a, b, altura)' em cada um.
+        /// O lado da câmera usa 'alturaPerto' (baixo, para não tampar o jogo); o resto, 'alturaFundo'.
+        /// </summary>
+        private static void Cercar(Transform t, ConfigFisica config, float alturaPerto, float alturaFundo, float passo,
+                                   System.Action<Vector3, Vector3, float> peca)
+        {
+            float L = config.comprimentoCampo * 0.5f + 0.15f, meia = config.larguraCampo * 0.5f + 0.15f;
+            void Lado(Vector3 de, Vector3 ate, float h)
+            {
+                int n = Mathf.Max(1, Mathf.RoundToInt(Vector3.Distance(de, ate) / passo));
+                for (int i = 0; i < n; i++) peca(Vector3.Lerp(de, ate, i / (float)n), Vector3.Lerp(de, ate, (i + 1) / (float)n), h);
+            }
+            Lado(new Vector3(-L, 0f, meia), new Vector3(L, 0f, meia), alturaFundo);
+            Lado(new Vector3(L, 0f, -meia), new Vector3(L, 0f, meia), alturaFundo);
+            Lado(new Vector3(-L, 0f, -meia), new Vector3(-L, 0f, meia), alturaFundo);
+            Lado(new Vector3(-L, 0f, -meia), new Vector3(L, 0f, -meia), alturaPerto);
+        }
+
+        private static void PainelAlambrado(Transform t, Vector3 a, Vector3 b, float h, Material tela)
+        {
+            GameObject q = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            q.name = "Alambrado";
+            Object.DestroyImmediate(q.GetComponent<Collider>());
+            q.transform.SetParent(t);
+            q.transform.position = (a + b) * 0.5f + Vector3.up * h * 0.5f;
+            q.transform.rotation = Quaternion.LookRotation(Vector3.Cross(b - a, Vector3.up).normalized);
+            float w = Vector3.Distance(a, b);
+            q.transform.localScale = new Vector3(w, h, 1f);
+            MeshRenderer mr = q.GetComponent<MeshRenderer>();
+            mr.sharedMaterial = tela;
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+        }
+
+        /// <summary>Muro de bloco em volta do terrão: alto no fundo e nas pontas, baixo do lado da câmera; com pichação.</summary>
+        private static void MuroDeBloco(Transform t, ConfigFisica config, Material bloco, System.Random r)
+        {
+            float L = config.comprimentoCampo, meia = config.larguraCampo * 0.5f;
+            // Fundo na altura do peito: a vizinhança assiste encostada no muro
+            const float h = 2.4f, e = 0.2f, hFundo = 1.25f;
+            Juntar("MuroBlocoFundo", bloco, new Vector3(0f, hFundo * 0.5f, meia + e * 0.5f), new Vector3(L + 2f * e, hFundo, e));
+            Juntar("CapaMuroBloco", concreto, new Vector3(0f, hFundo + 0.03f, meia + e * 0.5f), new Vector3(L + 2f * e + 0.04f, 0.06f, e + 0.06f));
+            Juntar("MuroBlocoPerto", bloco, new Vector3(0f, config.alturaMuroPerto * 0.5f, -meia - e * 0.5f), new Vector3(L + 2f * e, config.alturaMuroPerto, e));
+            foreach (float lado in new[] { -1f, 1f })
+                Juntar("MuroBlocoPonta", bloco, new Vector3(lado * (L + e) * 0.5f, h * 0.5f, 0f), new Vector3(e, h, 2f * meia + 2f * e));
+            for (int i = 0; i < 5; i++)
+                Pichar(t, new Vector3(-L * 0.4f + i * L * 0.2f + (float)(r.NextDouble() - 0.5) * 4f, 0.62f, meia - 0.01f), 1.8f, pichacao[r.Next(pichacao.Length)]);
+        }
+
+        /// <summary>Uma fileira de casas de bairro atrás do campo, de frente para ele.</summary>
+        private static void CasasAtras(ConfigFisica config, System.Random r, float zFrente)
+        {
+            float L = config.comprimentoCampo;
+            float x0 = -L * 0.5f - 25f;
+            while (x0 < L * 0.5f + 25f)
+            {
+                float w = 6f + r.Next(4);
+                float h = r.NextDouble() < 0.5 ? 3f + (float)r.NextDouble() : 5.8f + (float)r.NextDouble() * 2.4f;
+                Material m = r.NextDouble() < 0.35 ? tijolo : reboco[r.Next(reboco.Length)];
+                CasaVirada(new Vector3(x0 + w * 0.5f, 0f, zFrente), Vector3.back, w - 0.4f, h, 8f, m, r);
+                x0 += w;
+            }
+        }
+
+        /// <summary>Paredes invisíveis na volta do campo (os jogadores não saem; a bola já volta pela física).</summary>
+        private static void ColisoesDoCampo(Transform t, ConfigFisica config)
+        {
+            float L = config.comprimentoCampo, meia = config.larguraCampo * 0.5f, e = config.espessuraMuro;
+            ColisaoInvisivel("ColisaoFundo", t, new Vector3(0f, 2f, meia + e * 0.5f), new Vector3(L, 4f, e));
+            ColisaoInvisivel("ColisaoPerto", t, new Vector3(0f, 2f, -meia - e * 0.5f), new Vector3(L, 4f, e));
+            foreach (float lado in new[] { -1f, 1f })
+                ColisaoInvisivel("ColisaoPonta", t, new Vector3(lado * (L + e) * 0.5f, 2f, 0f), new Vector3(e, 4f, 2f * meia));
+        }
+
+        /// <summary>Vaca pastando (olhando para +X ou -X): corpo, cabeça, focinho, pernas, rabo e manchas.</summary>
+        private static void Vaca(Vector3 p, float dir, Material pelo, Material mancha, Material focinho, System.Random r, bool malhada)
+        {
+            float s = 0.9f + (float)r.NextDouble() * 0.2f;
+            Juntar("VacaCorpo", pelo, p + new Vector3(0f, 1.05f, 0f) * s, new Vector3(1.9f, 0.95f, 0.85f) * s, "esfera");
+            bool pastando = r.NextDouble() < 0.6;
+            Vector3 cabeca = p + new Vector3(dir * 1.05f, pastando ? 0.55f : 1.3f, 0f) * s;
+            Juntar("VacaCabeca", pelo, cabeca, new Vector3(0.55f, 0.48f, 0.42f) * s, "esfera");
+            Juntar("VacaPescoco", pelo, p + new Vector3(dir * 0.8f, pastando ? 0.8f : 1.2f, 0f) * s, new Vector3(0.5f, 0.55f, 0.45f) * s, "esfera");
+            Juntar("VacaFocinho", focinho, cabeca + new Vector3(dir * 0.24f, -0.07f, 0f) * s, new Vector3(0.24f, 0.22f, 0.3f) * s, "esfera");
+            foreach (float z in new[] { -0.17f, 0.17f })
+            {
+                Juntar("VacaOrelha", pelo, cabeca + new Vector3(-dir * 0.05f, 0.12f, z * 1.6f) * s, new Vector3(0.1f, 0.08f, 0.22f) * s, "esfera");
+                foreach (float x in new[] { -0.62f, 0.62f })
+                    Juntar("VacaPerna", pelo, p + new Vector3(x, 0.4f, z * 1.4f) * s, new Vector3(0.15f, 0.8f, 0.15f) * s, "cilindro");
+            }
+            Juntar("VacaRabo", pelo, p + new Vector3(-dir * 0.98f, 0.85f, 0f) * s, new Vector3(0.05f, 0.7f, 0.05f) * s, "cilindro");
+            if (!malhada) return;
+            for (int i = 0; i < 4; i++)
+            {
+                Vector3 o = new Vector3((float)(r.NextDouble() - 0.5) * 1.3f, 1.05f + (float)(r.NextDouble() - 0.2) * 0.35f, (r.NextDouble() < 0.5 ? -1f : 1f) * 0.3f);
+                Juntar("VacaMancha", mancha, p + o * s, new Vector3(0.5f, 0.45f, 0.3f) * s * (0.7f + (float)r.NextDouble() * 0.5f), "esfera");
             }
         }
 
@@ -711,6 +941,26 @@ namespace BetsDeRua.Editor
             return m;
         }
 
+        /// <summary>
+        /// Textura de foto (Poly Haven, CC0) em Assets/Texturas/Fotos/{nome}: cor e relevo (normal map).
+        /// Se não achar, devolve null e o material fica com a textura desenhada por código.
+        /// </summary>
+        private static Texture2D Foto(string nome, bool relevo)
+        {
+            string caminho = $"Assets/Texturas/Fotos/{nome}/{nome}_{(relevo ? "normal" : "cor")}.jpg";
+            if (AssetImporter.GetAtPath(caminho) is TextureImporter imp)
+            {
+                bool mudou = false;
+                if (relevo && imp.textureType != TextureImporterType.NormalMap) { imp.textureType = TextureImporterType.NormalMap; mudou = true; }
+                if (imp.wrapMode != TextureWrapMode.Repeat) { imp.wrapMode = TextureWrapMode.Repeat; mudou = true; }
+                if (imp.anisoLevel < 8) { imp.anisoLevel = 8; mudou = true; }
+                if (mudou) imp.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(caminho);
+        }
+
+        private static Texture2D FotoOu(string nome, bool relevo, Texture2D seNaoTiver) => Foto(nome, relevo) ?? seNaoTiver;
+
         private static void CriarMateriais()
         {
             GeradorTexturas.Asfalto(out Texture2D tAsfalto, out Texture2D nAsfalto);
@@ -723,10 +973,13 @@ namespace BetsDeRua.Editor
             Texture2D tFolha = GeradorTexturas.Folhagem();
             Texture2D tTerra = GeradorTexturas.Terra();
 
-            asfalto = Mat("Asfalto", Color.white, tAsfalto, nAsfalto, 7f, 0.18f);
-            calcada = Mat("Calcada", Color.white, tCalcada, nCalcada, 2.4f, 0.1f);
+            // Chão e paredes com foto de verdade (Poly Haven, CC0) quando disponível
+            bool fotos = Foto("asphalt_02", false) != null;
+            asfalto = fotos ? Mat("Asfalto", new Color(0.9f, 0.9f, 0.92f), Foto("asphalt_02", false), Foto("asphalt_02", true), 4f, 0.2f)
+                            : Mat("Asfalto", Color.white, tAsfalto, nAsfalto, 7f, 0.18f);
+            calcada = Mat("Calcada", new Color(0.95f, 0.93f, 0.9f), FotoOu("brushed_concrete", false, tCalcada), FotoOu("brushed_concrete", true, nCalcada), 2.4f, 0.1f);
             meioFio = Mat("MeioFio", new Color(0.95f, 0.95f, 0.92f), tCalcada, nCalcada, 1f, 0.1f);
-            tijolo = Mat("Tijolo", Color.white, tTijolo, nTijolo, 2f, 0.08f);
+            tijolo = Mat("Tijolo", Color.white, FotoOu("brick_wall_02", false, tTijolo), FotoOu("brick_wall_02", true, nTijolo), 2.5f, 0.08f);
             telha = Mat("Telha", Color.white, tTelha, null, 2f, 0.15f);
             janela = Mat("Janela", new Color(0.09f, 0.11f, 0.14f), null, null, 1f, 0.85f);
             grade = Mat("Grade", new Color(0.12f, 0.12f, 0.13f), null, null, 1f, 0.5f);
@@ -736,7 +989,7 @@ namespace BetsDeRua.Editor
             fio = Mat("Fio", new Color(0.05f, 0.05f, 0.06f), null, null, 1f, 0f, false, true);
             folhagem = Mat("Folhagem", Color.white, tFolha, null, 1.5f, 0.05f);
             tronco = Mat("Tronco", new Color(0.36f, 0.26f, 0.18f), null, null, 1f, 0.05f);
-            terra = Mat("Terra", Color.white, tTerra, null, 6f, 0.02f);
+            terra = Mat("Terra", Color.white, FotoOu("baseball_playground", false, tTerra), Foto("baseball_playground", true), 4f, 0.03f);
             giz = Mat("GizRua", Color.white, tGiz, null, 0.5f, 0.05f, true);
             faixaAmarela = Mat("FaixaAmarela", new Color(0.95f, 0.78f, 0.15f), tGiz, null, 0.6f, 0.2f, true);
             vidroCarro = Mat("VidroCarro", new Color(0.08f, 0.12f, 0.16f), null, null, 1f, 0.92f);
@@ -750,7 +1003,11 @@ namespace BetsDeRua.Editor
                 new Color(0.95f, 0.55f, 0.75f), new Color(0.85f, 0.85f, 0.82f)
             };
             reboco = new Material[cores.Length];
-            for (int i = 0; i < cores.Length; i++) reboco[i] = Mat($"Reboco{i + 1}", cores[i], tReboco, nReboco, 3f, 0.08f);
+            // Reboco: a foto é bege; clareia a cor para a tinta da casa não ficar escura
+            Texture2D fReboco = Foto("beige_wall_001", false), nfReboco = Foto("beige_wall_001", true);
+            for (int i = 0; i < cores.Length; i++)
+                reboco[i] = fReboco != null ? Mat($"Reboco{i + 1}", Color.Lerp(cores[i], Color.white, 0.15f) * 1.12f, fReboco, nfReboco, 3f, 0.08f)
+                                            : Mat($"Reboco{i + 1}", cores[i], tReboco, nReboco, 3f, 0.08f);
             Color[] coresPortao = { new Color(0.75f, 0.75f, 0.76f), new Color(0.3f, 0.55f, 0.35f), new Color(0.25f, 0.4f, 0.7f), new Color(0.6f, 0.2f, 0.18f) };
             portao = new Material[coresPortao.Length];
             for (int i = 0; i < coresPortao.Length; i++) portao[i] = Mat($"Portao{i + 1}", coresPortao[i], tPortao, nPortao, 1f, 0.35f);

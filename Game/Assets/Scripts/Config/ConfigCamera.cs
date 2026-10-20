@@ -60,8 +60,20 @@ namespace BetsDeRua
         [Tooltip("Distância (m) do close até o jogador.")]
         public float distanciaClose = 2.6f;
         public float campoVisaoClose = 34f;
+        [Tooltip("Câmera lenta na queimada (e um pouco na batida perfeita): quanto dura (s, tempo real).")]
+        public float duracaoCameraLenta = 1.2f;
+        [Tooltip("Velocidade do tempo na câmera lenta (1 = normal).")]
+        public float escalaCameraLenta = 0.3f;
 
         [Tooltip("Distância máxima que a câmera desenha (m).")]
         public float distanciaDesenho = 300f;
+
+        [Header("Lente de cinema")]
+        [Tooltip("Desfoca o fundo nos closes e na câmera lenta (foco em quem comemora / na garrafa caindo).")]
+        public bool desfocarFundoNoClose = true;
+        [Tooltip("Distância focal da lente (mm). Maior = fundo mais desfocado.")]
+        public float distanciaFocalCinema = 85f;
+        [Tooltip("Abertura (f). Menor = fundo mais desfocado.")]
+        public float aberturaCinema = 2.2f;
     }
 }

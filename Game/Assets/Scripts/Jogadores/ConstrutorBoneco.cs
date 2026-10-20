@@ -348,8 +348,9 @@ namespace BetsDeRua
         }
 
         /// <summary>
-        /// Taco de bets: pá de madeira achatada (como a do críquete) com o cabo enrolado em fita.
-        /// O pivô fica na mão (topo do cabo) e o taco pende para baixo (-Y).
+        /// Taco de bets no desenho da marca (o "!" da logo): pá larga e chata com a ponta reta de
+        /// cantos arredondados, que afina num ombro curvo até o cabo redondo, com pomo na ponta e
+        /// três faixas de fita isolante. O pivô fica na mão (topo do cabo) e o taco pende para baixo (-Y).
         /// </summary>
         public static void MontarTaco(Transform pivo, float comprimento, Color corFita)
         {
@@ -361,25 +362,37 @@ namespace BetsDeRua
                 else Object.DestroyImmediate(antigo.gameObject);
             }
             Transform taco = Pivo("Taco", pivo, Vector3.zero);
-            float cabo = comprimento * 0.32f;
-            Material madeira = Cor(new Color(0.78f, 0.6f, 0.38f), 0.35f);
-            Material madeiraEscura = Cor(new Color(0.55f, 0.38f, 0.22f), 0.3f);
-            Material fita = Cor(corFita, 0.15f);
+            float L = comprimento;
+            float fimCabo = L * 0.30f, fimOmbro = L * 0.45f;
+            const float raioCabo = 0.017f;
+            Material madeira = Cor(new Color(0.86f, 0.74f, 0.55f), 0.32f);
+            Material madeiraEscura = Cor(new Color(0.6f, 0.45f, 0.3f), 0.3f);
+            Material fita = Cor(corFita, 0.12f);
 
-            // Cabo redondo com fita
-            Peca("Cabo", taco, new Vector3(0f, 0.03f, 0f), Vector3.one, MalhasBoneco.Membro(cabo + 0.03f, 0.016f, 0.017f), fita);
-            Peca("Pomo", taco, new Vector3(0f, 0.03f, 0f), new Vector3(0.022f, 0.012f, 0.022f), MalhasBoneco.Esfera(), madeiraEscura);
-            // Pá: oval achatada, larga e fina, com a ponta arredondada
-            float pa = comprimento - cabo;
-            var perfilPa = new List<Vector2>
+            // Cabo redondo, pomo na ponta e três faixas de fita (como na logo)
+            Peca("Cabo", taco, new Vector3(0f, 0.005f, 0f), Vector3.one, MalhasBoneco.Membro(fimCabo + 0.03f, raioCabo, raioCabo * 1.05f), madeira);
+            Peca("Pomo", taco, new Vector3(0f, 0.012f, 0f), new Vector3(0.027f, 0.014f, 0.027f), MalhasBoneco.Esfera(), madeiraEscura);
+            for (int k = 0; k < 3; k++)
+                Peca("Fita", taco, new Vector3(0f, -0.06f - k * 0.03f, 0f), new Vector3(1f, 2.4f, 1f), MalhasBoneco.Anel(raioCabo + 0.0015f, 0.0035f), fita);
+
+            // Pá + ombro: contorno chato extrudado (meia-largura ao longo do comprimento)
+            var lado = new List<Vector2>();
+            for (int k = 0; k <= 6; k++)
             {
-                new Vector2(-comprimento, 0f), new Vector2(-comprimento + 0.012f, 0.6f), new Vector2(-comprimento + 0.04f, 0.92f),
-                new Vector2(-comprimento + pa * 0.5f, 1f), new Vector2(-cabo - 0.05f, 0.95f), new Vector2(-cabo + 0.005f, 0.42f),
-                new Vector2(-cabo + 0.03f, 0f)
-            };
-            Peca("Pa", taco, Vector3.zero, Vector3.one, MalhasBoneco.Torno($"pa{comprimento:0.###}", perfilPa, 0.038f, 0.012f, 16), madeira);
-            // Friso no meio da pá (dá leitura de madeira trabalhada)
-            Peca("Friso", taco, new Vector3(0f, -cabo - pa * 0.48f, 0f), new Vector3(0.006f, pa * 0.42f, 0.0135f), MalhasBoneco.Esfera(), madeiraEscura);
+                // ombro: do cabo até a largura da pá, numa curva suave
+                float t = k / 6f;
+                float y = -Mathf.Lerp(fimCabo, fimOmbro, t);
+                float meia = Mathf.Lerp(raioCabo, 0.0575f, Mathf.SmoothStep(0f, 1f, t));
+                lado.Add(new Vector2(meia, y));
+            }
+            lado.Add(new Vector2(0.065f, -(L - 0.025f)));
+            lado.Add(new Vector2(0.06f, -(L - 0.006f)));
+            lado.Add(new Vector2(0.045f, -L));
+            var contorno = new List<Vector2>(lado);
+            for (int k = lado.Count - 1; k >= 0; k--) contorno.Add(new Vector2(-lado[k].x, lado[k].y));
+            Peca("Pa", taco, Vector3.zero, Vector3.one, MalhasBoneco.Extrusao($"pa{L:0.###}", contorno, 0.024f), madeira);
+            // Friso no meio da pá (madeira trabalhada)
+            Peca("Friso", taco, new Vector3(0f, -(fimOmbro + L) * 0.5f, 0f), new Vector3(0.005f, (L - fimOmbro) * 0.4f, 0.0128f), MalhasBoneco.Esfera(), madeiraEscura);
         }
 
         private static Transform Pivo(string nome, Transform pai, Vector3 posicao)

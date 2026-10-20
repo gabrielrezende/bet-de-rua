@@ -42,8 +42,29 @@ namespace BetsDeRua
         private float raioCirculoMontado;
         private float espessuraCirculoMontada;
 
+        // Anel no chão embaixo de quem a pessoa controla (como o FIFA Street), na cor do P1/P2/P3/P4
+        private Transform anel;
+        private MeshRenderer desenhoAnel;
+        private static readonly System.Collections.Generic.Dictionary<int, Material> coresAnel = new System.Collections.Generic.Dictionary<int, Material>();
+
+        private static Material CorDoAnel(int numero)
+        {
+            if (coresAnel.TryGetValue(numero, out Material m) && m != null) return m;
+            Color c = TelaLados.CoresJogador[(Mathf.Max(1, numero) - 1) % 4];
+            m = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { name = $"AnelP{numero}" };
+            m.SetColor("_BaseColor", c);
+            m.SetFloat("_Cull", 0f);
+            coresAnel[numero] = m;
+            return m;
+        }
+
         private void Awake()
         {
+            anel = CriarFilho("AnelJogador", MalhasProcedurais.AnelNoChao(configFisica.raioJogador * 1.25f, 0.07f), null);
+            anel.localPosition = Vector3.up * 0.025f;
+            desenhoAnel = anel.GetComponent<MeshRenderer>();
+            desenhoAnel.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            anel.gameObject.SetActive(false);
             triangulo = CriarFilho("Triangulo", MontarTriangulo(), materialTriangulo);
             desenhoTriangulo = triangulo.GetComponent<MeshRenderer>();
             circulo = CriarFilho("CirculoGiz", null, materialGiz);
@@ -61,7 +82,11 @@ namespace BetsDeRua
                 if (visivel) tempoPiscando = 0f;
                 estavaVisivel = visivel;
             }
+            anel.gameObject.SetActive(visivel && !jogador.Mergulhando);
             if (!visivel) return;
+            desenhoAnel.sharedMaterial = CorDoAnel(jogador.Controlador.Numero);
+            float pulso = 1f + 0.06f * Mathf.Sin(Time.time * 6f);
+            anel.localScale = new Vector3(pulso, 1f, pulso);
 
             // Cor da seta: rebatedor = seguro (verde) ou perigo (vermelho piscando); os outros = cor do time
             Material cor = materialTriangulo;

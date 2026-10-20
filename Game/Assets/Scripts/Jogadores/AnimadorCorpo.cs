@@ -45,6 +45,8 @@ namespace BetsDeRua
             if (taco != null) posicaoBaseTaco = taco.transform.localPosition;
         }
 
+        public void DefinirConfig(ConfigFisica config) => configFisica = config;
+
         /// <summary>Acha o Animator do corpo (depois que o corpo é montado ou remontado).</summary>
         public void Religar(Animator novo)
         {
@@ -141,10 +143,63 @@ namespace BetsDeRua
                 taco.transform.localPosition = Vector3.Lerp(taco.transform.localPosition, alvo,
                                                             taco.Girando || taco.BatendoTacos ? 1f : Mathf.Clamp01(Time.deltaTime * 12f));
             }
+            VirarCorpoParaOndeVai();
+            ColarTacoNaMao();
+
             // A bola na mão de quem vai arremessar (só o desenho)
             if (arremessador != null && arremessador.ComBola && bola != null && maoDireita != null && !jogador.Mergulhando)
                 bola.transform.position = maoDireita.position + maoDireita.up * 0.06f + transform.forward * 0.02f;
         }
+
+        /// <summary>
+        /// O taco desenhado sai do meio da mão direita e aponta para a ponta do taco do jogo (que
+        /// cuida das regras: taco no chão, giro). Assim o taco nunca fica longe da mão.
+        /// </summary>
+        private void ColarTacoNaMao()
+        {
+            if (taco == null || animador == null || !animador.isHuman || jogador.Mergulhando) return;
+            Transform desenho = taco.transform.Find("Taco");
+            Transform mao = animador.GetBoneTransform(HumanBodyBones.RightHand);
+            Transform dedo = animador.GetBoneTransform(HumanBodyBones.RightMiddleProximal);
+            if (desenho == null || mao == null) return;
+            Vector3 pega = dedo != null ? Vector3.Lerp(mao.position, dedo.position, 0.7f) : mao.position;
+            float comprimento = configFisica != null ? configFisica.comprimentoTaco : 1f;
+            Vector3 ponta = taco.transform.position - taco.transform.up * comprimento;
+            Vector3 eixo = ponta - pega;
+            if (eixo.sqrMagnitude < 0.01f) return;
+            Vector3 dir = eixo.normalized;
+            desenho.position = pega - dir * 0.05f; // o pomo do cabo aparece um pouco acima da mão
+            Vector3 frente = Vector3.ProjectOnPlane(transform.forward, dir);
+            if (frente.sqrMagnitude < 0.0001f) frente = Vector3.ProjectOnPlane(transform.right, dir);
+            desenho.rotation = Quaternion.LookRotation(frente.normalized, -dir);
+            caboAtual = pega;
+            eixoAtual = eixo.normalized;
+            temCabo = true;
+        }
+
+        private Quaternion giroCorpo = Quaternion.identity;
+
+        /// <summary>
+        /// Correndo, o corpo vira para onde está indo (a animação de corrida é só para a frente);
+        /// parado ou devagar, olha para onde o jogador olha (o alvo, a bola).
+        /// </summary>
+        private void VirarCorpoParaOndeVai()
+        {
+            Transform corpo = animador.transform;
+            Vector3 v = jogador.Velocidade;
+            v.y = 0f;
+            Quaternion meiaVolta = Quaternion.Euler(0f, 180f, 0f); // o modelo olha para -Z
+            Quaternion alvo = transform.rotation * meiaVolta;
+            bool rebatedorNaBase = rebatedor != null && jogador.DentroDoCirculo();
+            if (v.magnitude > 1.6f && !jogador.Mergulhando && !rebatedorNaBase)
+                alvo = Quaternion.LookRotation(v.normalized, Vector3.up) * meiaVolta;
+            if (giroCorpo == Quaternion.identity) giroCorpo = alvo;
+            giroCorpo = Quaternion.Slerp(giroCorpo, alvo, 1f - Mathf.Exp(-Time.deltaTime * 12f));
+            corpo.rotation = giroCorpo;
+        }
+
+        private Vector3 caboAtual, eixoAtual;
+        private bool temCabo;
 
         /// <summary>Chamado pelo IKCorpo (no objeto do Animator) a cada quadro de animação.</summary>
         public void AplicarIK(Animator a)
@@ -168,28 +223,17 @@ namespace BetsDeRua
             Vector3 topo = taco.transform.position;
             Vector3 eixo = -taco.transform.up;
             Quaternion pega = Quaternion.LookRotation(transform.forward, -eixo);
-            a.SetIKPosition(AvatarIKGoal.RightHand, topo + eixo * 0.04f);
-            a.SetIKPosition(AvatarIKGoal.LeftHand, topo + eixo * 0.14f);
+            // Mão direita vai para a pega do jogo; a esquerda segura o cabo logo abaixo da direita
+            // (no taco desenhado, que sai da mão direita)
+            Vector3 maoEsquerda = temCabo ? caboAtual + eixoAtual * 0.11f : topo + eixo * 0.14f;
+            a.SetIKPosition(AvatarIKGoal.RightHand, topo + eixo * 0.02f);
+            a.SetIKPosition(AvatarIKGoal.LeftHand, maoEsquerda);
             a.SetIKRotation(AvatarIKGoal.RightHand, pega);
             a.SetIKRotation(AvatarIKGoal.LeftHand, pega);
             a.SetIKHintPositionWeight(AvatarIKHint.RightElbow, 0.5f);
             a.SetIKHintPositionWeight(AvatarIKHint.LeftElbow, 0.5f);
             a.SetIKHintPosition(AvatarIKHint.RightElbow, transform.position + transform.right * 0.5f + Vector3.up * 0.9f);
             a.SetIKHintPosition(AvatarIKHint.LeftElbow, transform.position - transform.right * 0.5f + Vector3.up * 0.9f);
-        }
-    }
-
-    /// <summary>Fica no objeto do Animator (o Unity só chama OnAnimatorIK ali) e repassa para o AnimadorCorpo.</summary>
-    public class IKCorpo : MonoBehaviour
-    {
-        public AnimadorCorpo dono;
-        private Animator animador;
-
-        private void Awake() => animador = GetComponent<Animator>();
-
-        private void OnAnimatorIK(int camada)
-        {
-            if (dono != null && animador != null) dono.AplicarIK(animador);
         }
     }
 }

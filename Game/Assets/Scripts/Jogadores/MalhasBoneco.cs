@@ -133,6 +133,52 @@ namespace BetsDeRua
             return malha;
         }
 
+        /// <summary>
+        /// Peça chata: um contorno convexo (x = largura, y = comprimento) extrudado com 'espessura'
+        /// no eixo Z, com frente, verso e laterais (a pá do taco).
+        /// </summary>
+        public static Mesh Extrusao(string chave, IList<Vector2> contorno, float espessura)
+        {
+            string id = $"extrusao:{chave}:{espessura:0.###}";
+            if (guardadas.TryGetValue(id, out Mesh pronta) && pronta != null) return pronta;
+            var v = new List<Vector3>();
+            var tri = new List<int>();
+            int n = contorno.Count;
+            float e = espessura * 0.5f;
+            Vector2 centro = Vector2.zero;
+            foreach (Vector2 p in contorno) centro += p;
+            centro /= n;
+            foreach (float lado in new[] { e, -e })
+            {
+                int b = v.Count;
+                v.Add(new Vector3(centro.x, centro.y, lado));
+                foreach (Vector2 p in contorno) v.Add(new Vector3(p.x, p.y, lado));
+                for (int i = 0; i < n; i++)
+                {
+                    int a1 = b + 1 + i, a2 = b + 1 + (i + 1) % n;
+                    if (lado > 0f) { tri.Add(b); tri.Add(a1); tri.Add(a2); }
+                    else { tri.Add(b); tri.Add(a2); tri.Add(a1); }
+                }
+            }
+            // Laterais (vértices próprios para a quina ficar marcada)
+            for (int i = 0; i < n; i++)
+            {
+                Vector2 p1 = contorno[i], p2 = contorno[(i + 1) % n];
+                int b = v.Count;
+                v.Add(new Vector3(p1.x, p1.y, e)); v.Add(new Vector3(p2.x, p2.y, e));
+                v.Add(new Vector3(p2.x, p2.y, -e)); v.Add(new Vector3(p1.x, p1.y, -e));
+                tri.Add(b); tri.Add(b + 2); tri.Add(b + 1);
+                tri.Add(b); tri.Add(b + 3); tri.Add(b + 2);
+            }
+            Mesh m = new Mesh { name = id };
+            m.SetVertices(v);
+            m.SetTriangles(tri, 0);
+            m.RecalculateNormals();
+            m.RecalculateBounds();
+            guardadas[id] = m;
+            return m;
+        }
+
         /// <summary>Disco fino (aba do chapéu): anel cheio entre raioDentro e raioFora, com espessura.</summary>
         public static Mesh Aba(float raioDentro, float raioFora, float espessura)
         {

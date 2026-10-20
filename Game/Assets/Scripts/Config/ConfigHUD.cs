@@ -124,6 +124,18 @@ namespace BetsDeRua
         [Tooltip("Cor da garrafa quando o taco do dono está fora do chão (pode ser queimada).")]
         public Color corGarrafaExposta = new Color(0.95f, 0.2f, 0.15f);
 
+        [Header("Poeira (bola quicando, garrafa caindo)")]
+        [Tooltip("Material das partículas de poeira (criado pelo montador da cena).")]
+        public Material materialPoeira;
+        [Tooltip("Partículas num quique bem forte.")]
+        public int particulasPoeira = 14;
+        [Tooltip("Tamanho de cada nuvenzinha (m).")]
+        public float tamanhoPoeira = 0.35f;
+        [Tooltip("Quanto tempo a poeira fica no ar (s).")]
+        public float duracaoPoeira = 1.4f;
+        [Tooltip("Cor da poeira (alfa = quão forte).")]
+        public Color corPoeira = new Color(0.62f, 0.58f, 0.52f, 0.35f);
+
         [Header("Mensagens")]
         [Tooltip("Quanto tempo a mensagem do lance fica na tela (s).")]
         public float duracaoMensagem = 2f;

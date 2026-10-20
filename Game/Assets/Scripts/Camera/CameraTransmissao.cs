@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace BetsDeRua
 {
@@ -44,7 +46,16 @@ namespace BetsDeRua
         private bool inscrito;
         private int modoAtual;              // 0 = transmissão, 1 = arremesso/rebatedor, 2 = close
         private Vector3 posicaoPertoSuave;
+        // Câmera lenta nos lances grandes
+        private Vector3 pontoDestaque;
+        private bool destaqueQueimada;
+        private float destaqueAte;
+        private bool lento;
         private Quaternion rotacaoPertoSuave;
+        // Fundo desfocado nos closes e na câmera lenta (lente de cinema, como no teaser do FC)
+        private Volume volumeFoco;
+        private DepthOfField desfoqueFundo;
+        private Vector3 pontoFoco;
 
         private void Awake()
         {
@@ -75,8 +86,24 @@ namespace BetsDeRua
 
         private void OnDisable()
         {
-            if (inscrito) ControladorLance.Comemoracao -= AoComemorar;
+            if (inscrito)
+            {
+                ControladorLance.Comemoracao -= AoComemorar;
+                ControladorLance.Destaque -= AoDestaque;
+            }
             inscrito = false;
+            if (lento) { Time.timeScale = 1f; lento = false; }
+        }
+
+        private void AoDestaque(Vector3 ponto, bool queimada)
+        {
+            if (!configCamera.usarClose) return;
+            pontoDestaque = ponto;
+            destaqueQueimada = queimada;
+            float duracao = queimada ? configCamera.duracaoCameraLenta : configCamera.duracaoCameraLenta * 0.6f;
+            destaqueAte = Time.unscaledTime + duracao;
+            // A comemoração vem depois do lance em câmera lenta
+            closeAte = Mathf.Max(closeAte, Time.time) + duracao;
         }
 
         /// <summary>Close em quem comemora (o humano dessa dupla, ou quem está mais perto da bola).</summary>
@@ -104,13 +131,31 @@ namespace BetsDeRua
         private void MisturarCameras()
         {
             if (lance == null) lance = FindFirstObjectByType<ControladorLance>();
-            if (!inscrito) { ControladorLance.Comemoracao += AoComemorar; inscrito = true; }
+            if (!inscrito) { ControladorLance.Comemoracao += AoComemorar; ControladorLance.Destaque += AoDestaque; inscrito = true; }
+
+            // Câmera lenta (sem brigar com a pausa)
+            bool destaque = Time.unscaledTime < destaqueAte;
+            if (destaque && !HUDPartida.SobreposicaoAberta) { Time.timeScale = configCamera.escalaCameraLenta; lento = true; }
+            else if (lento) { if (!HUDPartida.SobreposicaoAberta) Time.timeScale = 1f; lento = false; }
             posicaoTransmissao = transform.position;
             rotacaoTransmissao = transform.rotation;
 
             bool perto = false;
             int modo = 0;
-            if (emClose != null && Time.time < closeAte)
+            if (destaque)
+            {
+                // Baixinho, de lado: a garrafa caindo (queimada) ou o rebatedor no momento da pancada
+                Vector3 alvoCam = pontoDestaque + Vector3.up * (destaqueQueimada ? 0.25f : 1.0f);
+                Vector3 lado = destaqueQueimada ? new Vector3(0.6f, 0f, -1f).normalized : new Vector3(-0.8f, 0f, -1f).normalized;
+                float dist = destaqueQueimada ? 1.9f : 3.2f;
+                posicaoPerto = alvoCam + lado * dist + Vector3.up * (destaqueQueimada ? 0.25f : 0.3f);
+                rotacaoPerto = Quaternion.LookRotation(alvoCam - posicaoPerto, Vector3.up);
+                campoPerto = configCamera.campoVisaoClose;
+                pontoFoco = alvoCam;
+                perto = true;
+                modo = 3;
+            }
+            else if (emClose != null && Time.time < closeAte)
             {
                 // De frente para o jogador, na altura do peito, um pouco de lado
                 Transform j = emClose.transform;
@@ -119,6 +164,7 @@ namespace BetsDeRua
                 posicaoPerto = olho + (frente * configCamera.distanciaClose + j.right * 0.8f) + Vector3.up * 0.15f;
                 rotacaoPerto = Quaternion.LookRotation(olho - posicaoPerto, Vector3.up);
                 campoPerto = configCamera.campoVisaoClose;
+                pontoFoco = olho;
                 perto = true;
                 modo = 2;
             }
@@ -162,13 +208,38 @@ namespace BetsDeRua
                 posicaoPertoSuave = posicaoPerto;
                 rotacaoPertoSuave = rotacaoPerto;
             }
-            if (!perto) return;
+            if (!perto) { AjustarDesfoque(false); return; }
             float k = 1f - Mathf.Exp(-Time.deltaTime * configCamera.rapidezTroca);
             posicaoPertoSuave = Vector3.Lerp(posicaoPertoSuave, posicaoPerto, k);
             rotacaoPertoSuave = Quaternion.Slerp(rotacaoPertoSuave, rotacaoPerto, k);
             transform.position = posicaoPertoSuave;
             transform.rotation = rotacaoPertoSuave;
             cameraUnity.fieldOfView = campoPerto;
+            // Foco medido da câmera já no lugar (senão foca no fundo e desfoca quem importa)
+            AjustarDesfoque(modo >= 2);
+        }
+
+        /// <summary>Liga o fundo desfocado (foco em quem/no que importa) só nas câmeras de perto.</summary>
+        private void AjustarDesfoque(bool ligar)
+        {
+            if (!configCamera.desfocarFundoNoClose) ligar = false;
+            if (volumeFoco == null)
+            {
+                if (!ligar) return;
+                GameObject g = new GameObject("FocoDeCinema");
+                volumeFoco = g.AddComponent<Volume>();
+                volumeFoco.isGlobal = true;
+                volumeFoco.priority = 10f;
+                VolumeProfile perfil = ScriptableObject.CreateInstance<VolumeProfile>();
+                desfoqueFundo = perfil.Add<DepthOfField>(true);
+                desfoqueFundo.mode.Override(DepthOfFieldMode.Bokeh);
+                volumeFoco.profile = perfil;
+            }
+            volumeFoco.weight = ligar ? 1f : 0f;
+            if (!ligar) return;
+            desfoqueFundo.focalLength.Override(configCamera.distanciaFocalCinema);
+            desfoqueFundo.aperture.Override(configCamera.aberturaCinema);
+            desfoqueFundo.focusDistance.Override(Mathf.Max(0.3f, Vector3.Distance(transform.position, pontoFoco)));
         }
 
         /// <summary>Decide onde focar e quanto se afastar para caber a bola e os jogadores.</summary>

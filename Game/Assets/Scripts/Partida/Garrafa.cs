@@ -130,7 +130,12 @@ namespace BetsDeRua
         {
             if (exposta == marcadaExposta) return;
             marcadaExposta = exposta;
-            if (desenho == null) desenho = GetComponentInChildren<MeshRenderer>();
+            if (desenho == null)
+            {
+                // Garrafa PET: pinta o rótulo; garrafa antiga: o primeiro desenho
+                Transform rotulo = transform.Find("Rotulo");
+                desenho = rotulo != null ? rotulo.GetComponent<MeshRenderer>() : GetComponentInChildren<MeshRenderer>();
+            }
             if (propriedades == null) propriedades = new MaterialPropertyBlock();
             if (exposta)
             {

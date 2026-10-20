@@ -24,6 +24,12 @@ namespace BetsDeRua
         public event System.Action<Jogador> TocouNoCorpo;
         private Garrafa garrafaAtras;
 
+        /// <summary>
+        /// O arremesso sai de trás da casinha de quem arremessa: essa garrafa não conta até a bola
+        /// se afastar dela (senão a rasteira, rente ao chão, derrubava a própria garrafa).
+        /// </summary>
+        public void IgnorarGarrafaDeOrigem(Garrafa origem) => garrafaAtras = origem;
+
         /// <summary>Posição e velocidade da bola logo antes de bater no corpo (para saber se ia na garrafa).</summary>
         public Vector3 PosicaoAntesDoCorpo { get; private set; }
         public Vector3 VelocidadeAntesDoCorpo { get; private set; }
@@ -131,10 +137,14 @@ namespace BetsDeRua
             bool parada = Parada;
             AplicarCurva(dt);
             Vector3 antes = velocidade;
-            FisicaBola.Passo(config, ref posicao, ref velocidade, ref parada, dt);
+            FisicaBola.Passo(config, ref posicao, ref velocidade, ref parada, dt, true);
             Parada = parada;
             // Som: quique no chão (a velocidade vertical virou) e batida na parede (a horizontal virou)
-            if (antes.y < -0.8f && velocidade.y > 0f) Sons.Tocar(TipoSom.Quique, Mathf.Clamp01(-antes.y / 7f) * 0.9f);
+            if (antes.y < -0.8f && velocidade.y > 0f)
+            {
+                Sons.Tocar(TipoSom.Quique, Mathf.Clamp01(-antes.y / 7f) * 0.9f);
+                PoeiraBola.Soltar(new Vector3(posicao.x, FisicaBola.AlturaDoChao(config, posicao.z), posicao.z), Mathf.Clamp01((-antes.y - 1.5f) / 6f), configHUD);
+            }
             if ((antes.x * velocidade.x < 0f && Mathf.Abs(antes.x) > 1.5f) || (antes.z * velocidade.z < 0f && Mathf.Abs(antes.z) > 1.5f))
                 Sons.Tocar(TipoSom.Parede, Mathf.Clamp01(new Vector2(antes.x, antes.z).magnitude / 12f));
             if (posicao.y <= FisicaBola.AlturaDoChao(config, posicao.z) + config.raioBola + 0.001f) QuicouDesdeLancamento = true;
@@ -214,9 +224,12 @@ namespace BetsDeRua
                 if (garrafa == null || garrafa.Derrubada) continue;
                 if (garrafa == garrafaAtras)
                 {
-                    Vector3 longe = posicao - garrafa.transform.position;
-                    longe.y = 0f;
-                    if (longe.magnitude < config.distanciaGarrafaAtras) continue;
+                    // Ignora até a bola passar da garrafa (no sentido em que ela vai) com folga
+                    Vector3 rel = posicao - garrafa.transform.position;
+                    rel.y = 0f;
+                    Vector3 rumo = new Vector3(velocidade.x, 0f, velocidade.z);
+                    float passou = rumo.sqrMagnitude > 0.01f ? Vector3.Dot(rel, rumo.normalized) : rel.magnitude;
+                    if (passou < config.distanciaGarrafaAtras * 0.4f) continue;
                     garrafaAtras = null;
                 }
 

@@ -23,6 +23,8 @@ namespace BetsDeRua
         [SerializeField] private Jogador[] jogadores;
 
         private readonly List<ControleHumano> humanos = new List<ControleHumano>();
+        /// <summary>As pessoas jogando (para o HUD mostrar o nome e o fôlego de cada uma).</summary>
+        public IReadOnlyList<ControleHumano> Humanos => humanos;
 
         // Escolha do time antes da partida (o jogo fica parado enquanto isso)
         private bool escolhendoTime = true;

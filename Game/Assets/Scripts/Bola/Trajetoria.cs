@@ -79,8 +79,8 @@ namespace BetsDeRua
                     if (quicou) return config.raioBola; // segundo quique antes do alvo: chega rasteira
                     // Mesmo quique da Bola: perde parte da velocidade vertical e um pouco da horizontal
                     y = config.raioBola;
-                    vy = -vy * config.quiqueAsfalto;
-                    vh *= config.atritoQuique;
+                    vy = -vy * config.quiqueAsfalto * SuperficieAtual.Quique;
+                    vh *= config.atritoQuique * SuperficieAtual.AtritoQuique;
                     quicou = true;
                 }
                 if (vh <= 0.01f) return config.raioBola;

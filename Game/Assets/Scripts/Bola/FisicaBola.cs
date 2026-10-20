@@ -11,7 +11,7 @@ namespace BetsDeRua
     public static class FisicaBola
     {
         /// <summary>Avança a bola 'dt' segundos. 'parada' vira true quando ela para de rolar.</summary>
-        public static void Passo(ConfigFisica config, ref Vector3 posicao, ref Vector3 velocidade, ref bool parada, float dt)
+        public static void Passo(ConfigFisica config, ref Vector3 posicao, ref Vector3 velocidade, ref bool parada, float dt, bool deVerdade = false)
         {
             if (parada) return;
             float raio = config.raioBola;
@@ -29,7 +29,7 @@ namespace BetsDeRua
                 velocidade.y = 0f;
                 Vector3 horizontal = new Vector3(velocidade.x, 0f, velocidade.z);
                 float rapidezH = horizontal.magnitude;
-                float novaRapidez = rapidezH - config.atritoRolar * dt;
+                float novaRapidez = rapidezH - config.atritoRolar * SuperficieAtual.AtritoRolar * dt;
                 if (novaRapidez <= config.velocidadeParada)
                 {
                     velocidade = Vector3.zero;
@@ -42,14 +42,14 @@ namespace BetsDeRua
 
             posicao += velocidade * dt;
             ColidirComMeioFio(config, ref posicao, ref velocidade);
-            ColidirComChao(config, ref posicao, ref velocidade);
+            ColidirComChao(config, ref posicao, ref velocidade, deVerdade);
             ColidirComMuros(config, ref posicao, ref velocidade);
         }
 
         /// <summary>Altura do chão (m) nesta posição: 0 no asfalto, a altura da calçada fora da rua.</summary>
         public static float AlturaDoChao(ConfigFisica config, float z)
         {
-            return Mathf.Abs(z) > config.larguraRua * 0.5f ? config.alturaCalcada : 0f;
+            return SuperficieAtual.TemCalcada && Mathf.Abs(z) > config.larguraRua * 0.5f ? config.alturaCalcada : 0f;
         }
 
         /// <summary>
@@ -58,6 +58,7 @@ namespace BetsDeRua
         /// </summary>
         private static void ColidirComMeioFio(ConfigFisica config, ref Vector3 posicao, ref Vector3 velocidade)
         {
+            if (!SuperficieAtual.TemCalcada) return;
             float raio = config.raioBola;
             float meiaRua = config.larguraRua * 0.5f;
             float topo = config.alturaCalcada;
@@ -80,7 +81,7 @@ namespace BetsDeRua
             }
         }
 
-        private static void ColidirComChao(ConfigFisica config, ref Vector3 posicao, ref Vector3 velocidade)
+        private static void ColidirComChao(ConfigFisica config, ref Vector3 posicao, ref Vector3 velocidade, bool deVerdade)
         {
             float raio = config.raioBola;
             float chao = AlturaDoChao(config, posicao.z);
@@ -91,9 +92,18 @@ namespace BetsDeRua
             if (-velocidade.y > config.velocidadeMinimaQuique)
             {
                 // Quique: perde parte da velocidade vertical e um pouco da horizontal
-                velocidade.y = -velocidade.y * config.quiqueAsfalto;
-                velocidade.x *= config.atritoQuique;
-                velocidade.z *= config.atritoQuique;
+                velocidade.y = -velocidade.y * config.quiqueAsfalto * SuperficieAtual.Quique;
+                velocidade.x *= config.atritoQuique * SuperficieAtual.AtritoQuique;
+                velocidade.z *= config.atritoQuique * SuperficieAtual.AtritoQuique;
+                // Chão irregular (terra, grama): a bola quica um pouco torta. Só na bola de verdade,
+                // a previsão não sabe para onde vai (é isso que deixa a terra difícil de ler).
+                if (deVerdade && SuperficieAtual.DesvioQuique > 0f)
+                {
+                    Quaternion torto = Quaternion.AngleAxis(Random.Range(-SuperficieAtual.DesvioQuique, SuperficieAtual.DesvioQuique), Vector3.up);
+                    Vector3 h = torto * new Vector3(velocidade.x, 0f, velocidade.z);
+                    velocidade.x = h.x;
+                    velocidade.z = h.z;
+                }
             }
             else
             {
@@ -114,13 +124,13 @@ namespace BetsDeRua
             {
                 posicao.x = Mathf.Sign(posicao.x) * limiteX;
                 velocidade.x = -velocidade.x;
-                velocidade *= config.quiqueMuro;
+                velocidade *= config.quiqueMuro * SuperficieAtual.QuiqueMuro;
             }
             if (Mathf.Abs(posicao.z) > limiteZ && posicao.z * velocidade.z > 0f)
             {
                 posicao.z = Mathf.Sign(posicao.z) * limiteZ;
                 velocidade.z = -velocidade.z;
-                velocidade *= config.quiqueMuro;
+                velocidade *= config.quiqueMuro * SuperficieAtual.QuiqueMuro;
             }
         }
     }

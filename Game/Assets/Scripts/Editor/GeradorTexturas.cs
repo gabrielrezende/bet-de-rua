@@ -336,6 +336,24 @@ namespace BetsDeRua.Editor
         }
 
         /// <summary>Folhagem (verde com variação, para as copas das árvores e os matinhos).</summary>
+        /// <summary>Tela de alambrado (losangos de arame), transparente entre os arames.</summary>
+        public static Texture2D Alambrado()
+        {
+            const int n = 128;
+            Color[] px = new Color[n * n];
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    // Duas famílias de diagonais formam os losangos
+                    float a = Mathf.Abs(((x + y) % 64) - 32f);
+                    float b = Mathf.Abs(((x - y + 640) % 64) - 32f);
+                    float arame = Mathf.Max(Mathf.Clamp01(1f - (32f - a) / 2.2f), Mathf.Clamp01(1f - (32f - b) / 2.2f));
+                    float brilho = 0.55f + 0.15f * Mathf.Sin((x + y) * 0.3f);
+                    px[y * n + x] = new Color(brilho, brilho, brilho * 1.02f, arame > 0.5f ? 1f : 0f);
+                }
+            return Salvar("Alambrado", px, n, false, true);
+        }
+
         public static Texture2D Folhagem()
         {
             const int n = 256;

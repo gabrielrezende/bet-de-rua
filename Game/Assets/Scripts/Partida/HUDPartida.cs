@@ -27,6 +27,7 @@ namespace BetsDeRua
         [SerializeField] private StyleSheet estilo;
         [SerializeField] private ControladorLance lance;
         [SerializeField] private ConfigPartida configPartida;
+        [SerializeField] private GerenciadorJogadores gerenciador;
 
         private VisualElement raiz;
         private Label pontos1, pontos2, nome1, nome2, info, mensagem, instrucoes;
@@ -50,6 +51,9 @@ namespace BetsDeRua
         private EstadoLance estadoVisto = EstadoLance.FimDePartida;
         // Narração de rua em legenda (o moleque sentado no muro)
         private Label narracao;
+        // Barras de quem joga (nome + fôlego), como no FC / FIFA Street
+        private VisualElement barras;
+        private readonly List<(VisualElement caixa, Label nome, VisualElement folego)> barrasPessoas = new List<(VisualElement, Label, VisualElement)>();
         private float narracaoAte;
         private float tempoMensagem;
         private bool pausado;
@@ -94,7 +98,7 @@ namespace BetsDeRua
 
             faixaTroca = UI.Caixa("faixa-troca");
             textoTroca = UI.Texto("TROCA DE PAPEL", "titulo");
-            textoTroca.style.fontSize = 72;
+            textoTroca.style.fontSize = 50;
             textoTroca.style.unityTextAlign = TextAnchor.MiddleCenter;
             faixaTroca.Add(textoTroca);
             faixaTroca.style.display = DisplayStyle.None;
@@ -119,6 +123,14 @@ namespace BetsDeRua
             MontarCartao();
             narracao = UI.Texto("", "narracao");
             raiz.Add(narracao);
+            // Onde é o jogo hoje (lugar sorteado)
+            if (!string.IsNullOrEmpty(SuperficieAtual.Titulo))
+            {
+                narracao.text = "HOJE O JOGO É:  " + SuperficieAtual.Titulo;
+                narracaoAte = Time.time + 4f;
+            }
+            barras = UI.Caixa("barras-jogadores");
+            raiz.Add(barras);
             MontarPausa();
             MontarFim();
         }
@@ -300,6 +312,8 @@ namespace BetsDeRua
             }
             narracao.style.display = Time.time < narracaoAte ? DisplayStyle.Flex : DisplayStyle.None;
 
+            AtualizarBarras();
+
             // Cartão de entrada a cada novo arremesso
             if (lance.Estado == EstadoLance.Arremesso && estadoVisto != EstadoLance.Arremesso) MostrarCartao();
             estadoVisto = lance.Estado;
@@ -321,7 +335,7 @@ namespace BetsDeRua
             instrucoes.style.display = string.IsNullOrEmpty(dica) ? DisplayStyle.None : DisplayStyle.Flex;
 
             // Troca de papel
-            bool troca = lance.Estado == EstadoLance.TrocaDePapel;
+            bool troca = lance.Estado == EstadoLance.TrocaDePapel && lance.TempoNoEstado > 1.2f && lance.TempoNoEstado < 3.6f;
             faixaTroca.style.display = troca ? DisplayStyle.Flex : DisplayStyle.None;
             if (troca) textoTroca.text = $"TROCA DE PAPEL · {NomeDoLado(1 - noTaco)} VAI PARA O TACO";
 
@@ -355,6 +369,39 @@ namespace BetsDeRua
             SobreposicaoAberta = pausado || fim.resolvedStyle.display == DisplayStyle.Flex;
             if (fim.resolvedStyle.display == DisplayStyle.Flex) NavegarMenu(navFim);
             estadoAntes = lance.Estado;
+        }
+
+        private void AtualizarBarras()
+        {
+            if (gerenciador == null) return;
+            var humanos = gerenciador.Humanos;
+            while (barrasPessoas.Count < humanos.Count)
+            {
+                VisualElement caixa = UI.Caixa("barra-jogador");
+                Label nome = UI.Texto("", "barra-jogador-nome");
+                caixa.Add(nome);
+                VisualElement fundo = UI.Caixa("barra-folego-fundo");
+                VisualElement folego = UI.Caixa("barra-folego");
+                fundo.Add(folego);
+                caixa.Add(fundo);
+                barras.Add(caixa);
+                barrasPessoas.Add((caixa, nome, folego));
+            }
+            for (int i = 0; i < barrasPessoas.Count; i++)
+            {
+                var b = barrasPessoas[i];
+                bool ativo = i < humanos.Count && humanos[i].Jogador != null && !lance.Treino && !lance.TreinoBatida;
+                b.caixa.style.display = ativo ? DisplayStyle.Flex : DisplayStyle.None;
+                if (!ativo) continue;
+                ControleHumano h = humanos[i];
+                Jogador j = h.Jogador;
+                Color cor = TelaLados.CoresJogador[(h.Numero - 1) % 4];
+                b.caixa.style.borderLeftColor = cor;
+                string nomeJogador = j.Perfil != null ? j.Perfil.nome : j.Nome;
+                b.nome.text = $"P{h.Numero}  {nomeJogador.ToUpperInvariant()}";
+                b.folego.style.width = Length.Percent(Mathf.Clamp01(j.Estamina) * 100f);
+                b.folego.style.backgroundColor = j.Estamina < 0.25f ? new Color(1f, 0.35f, 0.3f) : cor;
+            }
         }
 
         private string NomeDoLado(int lado)

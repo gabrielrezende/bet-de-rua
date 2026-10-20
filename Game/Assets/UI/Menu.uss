@@ -468,10 +468,10 @@
 
 .faixa-troca {
     position: absolute;
-    top: 40%;
+    top: 20%;
     left: 0;
     right: 0;
-    height: 150px;
+    height: 92px;
     justify-content: center;
     align-items: center;
     background-color: rgba(10, 12, 18, 0.88);
@@ -694,4 +694,37 @@
     -unity-font: url("Fontes/BarlowCondensed-Bold.ttf");
     font-size: 26px;
     color: rgb(255, 255, 255);
+}
+
+/* ---------- barras de quem joga (nome + fôlego) ---------- */
+
+.barras-jogadores {
+    position: absolute;
+    right: 36px;
+    bottom: 26px;
+    flex-direction: row;
+}
+
+.barra-jogador {
+    width: 300px;
+    margin-left: 12px;
+    padding: 6px 12px;
+    background-color: rgba(10, 12, 18, 0.85);
+    border-left-width: 8px;
+}
+
+.barra-jogador-nome {
+    -unity-font: url("Fontes/Anton-Regular.ttf");
+    font-size: 24px;
+    color: rgb(255, 255, 255);
+}
+
+.barra-folego-fundo {
+    height: 8px;
+    margin-top: 4px;
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.barra-folego {
+    height: 100%;
 }

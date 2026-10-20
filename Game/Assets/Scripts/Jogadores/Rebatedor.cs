@@ -121,7 +121,10 @@ namespace BetsDeRua
             jogador.GatilhosOcupados = Ativo;
             Vector3 paraBola = bola.transform.position - transform.position;
             paraBola.y = 0f;
-            jogador.OlharEsperandoArremesso = Ativo && !BolaEmJogo ? paraBola : Vector3.zero;
+            // Na base, o rebatedor olha para a bola: quem recebe fica na diagonal (bola e área);
+            // o parceiro (na base de quem arremessa) vira quase todo para a bola, senão ficava de costas
+            jogador.OlharEsperandoArremesso = paraBola;
+            jogador.PesoOlharBola = Ativo ? config.diagonalRebatedor : 0.9f;
             if (!Ativo)
             {
                 // As ajudas e o arco são divididos entre os rebatedores: só esconde

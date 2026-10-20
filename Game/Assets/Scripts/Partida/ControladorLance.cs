@@ -75,6 +75,8 @@ namespace BetsDeRua
 
         /// <summary>Hora de festa: a dupla indicada comemora; com 'festa', a outra lamenta (as animações escutam).</summary>
         public static event System.Action<Dupla, bool> Comemoracao;
+        /// <summary>Lance de replay: a câmera faz um close em câmera lenta neste ponto (queimada = true, batida perfeita = false).</summary>
+        public static event System.Action<Vector3, bool> Destaque;
 
         // ---- Para o HUD (placar, mensagem, instruções) e o treino
         public int Pontos(int lado) => pontos[lado];
@@ -432,7 +434,12 @@ namespace BetsDeRua
         private void EntrarTrocaDePapel(string motivo)
         {
             Sons.Tocar(TipoSom.Queimou, 0.8f, 0f);
-            if (motivo.Contains("QUEIMOU")) Comemoracao?.Invoke(Dupla.Bola, true);
+            if (motivo.Contains("QUEIMOU"))
+            {
+                foreach (Garrafa g in Garrafas)
+                    if (g.Derrubada) { Destaque?.Invoke(g.transform.position, true); break; }
+                Comemoracao?.Invoke(Dupla.Bola, true);
+            }
             Vibracao.PulsarTodos(0.8f, 0.4f, 0.35f);
             MudarPara(EstadoLance.TrocaDePapel);
             EncerrarJogadas();
@@ -740,6 +747,7 @@ namespace BetsDeRua
             {
                 MudarPara(EstadoLance.BolaViva);
                 bola.Lancar(saida, velocidade, origem.Jogador);
+                bola.IgnorarGarrafaDeOrigem(GarrafaDeOrigem);
                 bola.CorposAtivos = !treino; // lancha: o arremesso pode bater no corpo de um rebatedor
                 if (treinoBatida) EstatisticasDoTreino.arremessos++;
                 if (treino)
@@ -788,6 +796,7 @@ namespace BetsDeRua
                 e.maiorBatidaKmh = Mathf.Max(e.maiorBatidaKmh, kmh);
             }
             string qualidade = perfeita ? "PERFEITA!" : "Boa";
+            if (perfeita && rebatedorDaVez != null) Destaque?.Invoke(rebatedorDaVez.transform.position, false);
             resumoBatida = $"{qualidade} {NomeDaBatida(tipo)} · {kmh:0} km/h  ({TextoErro(erroMs)})";
             Mostrar(resumoBatida);
             // Troca automática (opcional): quem joga na defesa passa para quem chega antes na bola

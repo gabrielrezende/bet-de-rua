@@ -6,7 +6,23 @@ PC (Steam) primeiro, controle recomendado, teclado e mouse suportados. Estilo FI
 
 ## Estado atual
 
-**Versão de teste 0.2** (deixou de ser só o protótipo cinza): já parece um jogo.
+**Versão de teste 0.4**: lugares sorteados, imagem mais realista e jogo mais justo.
+
+- **Quatro lugares, sorteados a cada partida**: Rua do Bar do Zé (asfalto e meio-fio), Terrão da Vila (terra que quica torto), Campinho do Bairro (grama com alambrado) e Fazenda do Tio (pasto, cerca de madeira, vacas e celeiro). Cada chão tem o seu quique e atrito (`ConfigMapas`).
+- **Imagem mais real** (referência: teaser do FC 26): texturas de foto (Poly Haven, CC0) no asfalto, calçada, tijolo, reboco, terra e grama; céu de foto de fim de tarde; morro com casinhas de tijolo, laje, janela e mato; grão de filme, borrão de movimento leve e fundo desfocado nos closes e na câmera lenta; poeira quando a bola quica.
+- **Garrafa PET de 2 litros** com líquido até um pouco acima da metade e rótulo inventado (cola e guaraná).
+- **Taco no estilo da marca** (pá larga e cabo com fita), as **duas mãos no taco**, ninguém mais corre de costas, o rebatedor parado olha para a bola, área do taco maior.
+- **Torcida maior**, em rodinhas, com crianças na beira do campo; todo mundo levanta nos lances grandes.
+- **Queimadas sem querer corrigidas**: a bola do arremesso não derruba mais a garrafa de quem arremessou.
+
+Da versão 0.3:
+
+- **Personagens com corpo e animação de captura** (Quaternius, CC0, ver `docs/CREDITOS.md`): andar, correr, arremessar, bater, pegar, deslizar, comemorar; as duas mãos seguram o taco e a cabeça acompanha a bola. Roupas (camisa do time, bermuda, tênis) geradas a partir do corpo.
+- **Câmeras como no MLB The Show**: atrás de quem arremessa antes do lance, atrás da casinha quando você rebate, transmissão depois da batida, close em quem comemora e **câmera lenta** na queimada, sempre com corte seco.
+- **Apresentação**: cartão "NO TACO / ARREMESSA", narração do "moleque do muro" em legenda, anel no chão e barra de fôlego de quem você controla, torcida na calçada.
+- **Menu no estilo FC 26**: lista vertical de modos, monograma, tomada de cinema diferente para cada modo, fundo desfocado.
+
+Da versão 0.2 (continua valendo):
 
 - **Menu no estilo FIFA**: abertura "APERTE START", início com abas (L1/R1) e blocos: Jogar, Treino, Meu Jogador, Online e Ajustes.
 - **Partida rápida** (você e um parceiro bot contra a CPU) e **multiplayer local** de 1 a 4 controles. Na escolha de lado, cada controle vai para o Lado 1 (começa no taco) ou para o Lado 2 (começa na bola), e vaga vazia vira bot.
@@ -19,13 +35,13 @@ PC (Steam) primeiro, controle recomendado, teclado e mouse suportados. Estilo FI
 
 ### Jogar a versão de teste (sem abrir o Unity)
 
-1. No editor, menu **Bets > Gerar build Windows** (ou peça ao Claude Code). Sai em `Game/Builds/BetsDeRua/`.
+1. No editor, menu **Bets > Gerar build Windows** (ou peça ao Claude Code). Sai em `Game/Builds/BetsDeRua/` (e há um .zip pronto em `Game/Builds/`).
 2. Copie a pasta `BetsDeRua` inteira (sem a subpasta `..._BackUpThisFolder_ButDontShipItWithYourGame`) para o PC do amigo, por pendrive ou num .zip.
 3. Abra `BetsDeRua.exe`. Controle recomendado (PlayStation ou Xbox); teclado e mouse também funcionam.
 
 ### Jogar no editor
 
-Abra `Game/` no Unity e aperte Play na cena `Assets/Scenes/Menu`. A cena `Prototipo` aberta direto continua funcionando do jeito antigo (tela de escolha do time; F2 = só assistir). Todos os números ficam em `Game/Assets/Config` (ConfigFisica, ConfigPartida, ConfigCamera, ConfigHUD). As cenas são montadas por código: menu **Bets > Montar cena Prototipo** e **Bets > Montar cena Menu**.
+Abra `Game/` no Unity e aperte Play na cena `Assets/Scenes/Menu`. A cena `Prototipo` aberta direto continua funcionando do jeito antigo (tela de escolha do time; F2 = só assistir). Todos os números ficam em `Game/Assets/Config` (ConfigFisica, ConfigPartida, ConfigCamera, ConfigHUD, ConfigMapas). As cenas são montadas por código: menu **Bets > Montar cena Prototipo** e **Bets > Montar cena Menu**.
 
 ## Estrutura
 

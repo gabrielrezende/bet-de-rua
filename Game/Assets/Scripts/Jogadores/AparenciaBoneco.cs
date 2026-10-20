@@ -63,6 +63,7 @@ namespace BetsDeRua
             {
                 if (animadorReal == null) animadorReal = gameObject.AddComponent<AnimadorCorpo>();
                 animadorReal.enabled = true;
+                animadorReal.DefinirConfig(config);
                 animadorReal.Religar(corpoAnimado);
             }
             else if (animadorReal != null) animadorReal.enabled = false;

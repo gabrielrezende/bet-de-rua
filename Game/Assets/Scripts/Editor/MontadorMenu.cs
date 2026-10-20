@@ -130,6 +130,29 @@ namespace BetsDeRua.Editor
             RenderSettings.ambientSkyColor = new Color(0.56f, 0.66f, 0.85f);
             RenderSettings.ambientEquatorColor = new Color(0.62f, 0.56f, 0.5f);
             RenderSettings.ambientGroundColor = new Color(0.25f, 0.22f, 0.2f);
+            // Céu de foto (HDRI de fim de tarde, Poly Haven CC0); sem ele, o céu desenhado
+            Texture ceuFoto = AssetDatabase.LoadAssetAtPath<Texture>("Assets/Texturas/Fotos/ceu_fim_de_tarde_2k.hdr");
+            if (ceuFoto != null)
+            {
+                Material ceuHdr = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materiais/CeuFoto.mat");
+                if (ceuHdr == null)
+                {
+                    ceuHdr = new Material(Shader.Find("Skybox/Panoramic"));
+                    AssetDatabase.CreateAsset(ceuHdr, "Assets/Materiais/CeuFoto.mat");
+                }
+                ceuHdr.SetTexture("_MainTex", ceuFoto);
+                ceuHdr.SetFloat("_Exposure", 1.1f);
+                ceuHdr.SetFloat("_Rotation", 140f);
+                EditorUtility.SetDirty(ceuHdr);
+                RenderSettings.skybox = ceuHdr;
+                RenderSettings.sun = sol;
+                RenderSettings.fog = true;
+                RenderSettings.fogMode = FogMode.Linear;
+                RenderSettings.fogColor = new Color(0.78f, 0.72f, 0.66f);
+                RenderSettings.fogStartDistance = 45f;
+                RenderSettings.fogEndDistance = 170f;
+                return;
+            }
             Material ceu = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materiais/Ceu.mat");
             if (ceu == null)
             {
@@ -194,6 +217,32 @@ namespace BetsDeRua.Editor
                 foreach (VolumeComponent c in perfil.components) AssetDatabase.AddObjectToAsset(c, perfil);
                 EditorUtility.SetDirty(perfil);
             }
+            // Acabamento de câmera de verdade (referência: teaser do FC 26): grão de filme leve,
+            // borrão de movimento nos lances rápidos e um tiquinho de aberração de lente
+            if (!perfil.Has<FilmGrain>())
+            {
+                FilmGrain grao = perfil.Add<FilmGrain>(true);
+                grao.type.Override(FilmGrainLookup.Thin1);
+                grao.intensity.Override(0.18f);
+                grao.response.Override(0.8f);
+                AssetDatabase.AddObjectToAsset(grao, perfil);
+            }
+            if (!perfil.TryGet(out MotionBlur borrao))
+            {
+                borrao = perfil.Add<MotionBlur>(true);
+                AssetDatabase.AddObjectToAsset(borrao, perfil);
+            }
+            // Leve e curto: no corte seco de câmera não pode borrar a tela toda
+            borrao.intensity.Override(0.15f);
+            borrao.clamp.Override(0.03f);
+            borrao.quality.Override(MotionBlurQuality.Medium);
+            if (!perfil.Has<ChromaticAberration>())
+            {
+                ChromaticAberration lente = perfil.Add<ChromaticAberration>(true);
+                lente.intensity.Override(0.06f);
+                AssetDatabase.AddObjectToAsset(lente, perfil);
+            }
+            EditorUtility.SetDirty(perfil);
             GameObject objVolume = new GameObject("PosProcessamento");
             Volume volume = objVolume.AddComponent<Volume>();
             volume.isGlobal = true;

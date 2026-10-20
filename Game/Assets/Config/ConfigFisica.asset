@@ -20,10 +20,10 @@ MonoBehaviour:
   alturaFachada: 3
   alturaMuroPerto: 0.8
   distanciaBases: 20
-  larguraAreaTaco: 1.4
-  profundidadeAreaTaco: 0.6
+  larguraAreaTaco: 2.6
+  profundidadeAreaTaco: 1.4
   ladoCasinhaGarrafa: 0.35
-  margemZonaSegura: 0.6
+  margemZonaSegura: 0.15
   larguraFaixaMeio: 3
   espessuraLinhaGiz: 0.08
   alturaMuro: 0.6
@@ -113,8 +113,10 @@ MonoBehaviour:
   alturaMaximaAlcance: 1.6
   janelaPerfeitaMs: 70
   janelaBoaMs: 170
-  anguloMaximoBatida: 80
+  anguloMaximoBatida: 60
   tempoMaximoEsperaBatida: 3
+  distanciaGarrafaAtras: 1.6
+  diagonalRebatedor: 0.5
   tempoPrevisao: 3
   passoPrevisao: 0.01
   tempoEncherBatida: 0.7
