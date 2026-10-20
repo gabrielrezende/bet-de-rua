@@ -66,4 +66,10 @@ MonoBehaviour:
   tamanhoPoeira: 0.35
   duracaoPoeira: 1.4
   corPoeira: {r: 0.62, g: 0.58, b: 0.52, a: 0.35}
+  rastroBola: 1
+  materialRastro: {fileID: 2100000, guid: 4861919a9c1b18d498ec4abccdd1eb50, type: 2}
+  velocidadeMinimaRastro: 14
+  duracaoRastro: 0.35
+  larguraRastro: 0.05
+  corRastro: {r: 1, g: 0.95, b: 0.75, a: 0.55}
   duracaoMensagem: 2

@@ -25,6 +25,10 @@ namespace BetsDeRua
                 if (Application.isPlaying) Object.Destroy(antigo.gameObject);
                 else Object.DestroyImmediate(antigo.gameObject);
             }
+            // Pessoa realista (MakeHuman) quando houver uma que combine; senão, o corpo de peças
+            BibliotecaCorpos.Pessoa pessoa = b.EscolherPessoa(perfil);
+            if (pessoa != null) return MontarPessoa(raiz, perfil, matTime, b, pessoa);
+
             bool feminino = perfil != null && perfil.genero == Genero.Feminino;
             int g = feminino ? 1 : 0;
             GameObject modelo = feminino && b.corpoFeminino != null ? b.corpoFeminino : b.corpoMasculino;
@@ -135,6 +139,106 @@ namespace BetsDeRua
                 }
                 if (estilo == EstiloCabelo.Moicano)
                     Enfeitar(cabeca, "Moicano", new Vector3(0f, 0.2f, 0f), new Vector3(0.04f, 0.07f, 0.13f), MalhasBoneco.Esfera(), matCabelo1, escala);
+                ChapeuEOculos(cabeca, perfil, tecidoTime, escala);
+                // Criança: cabeça um pouco maior; adolescente, um pouco
+                if (perfil != null && perfil.faixaEtaria != FaixaEtaria.Adulto)
+                    cabeca.localScale = Vector3.one * (perfil.faixaEtaria == FaixaEtaria.Crianca ? 1.18f : 1.07f);
+            }
+            Corrente(anim, perfil, escala);
+
+            // ---- Corpo magro / forte: alarga ou afina o tronco, braços e coxas (escala dos ossos, a animação não mexe)
+            float largura = perfil != null ? perfil.FatorLargura : 1f;
+            if (anim.isHuman && Mathf.Abs(largura - 1f) > 0.01f)
+            {
+                foreach (HumanBodyBones osso in new[] { HumanBodyBones.Spine, HumanBodyBones.Chest })
+                {
+                    Transform t = anim.GetBoneTransform(osso);
+                    if (t != null) t.localScale = new Vector3(Mathf.Lerp(1f, largura, 0.6f), 1f, Mathf.Lerp(1f, largura, 0.8f));
+                }
+            }
+            return animador;
+        }
+
+        /// <summary>
+        /// Pessoa realista do MakeHuman: o modelo já vem vestido (pele, olhos, cabelo, camiseta,
+        /// bermuda, tênis). A camiseta vira a camisa do time ("Time_Camisa"), a bermuda e o tênis
+        /// pegam a cor da ficha, e o boné/óculos/corrente vão por cima, como no corpo de peças.
+        /// </summary>
+        private static Animator MontarPessoa(Transform raiz, PerfilPersonagem perfil, Material matTime, BibliotecaCorpos b, BibliotecaCorpos.Pessoa pessoa)
+        {
+            GameObject corpo = Object.Instantiate(pessoa.modelo, raiz, false);
+            corpo.name = "Corpo";
+            corpo.transform.localPosition = Vector3.zero;
+            corpo.transform.localRotation = Quaternion.Euler(0f, b.giroPessoas, 0f);
+            float altura = perfil != null ? perfil.altura : PerfilPersonagem.AlturaReferencia;
+            float escala = altura / Mathf.Max(0.5f, pessoa.alturaModelo);
+            corpo.transform.localScale = Vector3.one * escala;
+
+            Animator animador = corpo.GetComponent<Animator>();
+            if (animador == null) animador = corpo.AddComponent<Animator>();
+            animador.runtimeAnimatorController = b.controladorJogador;
+            animador.applyRootMotion = false;
+            animador.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+
+            Material tecidoTime = matTime != null ? matTime : Mat("time", Color.blue, null, null, 0.2f);
+            Color corBermuda = perfil != null ? perfil.corBermuda : new Color(0.16f, 0.18f, 0.24f);
+            Color corCalcado = perfil != null ? perfil.corCalcado : Color.white;
+            bool comChapeu = perfil != null && perfil.chapeu != Chapeu.Nada;
+            foreach (SkinnedMeshRenderer r in corpo.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                r.updateWhenOffscreen = true;
+                // As peças vêm com nome em português do gerador (Ferramentas/Blender/gerar_pessoas.py)
+                string n = r.name.ToLowerInvariant();
+                if (n.StartsWith("camisa"))
+                {
+                    r.name = "Time_Camisa";
+                    r.sharedMaterial = MatTecidoPessoa(r.sharedMaterial, tecidoTime);
+                }
+                else if (n.StartsWith("bermuda"))
+                    r.sharedMaterial = Tingir(r.sharedMaterial, Color.Lerp(Color.white, corBermuda * 1.6f, 0.45f), "bermuda");
+                else if (n.StartsWith("tenis"))
+                    r.sharedMaterial = Tingir(r.sharedMaterial, Color.Lerp(Color.white, corCalcado, 0.3f), "tenis");
+                else if (comChapeu && n.StartsWith("cabelo") && r.sharedMaterial != null && !CabeloPreso(r.sharedMaterial.name))
+                    r.gameObject.SetActive(false); // cabelo solto vazaria pelo boné; rabo de cavalo e trança aparecem por trás
+            }
+
+            Transform cabeca = animador.isHuman ? animador.GetBoneTransform(HumanBodyBones.Head) : null;
+            // Boné e óculos medidos pelos olhos da pessoa (onde fica a testa, para onde ela olha, o tamanho da cabeça)
+            if (cabeca != null) ChapeuPelosOlhos(animador, cabeca, perfil, tecidoTime);
+            Corrente(animador, perfil, escala);
+            return animador;
+        }
+
+        private static bool CabeloPreso(string material)
+        {
+            string m = material.ToLowerInvariant();
+            return m.Contains("ponytail") || m.Contains("braid");
+        }
+
+        /// <summary>Camisa do time por cima da camiseta do MakeHuman: mantém a textura do tecido e pinta com a cor do time.</summary>
+        private static Material MatTecidoPessoa(Material original, Material time)
+        {
+            Color c = time.HasProperty("_BaseColor") ? time.GetColor("_BaseColor") : time.color;
+            return Tingir(original, c, "camisaPessoa");
+        }
+
+        /// <summary>Cópia do material com a cor multiplicada (a textura fica, só muda a cor).</summary>
+        private static Material Tingir(Material original, Color cor, string tipo)
+        {
+            string chave = $"{tipo}{(original != null ? original.name : "")}{ColorUtility.ToHtmlStringRGB(cor)}";
+            if (materiais.TryGetValue(chave, out Material m) && m != null) return m;
+            if (lit == null) lit = Shader.Find("Universal Render Pipeline/Lit");
+            m = original != null ? new Material(original) : new Material(lit);
+            m.name = "Pessoa_" + chave;
+            if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", cor);
+            else m.color = cor;
+            materiais[chave] = m;
+            return m;
+        }
+
+        /// <summary>Boné, chapéu, touca e óculos no osso da cabeça (peças feitas por código).</summary>
+        private static void ChapeuEOculos(Transform cabeca, PerfilPersonagem perfil, Material tecidoTime, float escala)
+        {
                 Chapeu chapeu = perfil != null ? perfil.chapeu : Chapeu.Nada;
                 if (chapeu == Chapeu.Bone || chapeu == Chapeu.BoneParaTras)
                 {
@@ -151,27 +255,69 @@ namespace BetsDeRua
                     Enfeitar(cabeca, "Time_Bone", new Vector3(0f, 0.125f, -0.01f), new Vector3(0.112f, 0.115f, 0.124f), MalhasBoneco.Calota(-5f, 90f), tecidoTime, escala);
                 if (perfil != null && perfil.acessorio == Acessorio.Oculos)
                     Enfeitar(cabeca, "Oculos", new Vector3(0f, 0.085f, 0.1f), new Vector3(0.085f, 0.02f, 0.012f), MalhasBoneco.Esfera(), Mat("oculos", new Color(0.04f, 0.04f, 0.05f), null, null, 0.9f), escala);
-                // Criança: cabeça um pouco maior; adolescente, um pouco
-                if (perfil != null && perfil.faixaEtaria != FaixaEtaria.Adulto)
-                    cabeca.localScale = Vector3.one * (perfil.faixaEtaria == FaixaEtaria.Crianca ? 1.18f : 1.07f);
+        }
+
+        /// <summary>
+        /// Boné, chapéu, touca e óculos nas pessoas do MakeHuman, posicionados pelos olhos: a frente é para
+        /// onde os olhos apontam, a altura sai da linha dos olhos e o tamanho da distância entre eles
+        /// (criança tem cabeça menor). Fica preso no osso da cabeça (acompanha a animação).
+        /// </summary>
+        private static void ChapeuPelosOlhos(Animator a, Transform cabeca, PerfilPersonagem perfil, Material tecidoTime)
+        {
+            Transform oe = a.GetBoneTransform(HumanBodyBones.LeftEye), od = a.GetBoneTransform(HumanBodyBones.RightEye);
+            if (oe == null || od == null) return;
+            Vector3 olhos = (oe.position + od.position) * 0.5f;
+            Vector3 frente = olhos - cabeca.position;
+            frente.y = 0f;
+            if (frente.sqrMagnitude < 1e-6f) return;
+            frente.Normalize();
+            Quaternion giro = Quaternion.LookRotation(frente, Vector3.up);
+            float k = Vector3.Distance(oe.position, od.position) / 0.06f; // 6 cm entre os olhos = adulto
+            Vector3 centro = cabeca.position + Vector3.up * 0.065f * k + frente * 0.012f * k;
+
+            void Peca(string nome, Vector3 deslocamento, Vector3 tamanho, Mesh malha, Material mat)
+            {
+                GameObject g = new GameObject(nome);
+                g.transform.SetPositionAndRotation(centro + giro * (deslocamento * k), giro);
+                g.transform.localScale = tamanho * k;
+                g.transform.SetParent(cabeca, true);
+                g.AddComponent<MeshFilter>().sharedMesh = malha;
+                g.AddComponent<MeshRenderer>().sharedMaterial = mat;
             }
+
+            Chapeu chapeu = perfil != null ? perfil.chapeu : Chapeu.Nada;
+            if (chapeu == Chapeu.Bone || chapeu == Chapeu.BoneParaTras)
+            {
+                float lado = chapeu == Chapeu.Bone ? 1f : -1f;
+                Peca("Time_Bone", Vector3.zero, new Vector3(0.096f, 0.098f, 0.106f), MalhasBoneco.Calota(-6f, 90f), tecidoTime);
+                Peca("Time_Aba", new Vector3(0f, 0.004f, lado * 0.118f), new Vector3(0.082f, 0.008f, 0.07f), MalhasBoneco.Esfera(), tecidoTime);
+            }
+            else if (chapeu == Chapeu.Bucket)
+            {
+                Peca("Time_Bone", new Vector3(0f, 0.01f, 0f), new Vector3(0.098f, 0.092f, 0.104f), MalhasBoneco.Calota(0f, 90f), tecidoTime);
+                Peca("Time_Aba", new Vector3(0f, 0.01f, 0f), Vector3.one, MalhasBoneco.Aba(0.095f, 0.15f, 0.007f), tecidoTime);
+            }
+            else if (chapeu == Chapeu.Touca)
+                Peca("Time_Bone", new Vector3(0f, -0.005f, -0.005f), new Vector3(0.098f, 0.104f, 0.108f), MalhasBoneco.Calota(-8f, 90f), tecidoTime);
+            if (perfil != null && perfil.acessorio == Acessorio.Oculos)
+            {
+                GameObject g = new GameObject("Oculos");
+                g.transform.SetPositionAndRotation(olhos + frente * 0.022f * k, giro);
+                g.transform.localScale = new Vector3(0.075f, 0.018f, 0.01f) * k;
+                g.transform.SetParent(cabeca, true);
+                g.AddComponent<MeshFilter>().sharedMesh = MalhasBoneco.Esfera();
+                g.AddComponent<MeshRenderer>().sharedMaterial = Mat("oculos", new Color(0.04f, 0.04f, 0.05f), null, null, 0.9f);
+            }
+        }
+
+        /// <summary>Corrente de ouro no peito.</summary>
+        private static void Corrente(Animator anim, PerfilPersonagem perfil, float escala)
+        {
             if (perfil != null && perfil.acessorio == Acessorio.Corrente && anim.isHuman)
             {
                 Transform peito = anim.GetBoneTransform(HumanBodyBones.UpperChest) ?? anim.GetBoneTransform(HumanBodyBones.Chest);
                 if (peito != null) Enfeitar(peito, "Corrente", new Vector3(0f, 0.12f, 0.06f), Vector3.one, MalhasBoneco.Anel(0.075f, 0.006f), Mat("ouro", new Color(0.95f, 0.75f, 0.25f), null, null, 0.9f), escala);
             }
-
-            // ---- Corpo magro / forte: alarga ou afina o tronco, braços e coxas (escala dos ossos, a animação não mexe)
-            float largura = perfil != null ? perfil.FatorLargura : 1f;
-            if (anim.isHuman && Mathf.Abs(largura - 1f) > 0.01f)
-            {
-                foreach (HumanBodyBones osso in new[] { HumanBodyBones.Spine, HumanBodyBones.Chest })
-                {
-                    Transform t = anim.GetBoneTransform(osso);
-                    if (t != null) t.localScale = new Vector3(Mathf.Lerp(1f, largura, 0.6f), 1f, Mathf.Lerp(1f, largura, 0.8f));
-                }
-            }
-            return animador;
         }
 
         private static Color Clarear(Color c) => Color.Lerp(c, Color.white, 0.08f) * 1.6f;
@@ -263,7 +409,10 @@ namespace BetsDeRua
             foreach (Renderer r in raiz.GetComponentsInChildren<Renderer>(true))
             {
                 if (!r.name.StartsWith("Time_")) continue;
-                r.sharedMaterial = r is SkinnedMeshRenderer ? camisa : time;
+                // Camiseta do MakeHuman: só troca a cor (a textura do tecido e as costuras ficam)
+                if (r is SkinnedMeshRenderer && r.sharedMaterial != null && r.sharedMaterial.name.StartsWith("Pessoa_"))
+                    r.sharedMaterial = MatTecidoPessoa(r.sharedMaterial, time);
+                else r.sharedMaterial = r is SkinnedMeshRenderer ? camisa : time;
             }
         }
     }

@@ -64,3 +64,91 @@ MonoBehaviour:
   controladorJogador: {fileID: 9100000, guid: d53b7ec7e7ff31744b0713fa7f4da4be, type: 2}
   controladorTorcida: {fileID: 9100000, guid: 6af05eddab824b84f840486a8c25b046, type: 2}
   alturaBase: 1.82
+  usarPessoas: 1
+  giroPessoas: 180
+  pessoas:
+  - modelo: {fileID: 919132149155446097, guid: 10a068c3f8f054344bd8085adb1e7743, type: 3}
+    genero: 1
+    faixa: 1
+    tomPele: 0.5
+    cabeloComprido: 1
+    alturaModelo: 1.4808812
+  - modelo: {fileID: 919132149155446097, guid: c1bc9a7b39da6e5428365249709cf534, type: 3}
+    genero: 1
+    faixa: 2
+    tomPele: 0.25
+    cabeloComprido: 1
+    alturaModelo: 1.6002728
+  - modelo: {fileID: 919132149155446097, guid: b05d4adb9463c3d4bbf59e505a863bc6, type: 3}
+    genero: 1
+    faixa: 2
+    tomPele: 0.55
+    cabeloComprido: 1
+    alturaModelo: 1.6125612
+  - modelo: {fileID: 919132149155446097, guid: d0623e2fdeb0b3f478aba9cebc24ce7c, type: 3}
+    genero: 1
+    faixa: 2
+    tomPele: 0.85
+    cabeloComprido: 0
+    alturaModelo: 1.6359818
+  - modelo: {fileID: 919132149155446097, guid: 97d61386010b41446b74bd3f730f9b81, type: 3}
+    genero: 1
+    faixa: 0
+    tomPele: 0.4
+    cabeloComprido: 1
+    alturaModelo: 1.2881285
+  - modelo: {fileID: 919132149155446097, guid: 4ef8f07ddd7309b40a4f05246b929637, type: 3}
+    genero: 1
+    faixa: 0
+    tomPele: 0.8
+    cabeloComprido: 1
+    alturaModelo: 1.2787259
+  - modelo: {fileID: 919132149155446097, guid: 0fe14fb3dfc558845be8720dfc42994e, type: 3}
+    genero: 0
+    faixa: 1
+    tomPele: 0.4
+    cabeloComprido: 0
+    alturaModelo: 1.5891575
+  - modelo: {fileID: 919132149155446097, guid: 66ef6a8e248e13b4eaf625ace168e6c3, type: 3}
+    genero: 0
+    faixa: 1
+    tomPele: 0.8
+    cabeloComprido: 0
+    alturaModelo: 1.6781094
+  - modelo: {fileID: 919132149155446097, guid: 3855ce0ed54e0754cbbeecc741899c3f, type: 3}
+    genero: 0
+    faixa: 2
+    tomPele: 0.15
+    cabeloComprido: 0
+    alturaModelo: 1.8062296
+  - modelo: {fileID: 919132149155446097, guid: 9cd5d748f9d51274a8c65363c9bdc837, type: 3}
+    genero: 0
+    faixa: 2
+    tomPele: 0.5
+    cabeloComprido: 0
+    alturaModelo: 1.7693288
+  - modelo: {fileID: 919132149155446097, guid: 4d79d1467826f18408b07509d797255d, type: 3}
+    genero: 0
+    faixa: 2
+    tomPele: 0.8
+    cabeloComprido: 0
+    alturaModelo: 1.775701
+  - modelo: {fileID: 919132149155446097, guid: ef48a8d4eab8d0344897809597078df6, type: 3}
+    genero: 0
+    faixa: 2
+    tomPele: 0.85
+    cabeloComprido: 0
+    alturaModelo: 1.8988703
+  - modelo: {fileID: 919132149155446097, guid: 0b82afa48b829e84bb755b51a51c07bc, type: 3}
+    genero: 0
+    faixa: 0
+    tomPele: 0.3
+    cabeloComprido: 0
+    alturaModelo: 1.3734698
+  - modelo: {fileID: 919132149155446097, guid: a3a6c17d2becb3a4ba997e468ac3b905, type: 3}
+    genero: 0
+    faixa: 0
+    tomPele: 0.8
+    cabeloComprido: 0
+    alturaModelo: 1.3668764
+  ajusteChapeuPessoas: -0.05

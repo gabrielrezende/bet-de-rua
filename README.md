@@ -6,6 +6,14 @@ PC (Steam) primeiro, controle recomendado, teclado e mouse suportados. Estilo FI
 
 ## Estado atual
 
+**Versão de teste 0.5**: pessoas realistas e rua com objetos de verdade.
+
+- **Pessoas do MakeHuman (CC0)**: 14 pessoas, entre homens, mulheres, adolescentes e crianças, com tons de pele variados, pele e olhos de foto, cabelos (afro, curtos, rabo de cavalo, trança), camiseta, polo ou regata, bermuda jeans ou calça cargo e tênis. A camiseta vira a camisa do time. Geradas por `Game/Ferramentas/Blender/gerar_pessoas.py` (Blender + MPFB) e trazidas pelo menu **Bets > Importar pessoas MakeHuman**.
+- **Pegada do bets**: as duas mãos no cabo, na frente do corpo, e a ponta do taco no chão (postura de golfista: tronco inclinado, joelhos dobrados). O boné se ajusta pelos olhos de cada pessoa.
+- **Objetos da rua de verdade (Poly Haven, CC0)**: portas de aço de enrolar (algumas pichadas), ar-condicionado nas paredes, lixeiras de lata, pneu velho, tampas de bueiro e carros cobertos com lona.
+- **Rastro da bola** nas bolas rápidas (como o traço do golfe) e reflexo do céu nos metais.
+- Quatro lugares novos no sorteio: favela, avenida, rodovia e pontilhão.
+
 **Versão de teste 0.4**: lugares sorteados, imagem mais realista e jogo mais justo.
 
 - **Quatro lugares, sorteados a cada partida**: Rua do Bar do Zé (asfalto e meio-fio), Terrão da Vila (terra que quica torto), Campinho do Bairro (grama com alambrado) e Fazenda do Tio (pasto, cerca de madeira, vacas e celeiro). Cada chão tem o seu quique e atrito (`ConfigMapas`).

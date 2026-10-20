@@ -365,6 +365,10 @@ namespace BetsDeRua
         public float pontaGuardaFrente = 0.55f;
         [Tooltip("Onde a ponta do taco encosta no chão na guarda: para a direita (m).")]
         public float pontaGuardaLado = 0.12f;
+        [Tooltip("Inclinação do tronco para a frente na guarda do bets (graus), como o golfista no 'address': quadril para trás, braços caindo retos.")]
+        public float inclinacaoGuardaBets = 22f;
+        [Tooltip("Quanto o quadril desce na guarda do bets (m): joelhos dobrados.")]
+        public float agachamentoGuardaBets = 0.07f;
         [Tooltip("Distância entre as duas mãos no cabo (m).")]
         public float distanciaEntreMaos = 0.09f;
     }

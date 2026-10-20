@@ -52,6 +52,31 @@ namespace BetsDeRua
         /// <summary>Quem lançou a bola por último (arremesso, chute, passe ou batida). Null = ninguém.</summary>
         public Jogador UltimoLancador { get; private set; }
 
+        private TrailRenderer rastro;
+
+        /// <summary>O rastro atrás da bola rápida (como o traço da bola no golfe), só no desenho.</summary>
+        private void AtualizarRastro(bool teleporte)
+        {
+            if (configHUD == null || !configHUD.rastroBola || configHUD.materialRastro == null) return;
+            if (rastro == null)
+            {
+                rastro = gameObject.AddComponent<TrailRenderer>();
+                rastro.sharedMaterial = configHUD.materialRastro;
+                rastro.time = configHUD.duracaoRastro;
+                rastro.minVertexDistance = 0.05f;
+                rastro.widthCurve = AnimationCurve.Linear(0f, configHUD.larguraRastro, 1f, 0f);
+                Gradient g = new Gradient();
+                Color c = configHUD.corRastro;
+                g.SetKeys(new[] { new GradientColorKey(c, 0f), new GradientColorKey(c, 1f) },
+                          new[] { new GradientAlphaKey(c.a, 0f), new GradientAlphaKey(0f, 1f) });
+                rastro.colorGradient = g;
+                rastro.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                rastro.emitting = false;
+            }
+            if (teleporte) { rastro.Clear(); rastro.emitting = false; return; }
+            rastro.emitting = !Parada && velocidade.magnitude >= configHUD.velocidadeMinimaRastro;
+        }
+
         private void Awake()
         {
             // O visual fica acima da posição física; desfaz esse deslocamento
@@ -66,6 +91,7 @@ namespace BetsDeRua
             posicao = posicaoInicial;
             velocidade = velocidadeInicial;
             Parada = false;
+            AtualizarRastro(true); // sai da mão: não liga o rastro com o caminho até a mão
             QuicouDesdeLancamento = posicao.y <= FisicaBola.AlturaDoChao(config, posicao.z) + config.raioBola + 0.001f;
             UltimoLancador = lancador;
             // A garrafa que fica ATRÁS de quem lança (a da casinha de onde ele arremessa) não conta
@@ -113,6 +139,7 @@ namespace BetsDeRua
             velocidade = Vector3.zero;
             Parada = true;
             AtualizarVisual();
+            AtualizarRastro(true);
         }
 
         private void Update()
@@ -130,6 +157,7 @@ namespace BetsDeRua
                 }
             }
             AtualizarVisual();
+            AtualizarRastro(false);
         }
 
         private void Simular(float dt)

@@ -39,6 +39,7 @@ namespace BetsDeRua.Editor
             ConfigPartida configPartida = CarregarOuCriarConfig<ConfigPartida>(CaminhoConfigPartida);
             ConfigHUD configHUD = CarregarOuCriarConfig<ConfigHUD>(CaminhoConfigHUD);
             configHUD.materialPoeira = CriarMaterialPoeira();
+            configHUD.materialRastro = CriarMaterialRastro();
             EditorUtility.SetDirty(configHUD);
 
             Material matChao = CriarMaterial("Chao", new Color(0.22f, 0.22f, 0.23f));
@@ -312,6 +313,16 @@ namespace BetsDeRua.Editor
             MontadorMenu.ConfigurarSol(Object.FindFirstObjectByType<Light>());
             MontadorMenu.ConfigurarCamera(cameraPrincipal);
             MontadorMenu.CriarVolume();
+            // Sonda de reflexo do céu e da rua: metal, vidro e carro refletem o lugar de verdade
+            GameObject sonda = new GameObject("SondaReflexo");
+            sonda.transform.position = new Vector3(0f, 3f, 0f);
+            ReflectionProbe rp = sonda.AddComponent<ReflectionProbe>();
+            rp.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
+            rp.refreshMode = UnityEngine.Rendering.ReflectionProbeRefreshMode.OnAwake;
+            rp.timeSlicingMode = UnityEngine.Rendering.ReflectionProbeTimeSlicingMode.IndividualFaces;
+            rp.size = new Vector3(config.comprimentoCampo + 60f, 40f, config.larguraCampo + 60f);
+            rp.resolution = 128;
+            rp.boxProjection = false;
 
             // Salva; o menu é a primeira cena do build, a partida a segunda
             EditorSceneManager.SaveScene(cena, CaminhoCena);
@@ -653,6 +664,29 @@ namespace BetsDeRua.Editor
             m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
             m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             m.SetFloat("_Smoothness", 0.95f);
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>Material do rastro da bola: sem luz, transparente (some no fim).</summary>
+        private static Material CriarMaterialRastro()
+        {
+            string caminho = "Assets/Materiais/RastroBola.mat";
+            Material m = AssetDatabase.LoadAssetAtPath<Material>(caminho);
+            if (m == null)
+            {
+                m = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+                AssetDatabase.CreateAsset(m, caminho);
+            }
+            m.SetColor("_BaseColor", Color.white);
+            m.SetFloat("_Surface", 1f);
+            m.SetFloat("_Blend", 0f);
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.SetFloat("_ZWrite", 0f);
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             EditorUtility.SetDirty(m);
             return m;
         }

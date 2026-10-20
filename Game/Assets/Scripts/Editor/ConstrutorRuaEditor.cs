@@ -61,7 +61,8 @@ namespace BetsDeRua.Editor
             {
                 float x = -L * 0.5f + (i + 0.5f) * L / 6f + (float)(r.NextDouble() - 0.5) * 4f;
                 float z = (r.NextDouble() < 0.5 ? -1f : 1f) * (meiaRua - 0.45f);
-                Juntar("Bueiro", grade, new Vector3(x, 0.003f, z), new Vector3(0.9f, 0.004f, 0.45f));
+                if (Objeto("water_manhole_cover", t, new Vector3(x, 0.0f, z), (float)r.NextDouble() * 360f, 1.15f) == null)
+                    Juntar("Bueiro", grade, new Vector3(x, 0.003f, z), new Vector3(0.9f, 0.004f, 0.45f));
             }
 
             // ---------- Calçadas e meio-fio (com colisão: os jogadores sobem) ----------
@@ -94,8 +95,11 @@ namespace BetsDeRua.Editor
                 GameObject muro = Caixa(lado < 0 ? "MuroFimA" : "MuroFimB", t, new Vector3(lado * (L + eFim) * 0.5f, hFim * 0.5f, 0f),
                                         new Vector3(eFim, hFim, config.larguraCampo + 2f * eFim), tijolo, false);
                 muro.AddComponent<BoxCollider>();
-                Carro(t, new Vector3(lado * (L * 0.5f + 4.5f), 0f, -meiaRua + 1.3f), lado < 0 ? 0f : 180f, carro[r.Next(carro.Length)]);
-                Carro(t, new Vector3(lado * (L * 0.5f + 11f), 0f, meiaRua - 1.3f), lado < 0 ? 180f : 0f, carro[r.Next(carro.Length)]);
+                // Carros parados debaixo da lona (modelo de verdade); sem o modelo, o carro de caixas
+                if (Objeto("covered_car", t, new Vector3(lado * (L * 0.5f + 4.5f), 0f, -meiaRua + 1.3f), 90f + (float)(r.NextDouble() - 0.5) * 6f, 1f) == null)
+                    Carro(t, new Vector3(lado * (L * 0.5f + 4.5f), 0f, -meiaRua + 1.3f), lado < 0 ? 0f : 180f, carro[r.Next(carro.Length)]);
+                if (Objeto("covered_car", t, new Vector3(lado * (L * 0.5f + 11f), 0f, meiaRua - 1.3f), 270f + (float)(r.NextDouble() - 0.5) * 6f, 1f) == null)
+                    Carro(t, new Vector3(lado * (L * 0.5f + 11f), 0f, meiaRua - 1.3f), lado < 0 ? 180f : 0f, carro[r.Next(carro.Length)]);
             }
 
             // ---------- Postes com fios (calçada do fundo) e árvores nas pontas ----------
@@ -107,6 +111,19 @@ namespace BetsDeRua.Editor
                     Fio(t, topos[i] + new Vector3(0f, -f * 0.25f, (f - 1) * 0.35f), topos[i + 1] + new Vector3(0f, -f * 0.25f, (f - 1) * 0.35f), 0.7f + f * 0.15f);
             foreach (float x in new[] { -L * 0.5f - 3f, L * 0.5f + 3f, -L * 0.5f + 4f, L * 0.5f - 4f })
                 Arvore(t, new Vector3(x, hCalcada, meiaLargura - 1.1f), r);
+
+            // ---------- Lixeira de lata e pneu velho na calçada do fundo (modelos de verdade) ----------
+            for (float x = -L * 0.5f + 6f; x < L * 0.5f - 4f; x += 9f + (float)r.NextDouble() * 6f)
+            {
+                if (Mathf.Abs(Mathf.Abs(x) - config.distanciaBases * 0.5f) < 4f) continue; // longe das bases
+                float zc = meiaLargura - 0.45f;
+                if (r.NextDouble() < 0.6)
+                    Objeto("metal_trash_can", t, new Vector3(x, hCalcada, zc), (float)r.NextDouble() * 360f, 0.85f,
+                           r.NextDouble() < 0.5 ? new[] { "metal_trash_can", "metal_trash_can_handle_left", "metal_trash_can_handle_right" }
+                                                 : new[] { "metal_trash_can_rust", "metal_trash_can_rust_handle_left", "metal_trash_can_rust_handle_right", "metal_trash_can_rust_lid" });
+                else
+                    Objeto("old_tyre", t, new Vector3(x, hCalcada, zc + 0.1f), 180f + (float)(r.NextDouble() - 0.5) * 40f, 1f);
+            }
 
             // ---------- Amarelinha de giz na calçada do fundo ----------
             Amarelinha(t, new Vector3(-L * 0.25f, hCalcada + 0.004f, meiaRua + larguraCalcada * 0.5f));
@@ -177,6 +194,7 @@ namespace BetsDeRua.Editor
             }
             Porta(xc - w * 0.3f, z0, hb);
             Janela(xc + w * 0.15f, z0, hb + 1.1f, 1.3f, 1.1f, true);
+            if (r.NextDouble() < 0.4) ArCondicionado(t, xc + w * 0.15f, z0, hb + 2.25f, r);
             if (w >= 7f) PortaoGaragem(xc + w * 0.35f - 1.2f, z0, hb, 2.6f, 2.3f, r);
         }
 
@@ -201,6 +219,7 @@ namespace BetsDeRua.Editor
             PortaoGaragem(xc + w * 0.18f, z0, hb, Mathf.Min(3f, w * 0.45f), 2.4f, r);
             Janela(xc - w * 0.2f, z0 + 0.1f, hb + h1 + 0.9f, 1.2f, 1f, false);
             Janela(xc + w * 0.22f, z0 + 0.1f, hb + h1 + 0.9f, 1.2f, 1f, false);
+            if (r.NextDouble() < 0.55) ArCondicionado(t, xc + w * 0.22f, z0 + 0.1f, hb + h1 + 2.0f, r);
         }
 
         private static void MuroComCasaAtras(Transform t, float xc, float z0, float hb, float w, Material parede, System.Random r)
@@ -225,10 +244,14 @@ namespace BetsDeRua.Editor
             float h = 3.6f, fundo = 8f;
             Juntar("Parede", parede, new Vector3(xc, hb + h * 0.5f, z0 + fundo * 0.5f), new Vector3(w, h, fundo));
             Juntar("Platibanda", parede, new Vector3(xc, hb + h + 0.4f, z0 + 0.1f), new Vector3(w, 0.8f, 0.2f));
-            // Portão de enrolar meio aberto, com o escuro da loja embaixo
+            // Portão de enrolar: fechado (portas de aço de verdade, às vezes pichadas) ou meio aberto (o escuro da loja embaixo)
             float lp = w * 0.7f;
-            Juntar("Loja", janela, new Vector3(xc, hb + 1.1f, z0 + 0.04f), new Vector3(lp, 2.2f, 0.1f));
-            CaixaNoMundo("PortaoEnrolar", t, new Vector3(xc, hb + 2.45f, z0 - 0.04f), new Vector3(lp, 1.3f, 0.06f), portao[r.Next(portao.Length)]);
+            bool fechado = r.NextDouble() < 0.5 && PortasDeEnrolar(t, xc, z0, hb, lp, 2.5f, r);
+            if (!fechado)
+            {
+                Juntar("Loja", janela, new Vector3(xc, hb + 1.1f, z0 + 0.04f), new Vector3(lp, 2.2f, 0.1f));
+                CaixaNoMundo("PortaoEnrolar", t, new Vector3(xc, hb + 2.45f, z0 - 0.04f), new Vector3(lp, 1.3f, 0.06f), portao[r.Next(portao.Length)]);
+            }
             Juntar("Toldo", placaCores[r.Next(placaCores.Length)], new Vector3(xc, hb + 3.05f, z0 - 0.5f), new Vector3(lp + 0.4f, 0.08f, 1f));
             // Placa com o nome
             Material corPlaca = placaCores[r.Next(placaCores.Length)];
@@ -281,7 +304,72 @@ namespace BetsDeRua.Editor
 
         private static void PortaoGaragem(float x, float z0, float hb, float largura, float altura, System.Random r)
         {
+            if (PortasDeEnrolar(raizAvulsos, x, z0, hb, largura, altura, r)) return;
             CaixaNoMundo("PortaoGaragem", null, new Vector3(x, hb + altura * 0.5f, z0 - 0.03f), new Vector3(largura, altura, 0.05f), portao[r.Next(portao.Length)]);
+        }
+
+        /// <summary>
+        /// Portas de aço de enrolar (Poly Haven, CC0) cobrindo um vão de 'largura' x 'altura', lado a lado.
+        /// Falso se o modelo não estiver no projeto (aí fica o portão de caixa).
+        /// </summary>
+        private static bool PortasDeEnrolar(Transform t, float xc, float z0, float hb, float largura, float altura, System.Random r)
+        {
+            const float larguraModelo = 1.1f, alturaModelo = 2.4f;
+            float escala = altura / alturaModelo;
+            int n = Mathf.Max(1, Mathf.RoundToInt(largura / (larguraModelo * escala)));
+            float passo = largura / n;
+            for (int i = 0; i < n; i++)
+            {
+                string variante = r.NextDouble() < 0.35 ? "rollershutter_door_graffiti" : "rollershutter_door";
+                float x = xc - largura * 0.5f + passo * (i + 0.5f);
+                GameObject g = Objeto("rollershutter_door", t, new Vector3(x, hb, z0 - 0.12f), 180f, escala, variante);
+                if (g == null) return false;
+                g.transform.localScale = new Vector3(passo / larguraModelo, escala, escala);
+            }
+            return true;
+        }
+
+        /// <summary>Ar-condicionado na parede (às vezes enferrujado), virado para a rua.</summary>
+        private static void ArCondicionado(Transform t, float x, float z0, float y, System.Random r)
+        {
+            Objeto("exterior_aircon_unit", t, new Vector3(x, y, z0 - 0.25f), 180f, 0.85f,
+                   r.NextDouble() < 0.5 ? "exterior_aircon_unit" : "exterior_aircon_unit_rusted");
+        }
+
+        /// <summary>
+        /// Coloca um modelo do Poly Haven (ImportadorModelos) com a base no ponto 'baseCentro', girado e
+        /// escalado. 'manter' escolhe as peças do arquivo (vários modelos vêm lado a lado num FBX só).
+        /// Null se o modelo não estiver no projeto.
+        /// </summary>
+        private static GameObject Objeto(string id, Transform pai, Vector3 baseCentro, float giroY, float escala, params string[] manter)
+        {
+            GameObject modelo = BetsDeRua.Editor.ImportadorModelos.Modelo(id);
+            if (modelo == null) return null;
+            GameObject g = (GameObject)PrefabUtility.InstantiatePrefab(modelo);
+            PrefabUtility.UnpackPrefabInstance(g, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            g.name = id;
+            if (manter != null && manter.Length > 0)
+            {
+                var filhos = new List<Transform>();
+                foreach (Transform c in g.transform) filhos.Add(c);
+                foreach (Transform c in filhos)
+                    if (System.Array.IndexOf(manter, c.name) < 0) Object.DestroyImmediate(c.gameObject);
+            }
+            g.transform.SetParent(pai != null ? pai : raizAvulsos, false);
+            g.transform.rotation = Quaternion.Euler(0f, giroY, 0f);
+            g.transform.localScale = Vector3.one * escala;
+            g.transform.position = Vector3.zero;
+            Bounds? caixa = null;
+            foreach (Renderer rr in g.GetComponentsInChildren<Renderer>())
+            {
+                if (caixa == null) caixa = rr.bounds;
+                else { Bounds c = caixa.Value; c.Encapsulate(rr.bounds); caixa = c; }
+            }
+            Vector3 baseAtual = caixa.HasValue ? new Vector3(caixa.Value.center.x, caixa.Value.min.y, caixa.Value.center.z) : Vector3.zero;
+            g.transform.position = baseCentro - baseAtual;
+            foreach (Transform f in g.GetComponentsInChildren<Transform>())
+                GameObjectUtility.SetStaticEditorFlags(f.gameObject, StaticEditorFlags.BatchingStatic | StaticEditorFlags.ContributeGI);
+            return g;
         }
 
         private static void Telhado(Transform t, float xc, float z0, float y, float w, float fundo)

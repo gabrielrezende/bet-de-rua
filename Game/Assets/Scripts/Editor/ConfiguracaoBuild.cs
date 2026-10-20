@@ -11,7 +11,7 @@ namespace BetsDeRua.Editor
     /// </summary>
     public static class ConfiguracaoBuild
     {
-        public const string Versao = "0.4.0";
+        public const string Versao = "0.5.0";
         public const string PastaSaida = "Builds/BetsDeRua";
 
         [MenuItem("Bets/Preparar build")]

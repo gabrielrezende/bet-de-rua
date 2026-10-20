@@ -283,7 +283,7 @@ namespace BetsDeRua
 
             Vector3 frente = transform.forward;
             // Quadril: desce na guarda e gira um pouco; o tronco gira o resto e inclina para a frente
-            quadril.position += Vector3.down * configFisica.agachamentoGuarda * pesoGuarda;
+            quadril.position += Vector3.down * (configFisica.agachamentoGuarda * pesoGuarda + configFisica.agachamentoGuardaBets * pesoGuardaGravada);
             IKDoisOssos.Torcer(quadril, torcao * configFisica.torcaoQuadril, Vector3.up);
             Transform[] coluna = { animador.GetBoneTransform(HumanBodyBones.Spine), animador.GetBoneTransform(HumanBodyBones.Chest), animador.GetBoneTransform(HumanBodyBones.UpperChest) };
             int ossos = 0;
@@ -294,6 +294,8 @@ namespace BetsDeRua
                 if (o == null) continue;
                 IKDoisOssos.Torcer(o, torcao * configFisica.torcaoTronco / ossos, Vector3.up);
                 IKDoisOssos.Torcer(o, configFisica.inclinacaoGuarda * pesoGuarda / ossos, direitaTorcida);
+                // Guarda do bets (como o golfista): o tronco desce para a frente em volta do eixo dos ombros
+                if (pesoGuardaGravada > 0f) IKDoisOssos.Torcer(o, configFisica.inclinacaoGuardaBets * pesoGuardaGravada / ossos, direitaPeito);
             }
 
             // Pernas de volta nos pés (joelhos dobram para a frente)

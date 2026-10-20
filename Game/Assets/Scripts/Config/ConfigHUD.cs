@@ -136,6 +136,19 @@ namespace BetsDeRua
         [Tooltip("Cor da poeira (alfa = quão forte).")]
         public Color corPoeira = new Color(0.62f, 0.58f, 0.52f, 0.35f);
 
+        [Header("Rastro da bola (como o traço do golfe)")]
+        [Tooltip("Desenha um rastro atrás da bola quando ela vai rápido (arremesso e batida).")]
+        public bool rastroBola = true;
+        [Tooltip("Material do rastro (criado pelo montador da cena).")]
+        public Material materialRastro;
+        [Tooltip("Velocidade mínima para o rastro aparecer (m/s).")]
+        public float velocidadeMinimaRastro = 14f;
+        [Tooltip("Quanto tempo o rastro fica no ar (s).")]
+        public float duracaoRastro = 0.35f;
+        [Tooltip("Largura do rastro perto da bola (m).")]
+        public float larguraRastro = 0.05f;
+        public Color corRastro = new Color(1f, 0.95f, 0.75f, 0.55f);
+
         [Header("Mensagens")]
         [Tooltip("Quanto tempo a mensagem do lance fica na tela (s).")]
         public float duracaoMensagem = 2f;
