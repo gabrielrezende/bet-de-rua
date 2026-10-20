@@ -142,7 +142,14 @@ def main():
     lista = v.TRAB / "lista.txt"
     lista.write_text("".join(f"file '{s.as_posix()}'\n" for s in segs), encoding="utf-8")
     juntado = v.TRAB / "juntado.mov"
-    v.rodar(["-f", "concat", "-safe", "0", "-i", str(lista), "-c", "copy", str(juntado)])
+    # junta decodificando cada pedaço (filtro concat): o concat por cópia perdia quadros
+    entradas, rotulos = [], ""
+    for k, sg in enumerate(segs):
+        entradas += ["-i", str(sg)]
+        rotulos += f"[{k}:v][{k}:a]"
+    v.rodar([*entradas, "-filter_complex", f"{rotulos}concat=n={len(segs)}:v=1:a=1[v][a]",
+             "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "14",
+             "-pix_fmt", "yuv420p", "-c:a", "pcm_s16le", str(juntado)])
 
     m = marcas
     secoes = [[0.0, m["18"], 2], [m["18"], m["logo"], 3], [m["logo"] + 0.5, total, 0]]
