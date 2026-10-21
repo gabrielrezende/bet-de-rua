@@ -59,3 +59,7 @@ Thumbs.db
 
 # Configurações locais do Claude Code (as skills em .claude/skills vão para o Git)
 .claude/settings.local.json
+
+# ===== Gravações frame a frame (Bets > Gravar partida) =====
+/Gravacoes/
+/Game/Builds/**/Gravacoes/

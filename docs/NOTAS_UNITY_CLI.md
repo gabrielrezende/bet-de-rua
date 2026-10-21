@@ -52,3 +52,13 @@ Antes de trocar de computador: commit e push. Ao chegar no outro: pull antes de 
 - **Testar a partida sem o menu**: o `soAssistir` fica desligado no asset; ligar só na memória (`LoadAssetAtPath<ConfigPartida>(...).soAssistir = true`) antes do Play e desligar + salvar depois, senão o jogo para na tela antiga "Seu time começa com o quê?".
 - **Blender pela linha de comando**: `blender.exe -b --python script.py -- argumentos`. Passar caminhos com barra normal (`cygpath -m`), nunca `\$var` no bash.
 - Capturas da CMU: ver `ferramentas/captura_cmu/LEIAME.md`.
+
+## Gravar partida quadro a quadro (Windows, 21/10/2026)
+
+- **Menu Bets > Gravar partida**: abre a cena Prototipo, liga uma partida no modo assistir (meta e dificuldade do menu Ajustes) e grava com o tempo fixo de 60 quadros/s. Sai do Play sozinho no fim da partida. Opções: todos os quadros, 1 a cada 4, ou "Jogando eu" (controle/teclado). **Parar gravação** fecha os arquivos na hora.
+- Pelo Claude Code: `BetsDeRua.Editor.MenuGravarPartida.Pedir(1, false)` (ou `GravadorFrameAFrame.Iniciar(new Opcoes{...})` com o Play já ligado).
+- Sai em `Gravacoes/AAAA-MM-DD_HH-MM-SS/` na raiz do repositório (fora do Git): `quadros/` (transmissão, com placar), `perto/` (câmera de corpo inteiro no jogador mais perto da bola, para avaliar animação), `quadros.csv` (todo quadro: tempo de jogo, ms reais, estado, placar, bola, foco), `lances.txt` (eventos de cada lance com o número do quadro) e `resumo.txt` (quadros por segundo e travadas).
+- Uma partida de 10 pontos entre bots deu 69 mil quadros por câmera (~9 GB) e levou ~37 min reais no editor.
+- **Desempenho de verdade só no jogo instalado**: `BetsDeRua.exe -gravarPartida "pasta" -soMedir -gravarSegundos 240` vai direto para uma partida de bots, mede em tempo real sem salvar imagens e fecha sozinho. No editor, o ms medido não é confiável (a captura segura a placa de vídeo).
+- **Controle de verdade ligado atrapalha o teste com controle virtual**: ele entra como P1. Antes do Play: `foreach (var g in new List<Gamepad>(Gamepad.all)) InputSystem.RemoveDevice(g);` (volta ao reabrir o Unity ou religar o cabo).
+- Teste com controle virtual: o `QueueStateEvent` feito num `Update` com `[DefaultExecutionOrder(-1000)]` faz o `wasPressedThisFrame` funcionar no quadro seguinte (dá para apertar L1, X, Select). Soltar o gatilho da batida no quadro anterior ao momento certo (a soltura só é lida no quadro seguinte).

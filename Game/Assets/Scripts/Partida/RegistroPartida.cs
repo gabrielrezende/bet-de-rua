@@ -42,9 +42,13 @@ namespace BetsDeRua
             arquivo = null;
         }
 
+        /// <summary>Avisa cada evento anotado (a gravação frame a frame escuta para montar o registro dos lances).</summary>
+        public static event System.Action<string> AoEvento;
+
         /// <summary>Anota um evento (qualquer script pode chamar).</summary>
         public static void Evento(string texto)
         {
+            AoEvento?.Invoke(texto);
             if (instancia == null || instancia.arquivo == null) return;
             instancia.Escrever("EVENTO", texto);
         }
