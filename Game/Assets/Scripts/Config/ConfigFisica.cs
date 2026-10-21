@@ -248,6 +248,9 @@ namespace BetsDeRua
         public float tempoMaximoEsperaBatida = 3f;
         [Tooltip("A garrafa atrás de quem lança (até esta distância, m) não conta até a bola se afastar dela (a rasteira não derruba a própria garrafa).")]
         public float distanciaGarrafaAtras = 1.6f;
+        [Tooltip("Quem lançou a bola só pode pegá-la de volta depois que ela se afastar esta distância (m) de onde saiu. " +
+                 "Evita o arremessador pegar a própria bola logo depois de soltar.")]
+        public float distanciaLiberarPropriaBola = 2.5f;
         [Tooltip("Rebatedor esperando o arremesso: 0 = olha para a área do taco, 1 = olha para quem arremessa.")]
         [Range(0f, 1f)] public float diagonalRebatedor = 0.5f;
         [Tooltip("Por quantos segundos à frente a trajetória da bola é prevista.")]
@@ -337,6 +340,8 @@ namespace BetsDeRua
         [Range(0f, 1f)] public float torcaoTronco = 0.45f;
         [Tooltip("Quanto o quadril desce na guarda (m): joelhos dobrados, pronto para bater.")]
         public float agachamentoGuarda = 0.09f;
+        [Tooltip("Quanto o quadril vai para trás na guarda (m), como o golfista se preparando: o tronco inclina por cima e os joelhos dobram pouco.")]
+        public float recuarQuadrilGuarda = 0.07f;
         [Tooltip("Quanto o tronco inclina para a frente na guarda (graus).")]
         public float inclinacaoGuarda = 16f;
         [Tooltip("Segundos para o corpo destorcer e voltar à guarda depois da batida (o 'follow-through').")]
@@ -371,5 +376,14 @@ namespace BetsDeRua
         public float agachamentoGuardaBets = 0.07f;
         [Tooltip("Distância entre as duas mãos no cabo (m).")]
         public float distanciaEntreMaos = 0.09f;
+        [Tooltip("Largura entre os pés de quem está parado, em fração da altura do quadril (0,42 ≈ largura dos ombros). " +
+                 "A animação de base abria demais as pernas.")]
+        [Range(0.2f, 0.8f)] public float larguraPes = 0.42f;
+
+        [Header("Torcida")]
+        [Tooltip("A torcida abre caminho: quem está assistindo se afasta quando um jogador chega a esta distância (m).")]
+        public float distanciaTorcidaAbrir = 1.8f;
+        [Tooltip("Quanto quem está assistindo se afasta, no máximo (m).")]
+        public float passoTorcida = 1.3f;
     }
 }

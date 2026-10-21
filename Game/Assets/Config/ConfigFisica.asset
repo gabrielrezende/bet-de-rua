@@ -116,6 +116,7 @@ MonoBehaviour:
   anguloMaximoBatida: 60
   tempoMaximoEsperaBatida: 3
   distanciaGarrafaAtras: 1.6
+  distanciaLiberarPropriaBola: 2.5
   diagonalRebatedor: 0.5
   tempoPrevisao: 3
   passoPrevisao: 0.01
@@ -160,10 +161,23 @@ MonoBehaviour:
   torcaoQuadril: 0.3
   torcaoTronco: 0.45
   agachamentoGuarda: 0.09
+  recuarQuadrilGuarda: 0.07
   inclinacaoGuarda: 16
   tempoVoltarDaBatida: 0.45
-  carregarGuarda: 18
-  usarCapturaNaBatida: 1
+  carregarGuarda: 8
+  usarCapturaNaBatida: 0
   inicioBatidaCaptura: 0.42
   rapidezBatidaCaptura: 1.6
   tempoBatidaRapida: 0.14
+  centralizarCorpoGuarda: 1
+  pegaGuardaFrente: 0.14
+  pegaGuardaAbaixo: 0.42
+  pegaGuardaLado: 0.03
+  pontaGuardaFrente: 0.55
+  pontaGuardaLado: 0.12
+  inclinacaoGuardaBets: 22
+  agachamentoGuardaBets: 0.07
+  distanciaEntreMaos: 0.09
+  larguraPes: 0.42
+  distanciaTorcidaAbrir: 1.8
+  passoTorcida: 1.3
