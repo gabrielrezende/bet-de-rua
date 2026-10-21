@@ -51,6 +51,13 @@ namespace BetsDeRua
         public bool QuicouDesdeLancamento { get; private set; }
         /// <summary>Quem lançou a bola por último (arremesso, chute, passe ou batida). Null = ninguém.</summary>
         public Jogador UltimoLancador { get; private set; }
+        /// <summary>
+        /// True depois que a bola se afastou de onde foi lançada (ConfigFisica.distanciaLiberarPropriaBola).
+        /// Antes disso, quem lançou não pode pegá-la de volta (senão o arremessador "pegava" a própria bola
+        /// no quadro seguinte ao arremesso, quando ela saía fraca, ainda perto da mão).
+        /// </summary>
+        public bool AfastouDoLancamento { get; private set; } = true;
+        private Vector3 pontoDeLancamento;
 
         private TrailRenderer rastro;
 
@@ -94,6 +101,8 @@ namespace BetsDeRua
             AtualizarRastro(true); // sai da mão: não liga o rastro com o caminho até a mão
             QuicouDesdeLancamento = posicao.y <= FisicaBola.AlturaDoChao(config, posicao.z) + config.raioBola + 0.001f;
             UltimoLancador = lancador;
+            pontoDeLancamento = posicaoInicial;
+            AfastouDoLancamento = lancador == null;
             // A garrafa que fica ATRÁS de quem lança (a da casinha de onde ele arremessa) não conta
             // até a bola se afastar dela: senão a rasteira, que sai rente ao chão, derrubava a própria garrafa
             garrafaAtras = null;
@@ -154,6 +163,12 @@ namespace BetsDeRua
                     float passo = Mathf.Min(restante, passoMaximo);
                     Simular(passo);
                     restante -= passo;
+                }
+                if (!AfastouDoLancamento)
+                {
+                    Vector3 andou = posicao - pontoDeLancamento;
+                    andou.y = 0f;
+                    AfastouDoLancamento = andou.magnitude >= config.distanciaLiberarPropriaBola;
                 }
             }
             AtualizarVisual();

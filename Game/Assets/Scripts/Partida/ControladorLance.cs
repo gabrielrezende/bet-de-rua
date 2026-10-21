@@ -403,8 +403,9 @@ namespace BetsDeRua
         {
             MudarPara(EstadoLance.Arremesso);
             // O bot que vai arremessar escolhe de onde (o nível diz quanto ele varia o ângulo)
-            ladoDoArremessoBot = arremessadorDaVez != null
-                ? Random.Range(0f, NiveisBots.De(configPartida, arremessadorDaVez.Jogador).variarLugarArremesso) : 0f;
+            // Sempre um pouco para o lado (longe do rebatedor da própria casinha), mais o que o nível varia
+            ladoDoArremessoBot = configPartida.ladoMinimoArremessoBot + (arremessadorDaVez != null
+                ? Random.Range(0f, NiveisBots.De(configPartida, arremessadorDaVez.Jogador).variarLugarArremesso) : 0f);
             rebatida = false;
             resumoBatida = "";
 

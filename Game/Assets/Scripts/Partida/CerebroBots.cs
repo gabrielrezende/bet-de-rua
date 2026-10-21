@@ -63,6 +63,7 @@ namespace BetsDeRua
                 estadoAnterior = lance.Estado;
             }
             if (lance.Estado == EstadoLance.Arremesso && configPartida.defesaAutomatica) PosicionarParaOArremesso();
+            if (lance.Estado == EstadoLance.Arremesso && configPartida.corridaAutomatica) TirarDaLinhaDoArremesso();
             if (lance.Estado != EstadoLance.BolaViva) return;
 
             if (configPartida.defesaAutomatica) ComandarDefesa();
@@ -121,6 +122,21 @@ namespace BetsDeRua
                 Jogador jogador = defensor.Jogador;
                 if (jogador.Controlador != null) continue;
                 IrPara(jogador, lance.PosicaoDeGuarda(jogador));
+            }
+        }
+
+        /// <summary>
+        /// O rebatedor bot da casinha de quem arremessa vai para o lugar dele, ao lado da área do taco,
+        /// fora da linha do arremesso. Parado na borda do círculo (onde para quando volta correndo),
+        /// a bola saía da mão e batia nele.
+        /// </summary>
+        private void TirarDaLinhaDoArremesso()
+        {
+            foreach (Jogador rebatedor in rebatedores)
+            {
+                if (rebatedor.Controlador != null) continue;
+                if (lance.RebatedorDaVez != null && lance.RebatedorDaVez.Jogador == rebatedor) continue;
+                IrPara(rebatedor, PontoNaBase(rebatedor.transform.position));
             }
         }
 
@@ -367,7 +383,13 @@ namespace BetsDeRua
                 // Só sai quando a pessoa sai de verdade: já longe da base E correndo para o meio
                 bool pessoaFoi = !humano.DentroDoCirculo() && distanciaDaBase >= configPartida.distanciaParaParceiroSair
                                  && rumoAoMeio > configPartida.velocidadeParaParceiroSair;
-                if (podeDecidir && pessoaFoi && !corrida.EsperandoChegarNaBase)
+                if (podeDecidir && pessoaFoi && !corrida.EsperandoChegarNaBase && DefesaComBolaPerto(parceiro))
+                {
+                    // A defesa já tem a bola perto da garrafa dele: sair agora é ser queimado na hora
+                    if (!avisouPerigoParceiro) RegistroPartida.Evento($"{parceiro.Nome} (bot) fica: a defesa está com a bola perto da garrafa dele");
+                    avisouPerigoParceiro = true;
+                }
+                else if (podeDecidir && pessoaFoi && !corrida.EsperandoChegarNaBase)
                 {
                     parceiroViajando = true;
                     origemDaPessoaNaViagem = baseDaPessoa;
@@ -379,7 +401,15 @@ namespace BetsDeRua
             {
                 // Chegou do outro lado: a viagem acabou
                 bool chegou = parceiro.DentroDoCirculo() && (parceiro.transform.position.x < 0f ? -1f : 1f) != baseDoParceiro;
+                float saiuDaBase = Mathf.Abs(parceiro.transform.position.x - baseDoParceiro * meio);
                 if (chegou) { parceiroViajando = false; baseDoParceiro = -baseDoParceiro; }
+                else if (saiuDaBase < configPartida.distanciaVoltarComPerigo && DefesaComBolaPerto(parceiro))
+                {
+                    // Mal saiu e a defesa dominou a bola perto da garrafa dele: volta para dentro do círculo
+                    parceiroViajando = false;
+                    proximaDecisaoParceiro = Time.time + configPartida.intervaloDecisaoParceiro;
+                    RegistroPartida.Evento($"{parceiro.Nome} (bot) volta: a defesa dominou a bola perto da garrafa dele");
+                }
                 else if (podeDecidir && !corrida.EsperandoChegarNaBase)
                 {
                     // Antes de cruzar, a pessoa virou e está voltando (ou já voltou): ele desiste junto,
@@ -397,11 +427,45 @@ namespace BetsDeRua
                 }
             }
 
+            if (!parceiroViajando && parceiro.DentroDoCirculo()) avisouPerigoParceiro = false;
             Vector3 destino = parceiroViajando
                 ? NoCaminho(parceiro, ZonaDoTaco.LugarDoRebatedor(new Vector3(-baseDoParceiro * meio, 0f, 0f),
                                                                   configFisica, configPartida.afastamentoRebatedor))
                 : PontoNaBase(parceiro.transform.position);
             IrPara(parceiro, destino);
+
+            // Em espelho: até se cruzarem, o parceiro acerta o passo para ficar à mesma distância do meio
+            // que a pessoa, e assim os dois se encontram dentro da faixa do meio (antes ele saía depois e
+            // os dois passavam um pelo outro fora da faixa, sem cruzar)
+            Vector3 p = parceiro.transform.position;
+            bool antesDeCruzar = parceiroViajando && Mathf.Sign(p.x) == baseDoParceiro && Mathf.Sign(h.x) == baseDaPessoa
+                                 && !humano.DentroDoCirculo();
+            if (antesDeCruzar)
+            {
+                float adiantado = Mathf.Abs(h.x) - Mathf.Abs(p.x); // > 0: o parceiro está mais perto do meio
+                Vector3 rumo = destino - p; rumo.y = 0f;
+                if (rumo.sqrMagnitude > 0.01f)
+                {
+                    Vector3 dir = rumo.normalized;
+                    float intensidade = adiantado > configPartida.folgaEspelho ? configPartida.ritmoEsperarEspelho : 1f;
+                    bool sprint = adiantado < -configPartida.folgaEspelho;
+                    parceiro.DefinirEntradaBot(new Vector2(dir.x, dir.z) * intensidade, sprint);
+                }
+            }
+        }
+
+        private bool avisouPerigoParceiro;
+
+        /// <summary>
+        /// True se um defensor está com a bola (dominada) perto da garrafa deste rebatedor:
+        /// sair da base agora deixaria a casinha exposta a um chute de perto.
+        /// </summary>
+        private bool DefesaComBolaPerto(Jogador rebatedor)
+        {
+            Arremessador portador = lance.Portador;
+            if (portador == null) return false;
+            Garrafa garrafa = lance.CasinhaMaisPerto(rebatedor.transform.position);
+            return DistanciaNoChao(portador.transform.position, garrafa.transform.position) < configPartida.distanciaPerigoParceiroSair;
         }
 
         /// <summary>

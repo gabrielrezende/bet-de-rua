@@ -202,6 +202,8 @@ namespace BetsDeRua
         /// <summary>True se a bola está a até 'raio' metros (no chão) e numa altura que dá para pegar.</summary>
         public bool AoAlcance(float raio)
         {
+            // A bola que ele mesmo acabou de lançar ainda não pode ser pega por ele
+            if (bola.UltimoLancador == jogador && !bola.AfastouDoLancamento) return false;
             Vector3 rumo = bola.Posicao - transform.position;
             rumo.y = 0f;
             return rumo.magnitude <= raio && bola.Posicao.y <= config.alturaMaximaPegar;

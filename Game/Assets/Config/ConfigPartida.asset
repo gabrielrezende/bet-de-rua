@@ -65,6 +65,7 @@ MonoBehaviour:
   pegarNoArPerdeTaco: 0
   afastamentoRebatedor: 0.95
   afastamentoArremessador: 1.2
+  ladoMinimoArremessoBot: 0.4
   distanciaGuardiao: 4
   corDuplaTaco: {r: 0.2, g: 0.45, b: 0.95, a: 1}
   corDuplaBola: {r: 1, g: 0.55, b: 0.1, a: 1}
@@ -93,6 +94,10 @@ MonoBehaviour:
   distanciaParaParceiroSair: 2
   velocidadeParaParceiroSair: 2
   intervaloDecisaoParceiro: 0.6
+  distanciaPerigoParceiroSair: 7
+  distanciaVoltarComPerigo: 2.5
+  folgaEspelho: 0.4
+  ritmoEsperarEspelho: 0.45
   distanciaParaApoio: 14
   fracaoApoio: 0.45
   trocaAutomaticaNaDefesa: 0

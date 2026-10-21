@@ -227,6 +227,14 @@ namespace BetsDeRua
             float rapidez = NoBoteDoMergulho
                 ? config.velocidadeMergulho
                 : Mathf.Max(0f, config.velocidadeMergulho - config.freioDeslizada * tempoNoChao);
+            // Deitado, o corpo vai até ~1 altura à frente dos pés: para antes de atravessar um muro, uma porta,
+            // uma garrafa ou outro jogador, e antes de passar dos muros do campo (antes entrava na lixeira e na porta)
+            Vector3 cabecaDeitado = transform.position + direcaoMergulho * Altura * 0.9f;
+            bool foraDoCampo = Mathf.Abs(cabecaDeitado.z) > config.larguraCampo * 0.5f - 0.2f
+                               || Mathf.Abs(cabecaDeitado.x) > config.comprimentoCampo * 0.5f - 0.2f;
+            bool obstaculo = Physics.SphereCast(transform.position + Vector3.up * 0.35f, 0.22f, direcaoMergulho, out _,
+                                                Altura * 0.9f, ~0, QueryTriggerInteraction.Ignore);
+            if (foraDoCampo || obstaculo) rapidez = 0f;
             velocidade = direcaoMergulho * rapidez;
             corpo.Move((velocidade + Vector3.down) * dt);
 

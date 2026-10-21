@@ -92,6 +92,9 @@ namespace BetsDeRua
         public float afastamentoRebatedor = 0.45f;
         [Tooltip("Quanto o arremessador fica atrás da garrafa da base dele (m).")]
         public float afastamentoArremessador = 1.2f;
+        [Tooltip("Quem arremessa (bot) sai pelo menos isto para o lado (m), longe do rebatedor da própria casinha, " +
+                 "para a bola não sair da mão e bater nele.")]
+        public float ladoMinimoArremessoBot = 0.4f;
         [Tooltip("Quanto o guardião fica atrás da garrafa do rebatedor (m). O GDD diz 3 a 5.")]
         public float distanciaGuardiao = 4f;
 
@@ -159,6 +162,14 @@ namespace BetsDeRua
         public float velocidadeParaParceiroSair = 2f;
         [Tooltip("Parceiro bot: tempo mínimo (s) entre uma decisão e outra (sair / desistir), para não ficar indo e voltando.")]
         public float intervaloDecisaoParceiro = 0.6f;
+        [Tooltip("Parceiro bot de uma pessoa: não sai da base se um defensor está com a bola a menos desta distância (m) da garrafa dele.")]
+        public float distanciaPerigoParceiroSair = 7f;
+        [Tooltip("Parceiro bot que mal saiu (até esta distância da base, m) volta se a defesa dominar a bola perto da garrafa dele.")]
+        public float distanciaVoltarComPerigo = 2.5f;
+        [Tooltip("Corrida em espelho: diferença (m) de distância até o meio que o parceiro tolera antes de apressar ou segurar o passo.")]
+        public float folgaEspelho = 0.4f;
+        [Tooltip("Corrida em espelho: força do analógico (0 a 1) do parceiro quando está adiantado, esperando a pessoa.")]
+        [Range(0f, 1f)] public float ritmoEsperarEspelho = 0.45f;
         [Tooltip("Apoio: com a bola a mais que isso (m) da casinha que ele guarda, o defensor bot que não vai " +
                  "na bola sai para o meio do caminho, para receber o passe.")]
         public float distanciaParaApoio = 8f;

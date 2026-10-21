@@ -78,6 +78,48 @@ namespace BetsDeRua
             ControladorLance.Destaque += AoDestaque;
         }
 
+        // A torcida abre caminho: quem está assistindo dá um passo para trás quando um jogador chega perto
+        // (a bola pode ir para a calçada, e os defensores atravessavam as pessoas)
+
+
+        private readonly List<Vector3> lugarDeCada = new List<Vector3>();
+        private Jogador[] jogadores;
+
+        private void Update()
+        {
+            if (torcedores.Count == 0) return;
+            if (jogadores == null || jogadores.Length == 0) jogadores = FindObjectsByType<Jogador>(FindObjectsSortMode.None);
+            if (lugarDeCada.Count != torcedores.Count)
+            {
+                lugarDeCada.Clear();
+                foreach (Torcedor t in torcedores) lugarDeCada.Add(t != null ? t.transform.parent.position : Vector3.zero);
+            }
+            for (int i = 0; i < torcedores.Count; i++)
+            {
+                Torcedor t = torcedores[i];
+                if (t == null) continue;
+                Transform pessoa = t.transform.parent;
+                Vector3 lugar = lugarDeCada[i];
+                Vector3 desvio = Vector3.zero;
+                foreach (Jogador j in jogadores)
+                {
+                    if (j == null) continue;
+                    Vector3 d = lugar - j.transform.position;
+                    d.y = 0f;
+                    float dist = d.magnitude;
+                    if (dist >= config.distanciaTorcidaAbrir) continue;
+                    Vector3 rumo = dist > 0.01f ? d / dist : Vector3.right;
+                    desvio += rumo * (config.passoTorcida * (1f - dist / config.distanciaTorcidaAbrir));
+                }
+                desvio = Vector3.ClampMagnitude(desvio, config.passoTorcida);
+                // Não atravessa o muro do fundo: só anda ao longo da calçada e um pouco para trás
+                Vector3 alvo = lugar + desvio;
+                float limiteZ = config.larguraCampo * 0.5f - 0.3f;
+                if (Mathf.Abs(lugar.z) < limiteZ) alvo.z = Mathf.Clamp(alvo.z, -limiteZ, limiteZ);
+                pessoa.position = Vector3.MoveTowards(pessoa.position, alvo, Time.deltaTime * (desvio.sqrMagnitude > 0.01f ? 4f : 1.5f));
+            }
+        }
+
         private void OnDestroy()
         {
             ControladorLance.Comemoracao -= AoComemorar;
