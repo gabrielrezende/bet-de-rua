@@ -31,6 +31,7 @@ MonoBehaviour:
   duracaoGestoPegar: 0.35
   alturaSinalZona: 0.18
   tamanhoSinalZona: 0.22
+  distanciaMinimaSinalZona: 9
   corZonaSegura: {r: 0.2, g: 0.9, b: 0.3, a: 1}
   corZonaPerigo: {r: 0.95, g: 0.2, b: 0.15, a: 1}
   raioCirculoAlvo: 0.6
@@ -48,6 +49,8 @@ MonoBehaviour:
   aberturaArco: 240
   alturaArco: 1.3
   ladoArco: -1.3
+  distanciaReferenciaArco: 20
+  escalaMinimaArco: 0.12
   corArcoNormal: {r: 1, g: 1, b: 1, a: 1}
   corArcoNaFaixa: {r: 0.3, g: 1, b: 0.3, a: 1}
   corArcoPassou: {r: 1, g: 0.25, b: 0.2, a: 1}

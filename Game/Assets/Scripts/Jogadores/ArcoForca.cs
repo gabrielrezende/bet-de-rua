@@ -57,12 +57,23 @@ namespace BetsDeRua
             gameObject.SetActive(true);
             faixa.gameObject.SetActive(comFaixa);
             Camera cameraPrincipal = Camera.main;
+            float escala = 1f;
             if (cameraPrincipal != null)
             {
+                // Mesmo tamanho na tela a qualquer distância: com a câmera perto (atrás do rebatedor,
+                // atrás de quem arremessa), o arco encolhe e fica junto do jogador
+                float distancia = Vector3.Distance(cameraPrincipal.transform.position, pes);
+                escala = Mathf.Clamp(distancia / Mathf.Max(1f, configHUD.distanciaReferenciaArco), configHUD.escalaMinimaArco, 1f);
+                // Do lado de FORA da tela (longe do meio, por onde a bola vem): jogador na metade
+                // direita da tela, o arco vai para a direita dele; na esquerda, para a esquerda
+                float lado = configHUD.ladoArco;
+                Vector3 naTela = cameraPrincipal.WorldToViewportPoint(pes);
+                if (naTela.z > 0f) lado = Mathf.Abs(lado) * (naTela.x >= 0.5f ? 1f : -1f);
                 transform.rotation = cameraPrincipal.transform.rotation;
-                transform.position = pes + Vector3.up * configHUD.alturaArco
-                                     + cameraPrincipal.transform.right * configHUD.ladoArco;
+                transform.position = pes + Vector3.up * (configHUD.alturaArco * Mathf.Lerp(0.6f, 1f, escala))
+                                     + cameraPrincipal.transform.right * lado * escala;
             }
+            transform.localScale = Vector3.one * escala;
 
             float raio = configHUD.raioArco;
             float espessura = configHUD.espessuraArco;

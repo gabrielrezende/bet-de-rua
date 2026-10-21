@@ -33,8 +33,13 @@ namespace BetsDeRua
 
         private void LateUpdate()
         {
-            // Quem a pessoa controla já tem a seta verde/vermelha: a bolinha some nele
-            sinal.gameObject.SetActive(jogador.Controlador == null);
+            // Quem a pessoa controla já tem a seta verde/vermelha: a bolinha some nele.
+            // Com a câmera perto (arremesso, atrás do rebatedor, closes) o jogador já se vê bem e a
+            // bolinha parecia uma bola no ar: só aparece de longe, onde ajuda a ler quem está seguro.
+            Camera camAtual = Camera.main;
+            bool longe = camAtual == null
+                         || Vector3.Distance(camAtual.transform.position, transform.position) >= configHUD.distanciaMinimaSinalZona;
+            sinal.gameObject.SetActive(jogador.Controlador == null && longe);
             bool seguro = jogador.DentroDoCirculo() && taco != null && taco.NoChao;
             if (estavaSeguro != seguro)
             {

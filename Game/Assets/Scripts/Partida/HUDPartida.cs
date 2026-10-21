@@ -338,6 +338,8 @@ namespace BetsDeRua
             bool troca = lance.Estado == EstadoLance.TrocaDePapel && lance.TempoNoEstado > 1.2f && lance.TempoNoEstado < 3.6f;
             faixaTroca.style.display = troca ? DisplayStyle.Flex : DisplayStyle.None;
             if (troca) textoTroca.text = $"TROCA DE PAPEL · {NomeDoLado(1 - noTaco)} VAI PARA O TACO";
+            // A faixa da troca fica no lugar da mensagem do lance (antes as duas se sobrepunham e nenhuma se lia)
+            if (troca) mensagem.style.display = DisplayStyle.None;
 
             // Treino
             painelTreino.style.display = lance.Treino || lance.TreinoBatida ? DisplayStyle.Flex : DisplayStyle.None;

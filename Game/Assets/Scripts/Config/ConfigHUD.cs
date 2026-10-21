@@ -55,6 +55,8 @@ namespace BetsDeRua
         public float alturaSinalZona = 0.18f;
         [Tooltip("Tamanho (diâmetro) do sinal (m).")]
         public float tamanhoSinalZona = 0.22f;
+        [Tooltip("O sinal só aparece com a câmera a pelo menos esta distância (m) do rebatedor. Perto, ele já se vê bem.")]
+        public float distanciaMinimaSinalZona = 9f;
         [Tooltip("Cor do sinal quando o rebatedor está seguro. Mudou? Rode Bets > Montar cena Prototipo.")]
         public Color corZonaSegura = new Color(0.2f, 0.9f, 0.3f);
         [Tooltip("Cor do sinal na zona de perigo. Mudou? Rode Bets > Montar cena Prototipo.")]
@@ -95,6 +97,11 @@ namespace BetsDeRua
         public float alturaArco = 1.3f;
         [Tooltip("Quanto o arco fica para o lado do jogador, na tela (m). Negativo = à esquerda.")]
         public float ladoArco = -1.3f;
+        [Tooltip("Distância da câmera (m) em que o arco tem o tamanho de raioArco. Mais perto, ele encolhe junto, " +
+                 "para ocupar sempre o mesmo pedaço da tela (atrás do rebatedor ele tapava a bola que vinha).")]
+        public float distanciaReferenciaArco = 20f;
+        [Tooltip("Menor escala do arco (fração de raioArco) com a câmera bem perto.")]
+        [Range(0.05f, 1f)] public float escalaMinimaArco = 0.12f;
         public Color corArcoNormal = Color.white;
         public Color corArcoNaFaixa = new Color(0.3f, 1f, 0.3f);
         public Color corArcoPassou = new Color(1f, 0.25f, 0.2f);
